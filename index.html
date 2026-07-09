@@ -121,6 +121,17 @@ canvas { display:block; width:100%; height:100%; }
   font-family:'Courier New',monospace; font-size:9px; letter-spacing:1px;
   color:rgba(255,255,255,0.7);
 }
+/* Lv上限到達：アイコンをゴールドで脈動発光させ、Lv表示も「MAX」のゴールド文字にする */
+.hud-item-chip.maxed .hud-item-icon {
+  animation: hudItemMaxGlow 1s ease-in-out infinite;
+}
+.hud-item-chip.maxed .hud-item-lv {
+  color:#ffd700; font-weight:bold;
+}
+@keyframes hudItemMaxGlow {
+  0%,100% { filter:drop-shadow(0 0 3px #ffd700) drop-shadow(0 0 1px #ffd700); }
+  50%     { filter:drop-shadow(0 0 9px #ffd700) drop-shadow(0 0 4px #fff2b0); }
+}
 #hud-timer {
   font-family:'Courier New',monospace;
   font-size:clamp(16px, 4vw, 22px); letter-spacing:4px;
@@ -409,10 +420,10 @@ canvas { display:block; width:100%; height:100%; }
 #gameover.show { opacity:1; pointer-events:auto; background:rgba(255,255,255,0.96); }
 #gameover-box {
   font-family:'Courier New',monospace; color:#111; text-align:center;
-  padding:36px 28px;
+  padding:36px 24px;
   border:1.5px solid #ddd; background:#fff;
   border-radius:8px;
-  width:min(320px, 88vw);
+  width:min(340px, 90vw);
   box-shadow:0 4px 32px rgba(0,0,0,0.08);
   position:relative;
 }
@@ -438,16 +449,16 @@ canvas { display:block; width:100%; height:100%; }
   font-size:9px; letter-spacing:3px; color:#bbb; margin-bottom:10px;
 }
 #go-items-list {
-  display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+  display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
 }
 .go-item-chip {
-  display:flex; flex-direction:column; align-items:center; gap:3px;
-  min-width:36px;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  min-width:32px;
 }
-.go-item-icon { width:20px; height:20px; object-fit:contain; font-size:20px; line-height:1; }
+.go-item-icon { width:18px; height:18px; object-fit:contain; font-size:18px; line-height:1; }
 .go-item-lv {
-  font-size:9px; letter-spacing:1px; color:#888;
-  background:#f5f5f5; border-radius:2px; padding:1px 5px;
+  font-size:8.5px; letter-spacing:0.5px; color:#888;
+  background:#f5f5f5; border-radius:2px; padding:1px 4px;
 }
 /* 獲得コイン内訳 */
 #go-coin-section {
@@ -763,6 +774,14 @@ canvas { display:block; width:100%; height:100%; }
 #skill-btn.holding::before { border-color:rgba(255,255,255,0.25); }
 #skill-btn.holding::after  { border-color:rgba(255,255,255,0.12); }
 #skill-btn.holding #skill-btn-icon { filter:invert(1); }
+/* 発動中（継続系スキルが効果を発揮している間）：ボタン全体をティールで光らせて一目で分かるように */
+#skill-btn.active { border-color:#0d9488; animation: skillActiveGlow 1s ease-in-out infinite; }
+#skill-btn.active::before { border-color:rgba(13,148,136,0.5); }
+#skill-btn.active::after  { border-color:rgba(13,148,136,0.3); }
+@keyframes skillActiveGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(13,148,136,0.55); }
+  50%     { box-shadow: 0 0 16px 7px rgba(13,148,136,0.55); }
+}
 #skill-btn-icon { font-size:30px; position:relative; z-index:1; }
 /* ストック数字：ボタン右下に絶対配置（ボタン下端揃え・右外側） */
 #skill-stock-label {
@@ -802,17 +821,17 @@ canvas { display:block; width:100%; height:100%; }
   font-size:9px; font-weight:300;
   color:rgba(34,34,34,0.5); line-height:1.4;
 }
-/* ストックドット */
-#skill-stocks { display:flex; gap:5px; padding-left:2px; }
+/* ストックドット：所持数(埋まっているドット)と最大数(ドットの総数)が一目で分かる */
+#skill-stocks { display:flex; gap:6px; padding-left:2px; }
 .skill-stock-dot {
-  width:8px; height:8px; border-radius:50%;
-  background:#ffffff;
-  border:1px solid #1a1a1a;
+  width:11px; height:11px; border-radius:50%;
+  background:#1a1a1a;
+  border:1.5px solid #1a1a1a;
   box-sizing:border-box;
 }
 .skill-stock-dot.empty {
-  background:#1a1a1a;
-  border:1px solid #1a1a1a;
+  background:#ffffff;
+  border:1.5px solid rgba(26,26,26,0.35);
   box-sizing:border-box;
 }
 
@@ -847,6 +866,14 @@ canvas { display:block; width:100%; height:100%; }
 .pause-item-chip {
   font-family:'Courier New',monospace; font-size:10px; letter-spacing:1px;
   padding:3px 9px; border-radius:3px; border:1px solid; white-space:nowrap;
+}
+.pause-item-chip.maxed {
+  font-weight:bold;
+  animation: pauseItemMaxGlow 1s ease-in-out infinite;
+}
+@keyframes pauseItemMaxGlow {
+  0%,100% { box-shadow:0 0 3px rgba(255,215,0,0.4); }
+  50%     { box-shadow:0 0 10px rgba(255,215,0,0.85); }
 }
 
 /* ── 全体マップ（Pause） ── */
@@ -1168,11 +1195,11 @@ canvas { display:block; width:100%; height:100%; }
     <span id="skill-btn-icon">⚡</span>
     <div id="skill-stock-label"></div>
   </div>
+  <div id="skill-stocks"></div>
   <div id="skill-desc-panel">
     <div id="skill-desc-name"></div>
     <div id="skill-desc-text"></div>
   </div>
-  <div id="skill-stocks" style="display:none"></div>
 </div>
 
 <div id="pause-screen">
@@ -1463,17 +1490,25 @@ const ITEM_DEFS = [
 // この一覧（＝表示対象）には含めない。
 // レベルは「(現在値-基準値)/増分値 を四捨五入 + 1」で計算する（基準値そのものがLv1という考え方）。
 const PLAYER_ITEM_DEFS = [
-  { id:'s_boost',       key:'sBoost',      base:1,   inc:0.4,  assetId:'s_boost',      color:'#ff6688', hudLabel:'S-PWR', pauseLabel:'吸引強化',       resultLabel:'S極強化' },
-  { id:'n_boost',       key:'nBoost',      base:1,   inc:0.5,  assetId:'n_boost',      color:'#6699ff', hudLabel:'N-PWR', pauseLabel:'斥力強化',       resultLabel:'N極強化' },
-  { id:'range_up',      key:'rangeUp',     base:1,   inc:0.25, assetId:'range_up',     color:'#aa66ff', hudLabel:'RANGE', pauseLabel:'磁場拡張',       resultLabel:'レンジアップ' },
-  { id:'chain_multi',   key:'chainMulti',  base:1,   inc:0.5,  assetId:'chain_multi',  color:'#ffcc44', hudLabel:'CHAIN', pauseLabel:'連鎖倍率UP',     resultLabel:'チェイン倍率アップ' },
-  { id:'explode_up',    key:'explodeUp',   base:1,   inc:0.2,  assetId:'explode_up',   color:'#ff8844', hudLabel:'BLAST', pauseLabel:'爆発強化',       resultLabel:'爆発強化' },
-  { id:'rare_booster',  key:'rareBoost',   base:0,   inc:2,    assetId:'rare_booster', color:'#ffaaff', hudLabel:'RARE',  pauseLabel:'レアブースター', resultLabel:'レアブースター' },
-  { id:'skill_charger', key:'skillCharge', base:100, inc:10,   assetId:'skill_charger',color:'#aaffff', hudLabel:'SKILL', pauseLabel:'スキルチャージャー', resultLabel:'スキルチャージャー' },
+  { id:'s_boost',       key:'sBoost',      base:1,   inc:0.4,  maxLv:6,  assetId:'s_boost',      color:'#ff6688', hudLabel:'S-PWR', pauseLabel:'吸引強化',       resultLabel:'S極強化' },
+  { id:'n_boost',       key:'nBoost',      base:1,   inc:0.6,  maxLv:6,  assetId:'n_boost',      color:'#6699ff', hudLabel:'N-PWR', pauseLabel:'斥力強化',       resultLabel:'N極強化' },
+  { id:'range_up',      key:'rangeUp',     base:1,   inc:0.3,  maxLv:6,  assetId:'range_up',     color:'#aa66ff', hudLabel:'RANGE', pauseLabel:'磁場拡張',       resultLabel:'レンジアップ' },
+  { id:'chain_multi',   key:'chainMulti',  base:1,   inc:0.5,  maxLv:10, assetId:'chain_multi',  color:'#ffcc44', hudLabel:'CHAIN', pauseLabel:'連鎖倍率UP',     resultLabel:'チェイン倍率アップ' },
+  { id:'explode_up',    key:'explodeUp',   base:1,   inc:0.2,  maxLv:10, assetId:'explode_up',   color:'#ff8844', hudLabel:'BLAST', pauseLabel:'爆発強化',       resultLabel:'爆発強化' },
+  { id:'rare_booster',  key:'rareBoost',   base:0,   inc:2,    maxLv:6,  assetId:'rare_booster', color:'#ffaaff', hudLabel:'RARE',  pauseLabel:'レアブースター', resultLabel:'レアブースター' },
+  { id:'skill_charger', key:'skillCharge', base:100, inc:10,   maxLv:10, assetId:'skill_charger',color:'#aaffff', hudLabel:'SKILL', pauseLabel:'スキルチャージャー', resultLabel:'スキルチャージャー' },
 ];
 // 現在の取得回数ベースのレベルを返す（基準値=Lv1、1回取得するごとに+1）
 function computeItemLevel(d){
   return Math.round((upgrades[d.key] - d.base) / d.inc) + 1;
+}
+// Lv表示用テキストを返す（上限到達時は"MAX"、それ以外は"Lv現在/上限"）※PAUSE画面専用
+function formatItemLevelFraction(d, lv){
+  return lv >= d.maxLv ? 'MAX' : `Lv${lv}/${d.maxLv}`;
+}
+// Lv表示用テキストを返す（上限到達時は"MAX"、それ以外は"Lv.現在"）※HUD・リザルト用
+function formatItemLevelSimple(d, lv){
+  return lv >= d.maxLv ? 'MAX' : `Lv.${lv}`;
 }
 
 // 上限まで育て切った強化アイテムが再抽選された時に代わりに出す「ハズレ枠」救済アイテム
@@ -1520,14 +1555,14 @@ let screenShake = { x:0, y:0, power:0 };
 // ── スキルシステム ────────────────────────────────
 const SKILL_DEFS = [
   { id:'blink',   name:'ブリンク',     icon:'⚡', spCost:100, maxStock:3, desc:'指定方向へ瞬間移動（約500px）' },
-  { id:'dash',    name:'ダッシュ',     icon:'💨', spCost:100, maxStock:1, desc:'約3秒間、高速移動' },
+  { id:'dash',    name:'ダッシュ',     icon:'💨', spCost:80,  maxStock:1, desc:'約3秒間、高速移動' },
   { id:'cannon',  name:'大砲',         icon:'💣', spCost:100, maxStock:3, desc:'前方へ巨大なガラス玉を発射' },
   { id:'typhoon', name:'台風の目',     icon:'🌪', spCost:300, maxStock:1, desc:'約3秒間、周囲の玉をゆっくり吸い寄せる' },
   { id:'shield',  name:'シールド',     icon:'🛡', spCost:100, maxStock:1, desc:'約10秒間、引き寄せた玉が壊れない' },
   { id:'stop',    name:'玉運動停止',   icon:'⏸', spCost:50,  maxStock:6, desc:'押している間、磁力範囲内の玉を停止' },
   { id:'beacon',  name:'ワープビーコン', icon:'🛰', spCost:100, maxStock:1, desc:'1回目で地点記憶、2回目でワープ' },
   { id:'sweep',   name:'マグネットスイープ', icon:'🧹', spCost:100, maxStock:2, desc:'前方を扇形に薙ぎ払う（N極中の方が距離が伸びる）' },
-  { id:'energyConverter', name:'エネルギー変換器', icon:'🔌', spCost:100, maxStock:1, desc:'約10秒間、玉が爆発するたびバッテリー+1%' },
+  { id:'energyConverter', name:'エネルギー変換器', icon:'🔌', spCost:150, maxStock:1, desc:'約10秒間、玉が爆発するたびバッテリー+0.2%' },
 ];
 const SP_RATE = 0.35; // SP獲得係数（チェイン・赤玉・金玉に適用）
 let selectedSkillId = null; // 選択中のスキルID
@@ -1536,6 +1571,7 @@ let skillStock      = 0;    // 現在のストック数
 let skillActive     = false;// スキル効果発動中
 let skillTimer      = 0;    // 効果残り時間（秒）
 let stopHeld         = false; // 玉運動停止：ホールド中フラグ
+let cannonCharge     = null;  // 大砲：チャージ中の状態（null=非チャージ中）
 let beaconPos         = null; // ワープビーコン：記憶地点 {x,y}
 
 let upgrades = { sBoost:1, nBoost:1, rangeUp:1, chainMulti:1, explodeUp:1, rareBoost:0, skillCharge:100 };
@@ -1709,7 +1745,13 @@ let player = {
   isCharging: false,// ホールド中フラグ
   r: 96,
   battery: 100,
+  blinking: false,   // ブリンク移動中フラグ（true中は岩・玉との衝突を無視して素通りする）
+  blinkTimer: 0,     // 残り時間（秒）
+  blinkDur: 0.15,    // 移動にかける時間（秒）
+  blinkX0: 0, blinkY0: 0, blinkX1: 0, blinkY1: 0, // 開始・目標座標
+  blinkGhostTimer: 0, // 残像スポーンの間隔管理
 };
+let blinkGhosts = []; // ブリンク中の残像（機体シルエット）の配列
 
 let marbles       = [];
 let rocks         = [];      // 黒い岩
@@ -1816,6 +1858,9 @@ function initGame(mode) {
   player.angle = -Math.PI/2;
   player.speedIdx = 4; player.magnet = 'N'; player.battery = 100;
   player.charge = 0; player.nPower = 1; player.isCharging = false;
+  player.blinking = false; player.blinkTimer = 0; blinkGhosts = [];
+  _dashLines = null; _dashRushBlend = 0; _dashLineTimer = 0;
+  cannonCharge = null;
   document.getElementById('chaos-overlay').style.opacity = '0';
   upgrades = { sBoost:1, nBoost:1, rangeUp:1, chainMulti:1, explodeUp:1, rareBoost:0, skillCharge:100 };
   marbles=[]; rocks=[]; explosions=[]; particles=[]; shockwaves=[];
@@ -1895,9 +1940,9 @@ function pickMarbleType(){
   if(r < 95) return 'sOnly';
   return 'nOnly';
 }
-function makeMarble(x,y,vx,vy,mass=1,type=null){
+function makeMarble(x,y,vx,vy,mass=1,type=null,forcedR=null){
   const marbleType = type || pickMarbleType();
-  const baseR =
+  const baseR = forcedR !== null ? forcedR :
     marbleType==='boost'    ? MARBLE_R * 0.85 :
     marbleType==='gravity'  ? MARBLE_R * 1.1  :
     marbleType==='homing'   ? MARBLE_R * 1.05 :
@@ -1949,7 +1994,7 @@ function makeMarble(x,y,vx,vy,mass=1,type=null){
     };
   });
 
-  return {x,y,vx,vy,r:baseR,alive:true,
+  return {x,y,vx,vy,r:baseR,baseR,alive:true,
     marbleType, blastMult, rangeMult, detonateTime,
     ringLoops, fineRingLoopsA, fineRingLoopsB, coreStipple,
     coreSpriteHalf: coreExtent + baseR*0.06, // 点描スプライトの半径（点の最大半径ぶんの余白込み）
@@ -2272,11 +2317,11 @@ function spawnComboItem(wx, wy) {
 function applyItem(def) {
   let msg=def.label, col=def.color;
   switch(def.id){
-    case 's_boost':      upgrades.sBoost      = Math.min(upgrades.sBoost+0.4,3); break;
-    case 'n_boost':      upgrades.nBoost      = Math.min(upgrades.nBoost+0.5,4); break;
-    case 'range_up':     upgrades.rangeUp     = Math.min(upgrades.rangeUp+0.25,2.5); break;
-    case 'chain_multi':  upgrades.chainMulti  = Math.min(upgrades.chainMulti+0.5,5); break;
-    case 'explode_up':   upgrades.explodeUp   = Math.min(upgrades.explodeUp+0.2,3); break;
+    case 's_boost':      upgrades.sBoost      = Math.min(upgrades.sBoost+0.4,3);   break;
+    case 'n_boost':      upgrades.nBoost      = Math.min(upgrades.nBoost+0.6,4);   break;
+    case 'range_up':     upgrades.rangeUp     = Math.min(upgrades.rangeUp+0.3,2.5);break;
+    case 'chain_multi':  upgrades.chainMulti  = Math.min(upgrades.chainMulti+0.5,5.5); break;
+    case 'explode_up':   upgrades.explodeUp   = Math.min(upgrades.explodeUp+0.2,2.8); break;
     case 'ep_bonus':
       addCoins(EP_BONUS_AMOUNT);
       itemRewardCoinsThisSession += EP_BONUS_AMOUNT;
@@ -2293,7 +2338,7 @@ function applyItem(def) {
       upgrades.rareBoost = Math.min(upgrades.rareBoost + 2, 10);
       msg=`レアブースター +2 (計${upgrades.rareBoost}) 赤玉・金玉の出現間隔短縮`; col='#ffaaff'; break;
     case 'skill_charger':
-      upgrades.skillCharge = Math.min(upgrades.skillCharge + 10, 200);
+      upgrades.skillCharge = Math.min(upgrades.skillCharge + 10, 190);
       msg=`スキルチャージャー ${upgrades.skillCharge}%`; col='#aaffff'; break;
     case 'bat_chaos':{
       const big=Math.random()<0.45;
@@ -2367,9 +2412,9 @@ function spawnResonanceWakeFX(resRocks){
 }
 
 function triggerExplosion(x, y, power, chainDepth, isRock, playerCaused=false, gaugePoints=1, slowBlast=false) {
-  // エネルギー変換器：発動中は玉が爆発するたびバッテリーが1%回復する
+  // エネルギー変換器：発動中は玉が爆発するたびバッテリーが0.2%回復する
   if(skillActive && selectedSkillId==='energyConverter'){
-    player.battery = Math.min(100, player.battery + 1);
+    player.battery = Math.min(100, player.battery + 0.2);
   }
   // ── 発電装置：爆発検知でゲージ加算 ──
   if(gameMode !== 'quick'){
@@ -2556,6 +2601,7 @@ function updateChainDisplay(n, depth, wx, wy, playerCaused=false) {
 // ── SP獲得・スキル発動 ───────────────────────────
 function gainSP(amount){
   if(!selectedSkillId || !gameRunning) return;
+  if(skillActive || stopHeld) return; // 継続系スキルの発動中／ホールド中は次のストックを貯めない
   const def = SKILL_DEFS.find(s=>s.id===selectedSkillId);
   if(!def) return;
   if(skillStock >= def.maxStock) return; // 最大ストック時はSP不加算
@@ -2576,6 +2622,8 @@ function useSkill(){
     activateBeacon();
     return;
   }
+  // 大砲チャージ中は再発動しない（ホールド中に連打されても新しいチャージを始めない）
+  if(selectedSkillId==='cannon' && cannonCharge) return;
   if(skillStock <= 0) return;
   skillStock--;
   // 使用後も現在貯まっている途中のゲージ(skillSP)はそのまま継続する
@@ -2597,20 +2645,29 @@ function releaseSkillHold(){
     stopHeld = false;
     skillActive = false;
   }
+  // 大砲：ホールド解除。出現アニメーション(0.5秒)が終わっていれば即発射、
+  // まだ出現中なら update() 側で出現完了を待ってから自動発射する
+  if(cannonCharge){
+    cannonCharge.holding = false;
+  }
 }
 
 // ── スキル効果実装 ─────────────────────────────────
 function activateBlink(){
-  // 進行方向に500px瞬間移動
+  // 進行方向へ500px「超高速で走り抜ける」演出付き移動（実際の移動は0.15秒かけて行う）
   const bx = player.wx + Math.cos(player.angle) * 500;
   const by = player.wy + Math.sin(player.angle) * 500;
-  player.wx = ((bx % WORLD_W) + WORLD_W) % WORLD_W;
-  player.wy = ((by % WORLD_H) + WORLD_H) % WORLD_H;
-  // 移動先にパーティクルエフェクト
-  for(let i=0;i<12;i++){
+  player.blinkX0 = player.wx; player.blinkY0 = player.wy;
+  player.blinkX1 = ((bx % WORLD_W) + WORLD_W) % WORLD_W;
+  player.blinkY1 = ((by % WORLD_H) + WORLD_H) % WORLD_H;
+  player.blinking = true;
+  player.blinkTimer = player.blinkDur;
+  player.blinkGhostTimer = 0;
+  // 移動元にも一瞬ほとばしるパーティクル（発射の起点を示す）
+  for(let i=0;i<10;i++){
     const a=Math.random()*Math.PI*2, s=2+Math.random()*4;
     particles.push({x:player.wx,y:player.wy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
-      hue:200,r:2+Math.random()*2,life:1,maxLife:0.5+Math.random()*0.3});
+      hue:200,r:2+Math.random()*2,life:1,maxLife:0.4+Math.random()*0.2});
   }
   showBanner('⚡ BLINK', '#aaddff');
 }
@@ -2622,29 +2679,54 @@ function activateDash(){
   showBanner('💨 DASH', '#aaffdd');
 }
 
+const CANNON_R = MARBLE_R * 3;   // 通常玉の3倍サイズ（S/N極には一切反応しない専用玉として扱う）
+const CANNON_APPEAR_DUR = 0.5;   // 出現にかける時間（秒）
+
 function activateCannon(){
-  // 前方へ巨大なガラス玉（通常の5倍サイズ）を発射。約2000px進んだ後は通常玉として漂う
-  const cannonR = MARBLE_R * 5;
+  // 即座に発射せず、まず機体先端にチャージ状態で出現させる
+  // （ホールドしている間はそこに留まり、離すと発射される。S/N極の磁力には一切影響されない）
+  cannonCharge = { timer: 0, holding: true };
+  // 出現エフェクト（起点となる火花）
+  for(let i=0;i<6;i++){
+    const a=Math.random()*Math.PI*2, s=1+Math.random()*2;
+    particles.push({x:player.wx,y:player.wy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+      hue:30,r:1.5+Math.random()*2,life:1,maxLife:0.3+Math.random()*0.2});
+  }
+}
+
+// 大砲玉の現在の機体先端アンカー座標を返す（出現中は玉のサイズが育っていく分、距離も追従させる）
+function getCannonAnchor(sizeRatio){
+  const dist = player.r + CANNON_R*sizeRatio + 6;
+  return {
+    x: player.wx + Math.cos(player.angle)*dist,
+    y: player.wy + Math.sin(player.angle)*dist,
+  };
+}
+
+// 実際に大砲玉を発射する（チャージ完了後、ホールド解除された瞬間に呼ばれる）
+function fireCannon(){
   const spd = 61; // 摩擦込みで約2000px直進
+  const pos = getCannonAnchor(1);
   const m = makeMarble(
-    player.wx + Math.cos(player.angle) * (player.r + cannonR + 5),
-    player.wy + Math.sin(player.angle) * (player.r + cannonR + 5),
+    pos.x, pos.y,
     Math.cos(player.angle) * spd,
     Math.sin(player.angle) * spd,
-    1, 'normal'
+    1, 'normal', CANNON_R
   );
-  m.r = cannonR;
   m.playerCaused = true;
   m.isCannonball = true;
-  // 大砲玉は爆発範囲もサイズに比例（rangeMult=5）
-  m.rangeMult = 5;
+  // 大砲玉は爆発範囲もサイズに比例（rangeMult=3。2000px到達時に被弾数ぶんさらに増加する）
+  m.rangeMult = 3;
+  m.cannonTravelDist = 0; // 発射地点からの移動距離（これが2000pxに達すると起爆準備に入る）
+  m.cannonHitCount = 0;   // 無敵飛行中にすり抜けて消費したガラス玉の数（爆発の大きさに反映）
+  m.cannonArmed = false;  // true になったら通常の起爆(0.4秒後に爆発)フローに合流する
   marbles.push(m);
   showBanner('💣 大砲', '#ffddaa');
   // 発射時の反動パーティクル
   for(let i=0;i<10;i++){
     const a=player.angle+Math.PI+(Math.random()-0.5)*0.8;
     const s=3+Math.random()*4;
-    particles.push({x:player.wx,y:player.wy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+    particles.push({x:pos.x,y:pos.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
       hue:30,r:2+Math.random()*3,life:1,maxLife:0.4+Math.random()*0.3});
   }
 }
@@ -2763,19 +2845,26 @@ function triggerGameOver() {
   document.getElementById('go-chain').textContent=maxChain;
   document.getElementById('go-time').textContent=`${m}:${s}`;
   document.getElementById('go-title').textContent='FINISH';
-  // アイテムLv一覧（バッテリー系・EPボーナスは対象外。7種は取得有無に関わらず常にLv1から表示）
+  // アイテムLv一覧（バッテリー系・EPボーナスは対象外。取得したものだけ表示）
   const list = document.getElementById('go-items-list');
   list.innerHTML='';
+  let hasItem=false;
   for (const d of PLAYER_ITEM_DEFS) {
     const lv = computeItemLevel(d);
+    if (lv <= 1) continue; // 1回も取得していない場合は表示しない
+    hasItem=true;
+    const isMax = lv >= d.maxLv;
     const chip = document.createElement('div');
     chip.className='go-item-chip';
     const path = (typeof IMAGE_ASSET_PATHS !== 'undefined') ? IMAGE_ASSET_PATHS.items[d.assetId] : null;
     chip.innerHTML=(path
         ? `<img class="go-item-icon" src="${path}" alt="${d.resultLabel}">`
         : `<div class="go-item-icon">•</div>`)
-      + `<div class="go-item-lv">Lv${lv}</div>`;
+      + `<div class="go-item-lv"${isMax ? ' style="color:#c9a400;font-weight:bold;background:#fff7d6;"' : ''}>${formatItemLevelSimple(d, lv)}</div>`;
     list.appendChild(chip);
+  }
+  if(!hasItem){
+    list.innerHTML='<div style="font-size:10px;letter-spacing:1px;color:#bbb;">なし</div>';
   }
 
   // ── コイン・経験値の付与（プレイ終了時） ──
@@ -2903,12 +2992,19 @@ function buildPauseItems() {
   for (const d of PLAYER_ITEM_DEFS) {
     const lv = computeItemLevel(d);
     if (lv <= 1) continue; // 1回も取得していない場合は表示しない
+    const isMax = lv >= d.maxLv;
     const chip = document.createElement('div');
-    chip.className = 'pause-item-chip';
-    chip.textContent = `${d.pauseLabel}  Lv${lv}`;
-    chip.style.borderColor = d.color + '88';
-    chip.style.color = d.color;
-    chip.style.background = d.color + '18';
+    chip.className = 'pause-item-chip' + (isMax ? ' maxed' : '');
+    chip.textContent = `${d.pauseLabel}  ${formatItemLevelFraction(d, lv)}`;
+    if (isMax) {
+      chip.style.borderColor = '#ffd700';
+      chip.style.color = '#ffd700';
+      chip.style.background = 'rgba(255,215,0,0.14)';
+    } else {
+      chip.style.borderColor = d.color + '88';
+      chip.style.color = d.color;
+      chip.style.background = d.color + '18';
+    }
     list.appendChild(chip);
     any = true;
   }
@@ -3107,6 +3203,54 @@ function update(dt){
     skillTimer -= dtSec;
     if(skillTimer <= 0){ skillActive=false; skillTimer=0; }
   }
+  updateDashVfx(dtSec); // ダッシュ集中線（VFX）：RUSHブレンド・粒子の発生と移動を進める
+
+  // ── 大砲：チャージ中の更新（出現アニメーション→ホールド解除で発射） ──
+  if(cannonCharge){
+    cannonCharge.timer = Math.min(CANNON_APPEAR_DUR, cannonCharge.timer + dtSec);
+    const appeared = cannonCharge.timer >= CANNON_APPEAR_DUR;
+    if(!cannonCharge.holding && appeared){
+      fireCannon();
+      cannonCharge = null;
+    }
+  }
+
+  // ── ブリンク：高速移動アニメーション（実移動を短時間かけて行い、残像を残す） ──
+  if(player.blinking){
+    // ワールドのループ境界をまたぐ場合でも、最短距離の方向へ真っ直ぐ進むよう補正
+    let dx = player.blinkX1 - player.blinkX0, dy = player.blinkY1 - player.blinkY0;
+    if(dx >  WORLD_W/2) dx -= WORLD_W; else if(dx < -WORLD_W/2) dx += WORLD_W;
+    if(dy >  WORLD_H/2) dy -= WORLD_H; else if(dy < -WORLD_H/2) dy += WORLD_H;
+
+    player.blinkTimer -= dtSec;
+    const progress = 1 - Math.max(0, player.blinkTimer) / player.blinkDur;
+    // イーズアウト：立ち上がり最速→終盤わずかに減速して、勢いよく飛び出す感じにする
+    const eased = 1 - Math.pow(1 - Math.min(1, progress), 2);
+    const nx = ((player.blinkX0 + dx*eased) % WORLD_W + WORLD_W) % WORLD_W;
+    const ny = ((player.blinkY0 + dy*eased) % WORLD_H + WORLD_H) % WORLD_H;
+    player.wx = nx; player.wy = ny;
+
+    // 残像（機体シルエット）を短い間隔でスポーン
+    player.blinkGhostTimer -= dtSec;
+    if(player.blinkGhostTimer <= 0){
+      player.blinkGhostTimer = 0.016; // 約1フレームおき
+      blinkGhosts.push({ x:player.wx, y:player.wy, angle:player.angle, r:player.r, life:1, maxLife:0.32 });
+    }
+
+    if(player.blinkTimer <= 0){
+      player.blinking = false;
+      player.wx = player.blinkX1; player.wy = player.blinkY1;
+      // 到着時にパーティクルで着地感を出す
+      for(let i=0;i<12;i++){
+        const a=Math.random()*Math.PI*2, s=2+Math.random()*4;
+        particles.push({x:player.wx,y:player.wy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+          hue:200,r:2+Math.random()*2,life:1,maxLife:0.5+Math.random()*0.3});
+      }
+    }
+  }
+  // 残像のライフ更新
+  for(const g of blinkGhosts) g.life -= dtSec / g.maxLife;
+  blinkGhosts = blinkGhosts.filter(g => g.life > 0);
 
   // クイックプレイはバッテリー基準に統一（タイマーは廃止）
   // ※hud-timerはdisplay:noneのままにする
@@ -3175,10 +3319,12 @@ function update(dt){
     }
   }
   const spd=SPEEDS[player.speedIdx] * (skillActive && selectedSkillId==='dash' ? 2.0 : 1.0);
-  player.wx+=Math.cos(player.angle)*spd*dt;
-  player.wy+=Math.sin(player.angle)*spd*dt;
-  player.wx=((player.wx%WORLD_W)+WORLD_W)%WORLD_W;
-  player.wy=((player.wy%WORLD_H)+WORLD_H)%WORLD_H;
+  if(!player.blinking){
+    player.wx+=Math.cos(player.angle)*spd*dt;
+    player.wy+=Math.sin(player.angle)*spd*dt;
+    player.wx=((player.wx%WORLD_W)+WORLD_W)%WORLD_W;
+    player.wy=((player.wy%WORLD_H)+WORLD_H)%WORLD_H;
+  }
 
   // ── 磁力チャージ更新 ──
   const chargeSpeed = [1.5,1.5,1.0,0.6,0.6][player.speedIdx];
@@ -3215,9 +3361,9 @@ function update(dt){
     const nx=dist>0.1?dx/dist:0, ny=dist>0.1?dy/dist:0;
 
     // S極に反応しない玉：N反応玉（nOnly）、および起爆して暴走中の追尾玉（homing）
-    const ignoresS = m.marbleType === 'nOnly' || (m.marbleType === 'homing' && m.detonating);
+    const ignoresS = m.marbleType === 'nOnly' || (m.marbleType === 'homing' && m.detonating) || m.isCannonball;
     // N極に反応しない玉：S反応玉（sOnly）
-    const ignoresN = m.marbleType === 'sOnly';
+    const ignoresN = m.marbleType === 'sOnly' || m.isCannonball;
 
     if(player.isCharging && player.charge > 0 && !ignoresS){
       // S極ホールド中：渦圏内に入ったらinVortex移行（バンパー/分裂で弾かれた直後の無敵中は再突入させない）
@@ -3320,6 +3466,22 @@ function update(dt){
     a.x=((a.x+a.vx*effDt)%WORLD_W+WORLD_W)%WORLD_W;
     a.y=((a.y+a.vy*effDt)%WORLD_H+WORLD_H)%WORLD_H;
 
+    // 大砲玉：発射地点からの移動距離を積算し、2000px到達（または最大4秒経過の保険）で
+    // 起爆準備（0.4秒後に爆発）に入る。被弾数(cannonHitCount)ぶんrangeMultを増やしておくことで、
+    // 後段の通常の起爆処理がそのまま大きな爆発として扱ってくれる
+    // （岩への衝突による即時起爆はこのフローと無関係に従来通り動作する）
+    if(a.isCannonball && !a.cannonArmed){
+      a.cannonTravelDist += Math.hypot(a.vx*effDt, a.vy*effDt);
+      a.cannonAge = (a.cannonAge||0) + dtSec;
+      if(a.cannonTravelDist >= 2000 || a.cannonAge >= 4){
+        a.cannonArmed = true;
+        a.rangeMult = 3 * (1 + a.cannonHitCount*0.15);
+        a.detonating = true;
+        a.detonateTimer = a.detonateTime || 0.4;
+        a.playerCaused = true;
+      }
+    }
+
     if(a.inVortex) continue; // 渦中は岩との衝突判定のみスキップ（玉同士・岩は後で別途処理）
 
     // 玉同士衝突（渦中でない玉のみ）
@@ -3330,6 +3492,40 @@ function update(dt){
       if(dist<a.r+b.r&&dist>0.1){
         const nx=dx/dist, ny=dy/dist;
         const rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
+
+        // 大砲玉：2000px到達まで無敵（岩への衝突を除く）。当たったガラス玉はバンパー岩と同様に
+        // 強く弾き飛ばし、そのまま通常の起爆(0.4秒後に爆発)に入れる。大砲玉自身は無傷で直進を続け、
+        // 被弾した数だけ後の自爆時の威力(rangeMult)に上乗せされる
+        if(a.isCannonball && !a.cannonArmed && !b.isCannonball){
+          const dot=b.vx*nx+b.vy*ny;
+          b.vx -= 2.2*dot*nx; b.vy -= 2.2*dot*ny;
+          const spdB=Math.hypot(b.vx,b.vy);
+          const boostB=Math.max(spdB*1.4, 40);
+          if(spdB>0){ b.vx=b.vx/spdB*boostB; b.vy=b.vy/spdB*boostB; }
+          b.spawnShield = Math.max(b.spawnShield, 0.3);
+          if(b.marbleType==='delay'){ armDelayMarble(b); }
+          else if(!b.detonating){
+            b.detonating=true; b.detonateTimer=b.detonateTime||0.4; b.playerCaused=true;
+            chainCount++; updateChainDisplay(chainCount, 0, b.x, b.y, true);
+          }
+          a.cannonHitCount++;
+          continue;
+        }
+        if(b.isCannonball && !b.cannonArmed && !a.isCannonball){
+          const dot=a.vx*nx+a.vy*ny;
+          a.vx -= 2.2*dot*nx; a.vy -= 2.2*dot*ny;
+          const spdA=Math.hypot(a.vx,a.vy);
+          const boostA=Math.max(spdA*1.4, 40);
+          if(spdA>0){ a.vx=a.vx/spdA*boostA; a.vy=a.vy/spdA*boostA; }
+          a.spawnShield = Math.max(a.spawnShield, 0.3);
+          if(a.marbleType==='delay'){ armDelayMarble(a); }
+          else if(!a.detonating){
+            a.detonating=true; a.detonateTimer=a.detonateTime||0.4; a.playerCaused=true;
+            chainCount++; updateChainDisplay(chainCount, 0, a.x, a.y, true);
+          }
+          b.cannonHitCount++;
+          continue;
+        }
 
         // どちらかが起爆中 → 連鎖起爆＋物理弾き（排出直後の無敵中は巻き込まれない・遅延玉は爆発せず起爆armedに入る）
         if(a.detonating || b.detonating){
@@ -3491,9 +3687,9 @@ function update(dt){
       const dist=Math.hypot(dx,dy);
       // 内側に近いほど縮小（最小0.5倍）
       const compressionRatio = 0.7 + 0.3 * Math.min(dist / VORTEX_CAPTURE_R, 1);
-      m.r = MARBLE_R * compressionRatio;
+      m.r = m.baseR * compressionRatio;
     } else {
-      m.r = MARBLE_R; // 渦外は通常サイズに戻す
+      m.r = m.baseR; // 渦外は、その玉本来のサイズに戻す（種類ごとの倍率・大砲玉のforcedRを保持）
     }
   }
 
@@ -3553,7 +3749,7 @@ function update(dt){
           }
         } else {
           m.alive=false; m.inVortex=false;
-          triggerExplosion((m.x+rk.x)/2,(m.y+rk.y)/2,1.4,0,false,m.playerCaused||false);
+          triggerExplosion((m.x+rk.x)/2,(m.y+rk.y)/2,1.4*(m.rangeMult||1),0,false,m.playerCaused||false);
           addScore(Math.floor(50*upgrades.chainMulti));
           currentChainDepth=0; chainCount++;updateChainDisplay(chainCount,0,(m.x+rk.x)/2,(m.y+rk.y)/2, m.playerCaused||false);
           if(rk.state === 'awake' && rk.ability === 'resonance'){
@@ -3697,9 +3893,9 @@ function update(dt){
   const playerCollisionR = player.isCharging
     ? player.r * (0.3 + 0.7 * (1 - player.charge)) // チャージ量で縮む（最小0.3倍）
     : player.r * 1.0;
-  if(playTime > 3){
+  if(playTime > 3 && !player.blinking){
     for(const m of marbles){
-      if(!m.alive || m.inVortex) continue;
+      if(!m.alive || m.inVortex || m.isCannonball) continue;
       let dx=m.x-player.wx, dy=m.y-player.wy;
       if(dx> WORLD_W/2) dx-=WORLD_W; else if(dx<-WORLD_W/2) dx+=WORLD_W;
       if(dy> WORLD_H/2) dy-=WORLD_H; else if(dy<-WORLD_H/2) dy+=WORLD_H;
@@ -3784,8 +3980,9 @@ function update(dt){
   }
   syncResonanceRocks();
 
-  // ── プレイヤー↔岩 当たり判定 ──
+  // ── プレイヤー↔岩 当たり判定（ブリンクで高速移動中は素通りする） ──
   rockHitCooldown = Math.max(0, rockHitCooldown - dtSec);
+  if(!player.blinking)
   for(const rk of rocks){
     if(!rk.alive) continue;
     let dx=player.wx-rk.x, dy=player.wy-rk.y;
@@ -3994,7 +4191,7 @@ function update(dt){
           spawnFeverMarbles(10);
         }, 800);
       } else {
-        triggerExplosion(m.x, m.y, 1.0, 0, false, m.playerCaused||false, 1);
+        triggerExplosion(m.x, m.y, 1.0*(m.rangeMult||1), 0, false, m.playerCaused||false, 1);
       }
     }
   }
@@ -4319,14 +4516,15 @@ function updateHudItems() {
   for (const d of PLAYER_ITEM_DEFS) {
     const lv = computeItemLevel(d);
     if (lv <= 1) continue; // 1回も取得していない場合は表示しない
+    const isMax = lv >= d.maxLv;
     const path = (typeof IMAGE_ASSET_PATHS !== 'undefined') ? IMAGE_ASSET_PATHS.items[d.assetId] : null;
     const chip = document.createElement('div');
-    chip.className = 'hud-item-chip';
+    chip.className = 'hud-item-chip' + (isMax ? ' maxed' : '');
     chip.innerHTML =
       (path
         ? `<img class="hud-item-icon" src="${path}" alt="${d.hudLabel}" style="color:${d.color}">`
         : `<span class="hud-item-icon" style="color:${d.color}">★</span>`) +
-      `<span class="hud-item-lv" style="color:${d.color}">Lv${lv}</span>`;
+      `<span class="hud-item-lv" style="color:${isMax ? '' : d.color}">${formatItemLevelSimple(d, lv)}</span>`;
     row.appendChild(chip);
   }
 }
@@ -4532,7 +4730,9 @@ function draw(){
   }
 
   // プレイヤーは常に中心（オフセットなし）
+  drawBlinkGhosts();
   drawPlayer();
+  drawCannonCharge();
 
   ctx.restore();
 
@@ -4540,6 +4740,94 @@ function draw(){
   drawResonanceEdgeFX();
   drawWorldEventOverlay();
   drawPulseFrame();
+  drawDashVfx();
+}
+
+// ── ダッシュ集中線（王道の漫画的集中線） ──────────────────────
+// 中心にわずかな空白（楕円）を残し、そこから画面の外まで届く線を放射状に配置する。
+// 毎フレーム線を生成し直すと騒がしくなるため、発動中は同じ線のセットを使い回し、
+// 太さ・長さ・濃さにあらかじめばらつきを持たせた上で、ごく緩やかな明滅だけを加える。
+let _dashLines = null;   // {angle, lenR, width, alphaBase, phase}[]
+let _dashRushBlend = 0;  // 0=非発動 〜 1=発動中（0.35秒かけて滑らかに遷移）
+
+// ダッシュ集中線の配置を1セット新しく作る（本数・角度をランダムに）
+function generateDashLines(){
+  const count = 90 + Math.floor(Math.random()*50); // 切り替えごとに本数も変える
+  const lines = [];
+  for(let i=0;i<count;i++){
+    // 均等角度に少しだけランダムなズレを混ぜて、機械的すぎない粗密を作る
+    const angle = (i/count)*Math.PI*2 + (Math.random()-0.5)*(Math.PI*2/count)*0.9;
+    lines.push({
+      angle,
+      gapRatio:  0.74 + Math.random()*0.12,  // 空白の広さ（画面端までの距離に対する比率）
+      overshoot: 1.0  + Math.random()*0.08,  // 画面端をわずかに超えるまで伸ばし、確実に端まで届かせる
+      width:     0.5 + Math.random()*1.8,
+      alphaBase: 0.14 + Math.random()*0.26,
+    });
+  }
+  return lines;
+}
+
+const DASH_LINE_INTERVAL = 0.08; // コマ切り替えの間隔（秒）＝これが「ズレた感じで切り替わる」ストロボ効果を作る
+let _dashLineTimer = 0;
+
+function updateDashVfx(dtSec){
+  const rushOn = skillActive && selectedSkillId==='dash';
+  const step = dtSec / 0.35; // フェードイン/アウトの遷移時間（秒。配置そのものは切り替わるが、全体の濃さはここで滑らかにする）
+  _dashRushBlend = rushOn ? Math.min(1, _dashRushBlend + step) : Math.max(0, _dashRushBlend - step);
+  if(rushOn){
+    _dashLineTimer -= dtSec;
+    if(!_dashLines || _dashLineTimer <= 0){
+      _dashLines = generateDashLines(); // 配置を丸ごと入れ替える（コマ送りのストロボ効果）
+      _dashLineTimer = DASH_LINE_INTERVAL;
+    }
+  } else if(_dashRushBlend <= 0){
+    _dashLines = null; // 完全に消えたら破棄し、次の発動でまた新しい配置から始める
+  }
+}
+
+function drawDashVfx(){
+  if(_dashRushBlend <= 0.001 || !_dashLines) return;
+  const cx = W*0.5, cy = H*0.52;
+  const SCALE_Y = 0.82; // 中心の空白を楕円形にするための縦方向の圧縮率
+
+  // 縦圧縮後の座標系(ローカル空間)における画面の境界を先に求めておく
+  const localXMin = -cx, localXMax = W-cx;
+  const localYMin = (0-cy)/SCALE_Y, localYMax = (H-cy)/SCALE_Y;
+  // 指定角度の光線が、そのローカル空間での画面の境界まで届く距離を返す（矩形との交差判定）
+  function edgeDist(angle){
+    const dx = Math.cos(angle), dy = Math.sin(angle);
+    let dist = Infinity;
+    if(dx > 0) dist = Math.min(dist, localXMax/dx);
+    else if(dx < 0) dist = Math.min(dist, localXMin/dx);
+    if(dy > 0) dist = Math.min(dist, localYMax/dy);
+    else if(dy < 0) dist = Math.min(dist, localYMin/dy);
+    return dist;
+  }
+
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.scale(1, SCALE_Y);
+  ctx.lineCap = 'round';
+  for(const l of _dashLines){
+    // 伸びるアニメーションはさせず、常に「空白の縁〜画面端超え」まで届いた状態で描く
+    const edge = edgeDist(l.angle);
+    const innerR = edge * l.gapRatio;
+    const outerR = edge * l.overshoot;
+    const x1 = Math.cos(l.angle)*innerR, y1 = Math.sin(l.angle)*innerR;
+    const x2 = Math.cos(l.angle)*outerR, y2 = Math.sin(l.angle)*outerR;
+    const a = l.alphaBase * _dashRushBlend;
+    const grad = ctx.createLinearGradient(x1,y1,x2,y2);
+    grad.addColorStop(0,   `rgba(26,26,26,${a*0.6})`);
+    grad.addColorStop(0.65,`rgba(26,26,26,${a})`);
+    grad.addColorStop(1,   `rgba(26,26,26,${a*0.85})`);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = l.width;
+    ctx.beginPath();
+    ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // ── 世界イベント画面オーバーレイ（画面端の色付きバーのみ。ギミックタイマー本体はDOM側の#gimmick-rowで表示） ─────────────────
@@ -5446,6 +5734,66 @@ const MARBLE_SKINS = {
   sketchScribble: drawMarbleSkin_sketchScribble, // ショップスキン①候補
 };
 
+// 大砲玉専用スキン：ガラス玉ではなく、手描き感のある黒い鉄球として描く
+function drawCannonballSkin(m, t){
+  const r = m.r;
+  const wobSeed = m.phase || 0;
+  ctx.save();
+  ctx.translate(m.x, m.y);
+
+  // 輪郭：完全な真円ではなく、わずかにガタつかせて手描き感を出す
+  ctx.beginPath();
+  const segs = 28;
+  for(let i=0;i<=segs;i++){
+    const a = (i/segs)*Math.PI*2;
+    const wob = 1 + Math.sin(a*5 + wobSeed*3 + t*0.6)*0.018 + Math.sin(a*9 - wobSeed*2)*0.01;
+    const px = Math.cos(a)*r*wob, py = Math.sin(a)*r*wob;
+    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+  }
+  ctx.closePath();
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fill();
+  ctx.lineWidth = Math.max(2, r*0.05);
+  ctx.strokeStyle = '#000000';
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // 鉄球らしい控えめなハイライト（左上）
+  ctx.save();
+  ctx.globalAlpha = 0.20;
+  ctx.beginPath();
+  ctx.ellipse(-r*0.32, -r*0.32, r*0.30, r*0.17, -0.6, 0, Math.PI*2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+}
+
+// 大砲：チャージ中のプレビュー描画（機体先端に追従し、0.5秒かけて育っていく）
+function drawCannonCharge(){
+  if(!cannonCharge) return;
+  const t = Date.now()*0.001;
+  const raw = cannonCharge.timer / CANNON_APPEAR_DUR; // 0〜1
+  const eased = 1 - Math.pow(1-Math.min(1,raw), 2); // イーズアウトで勢いよく育つ
+  const pos = getCannonAnchor(eased);
+  const alpha = Math.min(1, raw*3); // 出現ごく初期だけ素早くフェードイン
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  // チャージ中であることを示す薄いオーラ（完成に近づくほど強く）
+  const glowR = CANNON_R*eased*1.35;
+  if(glowR > 1){
+    const g = ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,glowR);
+    g.addColorStop(0, `rgba(255,170,60,${0.25+eased*0.2})`);
+    g.addColorStop(1, 'rgba(255,170,60,0)');
+    ctx.beginPath(); ctx.arc(pos.x,pos.y,glowR,0,Math.PI*2);
+    ctx.fillStyle = g; ctx.fill();
+  }
+  drawCannonballSkin({x:pos.x, y:pos.y, r:Math.max(1,CANNON_R*eased), phase:0}, t);
+  ctx.restore();
+}
+
 function drawMarbles(){
   const t = Date.now() * 0.001;
   const skinFn = MARBLE_SKINS[activeMarbleSkin] || drawMarbleSkin_fragileGlass;
@@ -5468,7 +5816,18 @@ function drawMarbles(){
     else { h=m.hue; s=55; l=55; ringAlpha=0.85; lineW=1.2; } // 通常玉：玉ごとのランダム色を流用
     const ringColor = `hsla(${h},${s}%,${l}%,${ringAlpha})`;
 
-    skinFn(m, t, pulse, ringColor, lineW, {h,s,l});
+    if(m.isCannonball){
+      // チャージ中と同じ発光を発射後も維持し、着弾まで見た目のサイズ感が変わらないようにする
+      const glowR = m.r*1.35;
+      const g = ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,glowR);
+      g.addColorStop(0, 'rgba(255,170,60,0.30)');
+      g.addColorStop(1, 'rgba(255,170,60,0)');
+      ctx.beginPath(); ctx.arc(m.x,m.y,glowR,0,Math.PI*2);
+      ctx.fillStyle = g; ctx.fill();
+      drawCannonballSkin(m, t);
+    } else {
+      skinFn(m, t, pulse, ringColor, lineW, {h,s,l});
+    }
 
     // ── 起爆状態（赤くパルス） ──
     if(m.detonating){
@@ -5716,6 +6075,58 @@ function drawChainTexts() {
     ctx.textBaseline = 'bottom';
     ctx.fillStyle = ct.color;
     ctx.fillText(ct.text, ct.x, ct.y);
+    ctx.restore();
+  }
+}
+
+// ブリンク中の残像（機体シルエット）を描画。本体の詳細な手描き描写は省き、
+// 六角形のシルエットだけを薄い水色で残すことで軽量に「疾走の軌跡」を表現する
+function drawBlinkGhosts(){
+  for(const g of blinkGhosts){
+    const r = g.r;
+    const alpha = Math.max(0, g.life) * 0.4;
+    if(alpha <= 0.01) continue;
+    ctx.save();
+    ctx.translate(g.x, g.y);
+    ctx.rotate(g.angle);
+    const HEXG=[
+      [ r*1.1,   0      ],
+      [ r*0.3,   r*0.75 ],
+      [-r*0.55,  r*0.55 ],
+      [-r*0.75,  0      ],
+      [-r*0.55, -r*0.55 ],
+      [ r*0.3,  -r*0.75 ],
+    ];
+    ctx.beginPath();
+    ctx.moveTo(HEXG[0][0],HEXG[0][1]);
+    for(let i=1;i<HEXG.length;i++) ctx.lineTo(HEXG[i][0],HEXG[i][1]);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(120,190,255,${alpha})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(180,225,255,${alpha*1.3})`;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ブリンク中：進行方向後方へ流れるスピードライン
+  if(player.blinking){
+    ctx.save();
+    ctx.translate(player.wx, player.wy);
+    ctx.rotate(player.angle);
+    const r = player.r;
+    ctx.strokeStyle = 'rgba(150,210,255,0.7)';
+    ctx.lineCap = 'round';
+    for(let i=0;i<7;i++){
+      const yOff = (Math.random()-0.5) * r*1.6;
+      const len = r*(1.2+Math.random()*1.6);
+      const xStart = -r*0.7 - Math.random()*r*0.6;
+      ctx.lineWidth = 1 + Math.random()*1.5;
+      ctx.beginPath();
+      ctx.moveTo(xStart, yOff);
+      ctx.lineTo(xStart-len, yOff);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 }
@@ -6427,6 +6838,7 @@ function updateSkillUI(){
   // アイコン・説明文
   document.getElementById('skill-btn-icon').textContent = def.icon;
   document.getElementById('skill-btn').classList.toggle('holding', selectedSkillId==='stop' && stopHeld);
+  document.getElementById('skill-btn').classList.toggle('active', skillActive && selectedSkillId !== 'stop');
   document.getElementById('skill-desc-name').textContent = def.name;
   document.getElementById('skill-desc-text').textContent = def.desc;
   // SPゲージ（canvas描画）
@@ -6510,17 +6922,37 @@ function updateSkillUI(){
     c.restore();
   }
 
-  // アクティブ中リング
+  // アクティブ中リング（継続系スキルが効果を発揮している間、ティールで大きく発光させる）
   if(skillActive && selectedSkillId !== 'stop'){
-    const durationMap = { shield:10, dash:3, typhoon:3, slow:5 };
+    const durationMap = { shield:10, dash:3, typhoon:3, energyConverter:10 };
     const dur = durationMap[selectedSkillId] || 1;
-    const arcEnd2 = -Math.PI/2 + (skillTimer/dur)*Math.PI*2;
-    c.beginPath(); c.arc(cx, cy, SP_RAD+6, -Math.PI/2, arcEnd2);
-    c.strokeStyle = 'rgba(74,96,128,0.35)'; c.lineWidth = 1.5;
+    const ratio = Math.max(0, Math.min(1, skillTimer/dur));
+    const arcEnd2 = -Math.PI/2 + ratio*Math.PI*2;
+    const teal = '13,148,136';
+    const aPulse = Math.abs(Math.sin(now / 260));
+
+    // 外側グロー（大きく広がる発光）
+    const activeGlow = c.createRadialGradient(cx, cy, SP_RAD+4, cx, cy, SP_RAD+22);
+    activeGlow.addColorStop(0,   `rgba(${teal},${0.5 + aPulse*0.3})`);
+    activeGlow.addColorStop(0.5, `rgba(${teal},${0.2 + aPulse*0.15})`);
+    activeGlow.addColorStop(1,   `rgba(${teal},0)`);
+    c.beginPath(); c.arc(cx, cy, SP_RAD+22, 0, Math.PI*2);
+    c.fillStyle = activeGlow; c.fill();
+
+    // カウントダウン弧本体（残り時間ぶんだけ・太め）
+    c.beginPath(); c.arc(cx, cy, SP_RAD+8, -Math.PI/2, arcEnd2);
+    c.strokeStyle = `rgba(${teal},0.95)`; c.lineWidth = 4.5;
     c.lineCap = 'round'; c.stroke(); c.lineCap = 'butt';
+
+    // ハイライト細線
+    c.save(); c.translate(0.4,-0.4);
+    c.beginPath(); c.arc(cx, cy, SP_RAD+8, -Math.PI/2, arcEnd2);
+    c.strokeStyle = `rgba(190,255,248,${0.5 + aPulse*0.35})`; c.lineWidth = 1.4;
+    c.lineCap = 'round'; c.stroke(); c.lineCap = 'butt';
+    c.restore();
   }
 
-  // ── ストック：×n 表示（DOM要素で右下に配置） ──
+  // ── ストック：×n 表示（DOM要素で右下に配置）＋ドット表示（現在数／最大数が一目で分かる） ──
   const maxStock = def.maxStock;
   const stockLabel = document.getElementById('skill-stock-label');
   if(stockLabel && maxStock > 0){
@@ -6530,8 +6962,14 @@ function updateSkillUI(){
   } else if(stockLabel) {
     stockLabel.style.display = 'none';
   }
-  // DOMストック（旧ドット表示）は非表示
-  document.getElementById('skill-stocks').innerHTML = '';
+  // ドット：左から「所持数ぶんの塗りつぶし」→「残りは空」の順で、maxStock個並べる
+  const stocksEl = document.getElementById('skill-stocks');
+  stocksEl.innerHTML = '';
+  for(let i=0;i<maxStock;i++){
+    const dot = document.createElement('div');
+    dot.className = 'skill-stock-dot' + (i < skillStock ? '' : ' empty');
+    stocksEl.appendChild(dot);
+  }
 }
 
 // ── リトライ時にスキル選択に戻る ──────────────────
