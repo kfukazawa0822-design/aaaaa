@@ -43,7 +43,11 @@ canvas { display:block; width:100%; height:100%; }
 #battery-fill {
   height:100%;
   background:#1a1a1a;
-  transition:width 0.4s linear;
+  transition:width 0.4s linear, background-color 0.3s ease;
+}
+/* エネルギー変換器の発動中：黒→ティール色に変化させ、回復モード中であることを示す */
+#battery-fill.recovering {
+  background:#0d9488;
 }
 /* 電池の電極突起（手書き風に少し傾ける） */
 #battery-bar::after {
@@ -715,7 +719,11 @@ canvas { display:block; width:100%; height:100%; }
 }
 .skill-card:hover { background:rgba(255,255,255,0.13); }
 .skill-card.selected { background:rgba(255,255,255,0.18); border-color:rgba(255,255,255,0.8); }
-.skill-card-icon { font-size:24px; min-width:32px; text-align:center; }
+.skill-card-icon {
+  font-size:24px; min-width:32px; width:32px; height:32px;
+  display:flex; align-items:center; justify-content:center;
+}
+.skill-card-icon img { width:26px; height:26px; object-fit:contain; }
 .skill-card-info { flex:1; }
 .skill-card-name { font-size:14px; font-weight:bold; color:#fff; }
 .skill-card-desc { font-size:11px; color:rgba(255,255,255,0.55); margin-top:2px; }
@@ -773,7 +781,6 @@ canvas { display:block; width:100%; height:100%; }
 #skill-btn.holding { background:#1a1a1a; border-color:#1a1a1a; }
 #skill-btn.holding::before { border-color:rgba(255,255,255,0.25); }
 #skill-btn.holding::after  { border-color:rgba(255,255,255,0.12); }
-#skill-btn.holding #skill-btn-icon { filter:invert(1); }
 /* 発動中（継続系スキルが効果を発揮している間）：ボタン全体をティールで光らせて一目で分かるように */
 #skill-btn.active { border-color:#0d9488; animation: skillActiveGlow 1s ease-in-out infinite; }
 #skill-btn.active::before { border-color:rgba(13,148,136,0.5); }
@@ -782,7 +789,16 @@ canvas { display:block; width:100%; height:100%; }
   0%,100% { box-shadow: 0 0 0 0 rgba(13,148,136,0.55); }
   50%     { box-shadow: 0 0 16px 7px rgba(13,148,136,0.55); }
 }
-#skill-btn-icon { font-size:30px; position:relative; z-index:1; }
+/* アイコンは白色SVGなのでinvertで黒に変換して使用。SPゲージ(半径33px)に被らないサイズに収めている */
+#skill-btn-icon {
+  font-size:30px; position:relative; z-index:1;
+  width:60px; height:60px;
+  display:flex; align-items:center; justify-content:center;
+}
+/* SVGは白色で作られているため、filter:invert(1)で黒に変換して使う（背景の黒円は不要に） */
+#skill-btn-icon img { width:46px; height:46px; object-fit:contain; filter:invert(1); }
+/* holding中(ボタン背景が黒)は反転を解除し、SVG本来の白のまま表示する */
+#skill-btn.holding #skill-btn-icon img { filter:none; }
 /* ストック数字：ボタン右下に絶対配置（ボタン下端揃え・右外側） */
 #skill-stock-label {
   position:absolute;
@@ -803,7 +819,7 @@ canvas { display:block; width:100%; height:100%; }
   position:absolute;
   left:calc(50% + 28px); top:50%;
   transform:translate(-50%,-50%);
-  width:140px; height:140px;
+  width:176px; height:140px;
   pointer-events:none;
 }
 /* 説明文：ボタン下に縦配置 */
@@ -1191,7 +1207,7 @@ canvas { display:block; width:100%; height:100%; }
 <!-- スキルUI（ゲーム中） -->
 <div id="skill-ui" class="hide">
   <div id="skill-btn">
-    <canvas id="skill-sp-canvas" width="140" height="140"></canvas>
+    <canvas id="skill-sp-canvas" width="176" height="140"></canvas>
     <span id="skill-btn-icon">⚡</span>
     <div id="skill-stock-label"></div>
   </div>
@@ -1557,10 +1573,10 @@ const SKILL_DEFS = [
   { id:'blink',   name:'ブリンク',     icon:'⚡', spCost:100, maxStock:3, desc:'指定方向へ瞬間移動（約500px）' },
   { id:'dash',    name:'ダッシュ',     icon:'💨', spCost:80,  maxStock:1, desc:'約3秒間、高速移動' },
   { id:'cannon',  name:'大砲',         icon:'💣', spCost:100, maxStock:3, desc:'前方へ巨大なガラス玉を発射' },
-  { id:'typhoon', name:'台風の目',     icon:'🌪', spCost:300, maxStock:1, desc:'約3秒間、周囲の玉をゆっくり吸い寄せる' },
-  { id:'shield',  name:'シールド',     icon:'🛡', spCost:100, maxStock:1, desc:'約10秒間、引き寄せた玉が壊れない' },
+  { id:'typhoon', name:'台風の目',     icon:'🌪', spCost:200, maxStock:1, desc:'約3秒間、周囲の玉をゆっくり吸い寄せる' },
+  { id:'shield',  name:'シールド',     icon:'🛡', spCost:100, maxStock:1, desc:'約10秒間、引き寄せた玉が壊れない＋遅延玉の起爆タイマーも停止' },
   { id:'stop',    name:'玉運動停止',   icon:'⏸', spCost:50,  maxStock:6, desc:'押している間、磁力範囲内の玉を停止' },
-  { id:'beacon',  name:'ワープビーコン', icon:'🛰', spCost:100, maxStock:1, desc:'1回目で地点記憶、2回目でワープ' },
+  { id:'beacon',  name:'ワープビーコン', icon:'🛰', spCost:100, maxStock:1, desc:'1回目で地点記憶(周囲600pxのアイテムを検知)、2回目でワープ' },
   { id:'sweep',   name:'マグネットスイープ', icon:'🧹', spCost:100, maxStock:2, desc:'前方を扇形に薙ぎ払う（N極中の方が距離が伸びる）' },
   { id:'energyConverter', name:'エネルギー変換器', icon:'🔌', spCost:150, maxStock:1, desc:'約10秒間、玉が爆発するたびバッテリー+0.2%' },
 ];
@@ -1573,6 +1589,7 @@ let skillTimer      = 0;    // 効果残り時間（秒）
 let stopHeld         = false; // 玉運動停止：ホールド中フラグ
 let cannonCharge     = null;  // 大砲：チャージ中の状態（null=非チャージ中）
 let beaconPos         = null; // ワープビーコン：記憶地点 {x,y}
+let sweepEffects      = []; // マグネットスイープ：手描きの弧エフェクト {cx,cy,startAngle,endAngle,range,color,born,dur}
 
 let upgrades = { sBoost:1, nBoost:1, rangeUp:1, chainMulti:1, explodeUp:1, rareBoost:0, skillCharge:100 };
 
@@ -1860,6 +1877,7 @@ function initGame(mode) {
   player.charge = 0; player.nPower = 1; player.isCharging = false;
   player.blinking = false; player.blinkTimer = 0; blinkGhosts = [];
   _dashLines = null; _dashRushBlend = 0; _dashLineTimer = 0;
+  sweepEffects = [];
   cannonCharge = null;
   document.getElementById('chaos-overlay').style.opacity = '0';
   upgrades = { sBoost:1, nBoost:1, rangeUp:1, chainMulti:1, explodeUp:1, rareBoost:0, skillCharge:100 };
@@ -2495,7 +2513,9 @@ function triggerExplosion(x, y, power, chainDepth, isRock, playerCaused=false, g
           } else {
             baseHitScore = 50; // 非プレイヤー起因：段階によらず固定
           }
-          addScore(Math.floor(baseHitScore * upgrades.chainMulti * getEventMult('chainMulti')));
+          // S反応玉・N反応玉：片方の極にしか反応しない制約への見返りとして基本ヒット点2倍
+          const typeScoreMult = (m.marbleType === 'sOnly' || m.marbleType === 'nOnly') ? 2 : 1;
+          addScore(Math.floor(baseHitScore * typeScoreMult * upgrades.chainMulti * getEventMult('chainMulti')));
         }
         // 外周部（0.85〜1.0）：弾き飛ばしのみ（起爆なし）
       }
@@ -2756,9 +2776,13 @@ function activateStop(){
 // 薙ぎ払われた玉は、押し出される衝撃で誤って起爆しないよう一時的に無敵にする。
 function activateSweep(){
   const isNPole = !player.isCharging; // player.magnetは'S'/'N'の表示用なのでisChargingで直接判定
-  const range = isNPole ? 750 : 500; // N極中の方が距離が伸びる
+  const mRange = BASE_MAGNET_RANGE * upgrades.rangeUp; // 通常の磁力(引き寄せ)範囲。レンジアップで伸びる
+  // S極はレンジアップ込みの通常の磁力範囲より少し広く、N極はさらにその1.6倍先まで届く
+  const range = isNPole ? mRange * 1.6 : mRange * 1.1;
   const halfArc = Math.PI * 0.42; // 前方に約150°の扇形
-  const SWEEP_INVULN = 0.5; // 薙ぎ払われた玉の無敵時間（秒）
+  const SWEEP_INVULN = 0.4; // 薙ぎ払われた玉の無敵時間（秒）
+  const SWEEP_HIT_SPEED = 85; // スマブラのふっとばしを狙った大幅強化（バンパー岩の60を上回る強さ）
+  const SWEEP_BOOST_DUR = 0.5; // この間だけ通常の速度上限(24)を解除し、実際に遠くまで飛ばす
 
   for(const m of marbles){
     if(!m.alive || m.inVortex) continue;
@@ -2773,16 +2797,46 @@ function activateSweep(){
     while(angDiff < -Math.PI) angDiff += Math.PI*2;
     if(Math.abs(angDiff) > halfArc) continue;
 
-    // 左(-halfArc)から右(+halfArc)へ薙ぎ払う＝プレイヤー正面から見て右方向(時計回り)への接線力
-    const tangentX = -Math.sin(player.angle), tangentY = Math.cos(player.angle);
-    const sweepPower = 14 * (1 - dist/range*0.5); // 近いほど強く払われる
-    m.vx += tangentX * sweepPower;
-    m.vy += tangentY * sweepPower;
-    // 外側にも軽く押し出す
-    m.vx += (dx/dist) * 3;
-    m.vy += (dy/dist) * 3;
+    const nx = dx/dist, ny = dy/dist; // このガラス玉自身の、プレイヤーから見た方向
+    // 左(-halfArc)から右(+halfArc)へ薙ぎ払う＝各玉の位置を基準にした時計回りの接線方向
+    const tangentX = ny, tangentY = -nx;
+    // 接線方向(薙ぎ払いの向き)と外側方向(プレイヤーから離れる向き)をブレンドして、
+    // スマブラのふっとばしのように「外へ大きく吹っ飛ぶ」軌道にする（純粋な回転方向だけにしない）
+    let dirX = tangentX*0.6 + nx*0.85;
+    let dirY = tangentY*0.6 + ny*0.85;
+    const dirLen = Math.hypot(dirX,dirY) || 1;
+    dirX /= dirLen; dirY /= dirLen;
+
+    const curSpeed = Math.hypot(m.vx, m.vy);
+    const boostSpeed = Math.max(curSpeed*1.3, SWEEP_HIT_SPEED*(1 - dist/range*0.2));
+    m.vx = dirX*boostSpeed;
+    m.vy = dirY*boostSpeed;
     m.spawnShield = Math.max(m.spawnShield, SWEEP_INVULN);
+    m.speedCapBoostTimer = SWEEP_BOOST_DUR; // この間だけ速度上限を緩めて、実際に遠くへ飛ばす
+
+    // 着弾の瞬間、弾かれた玉自身にも小さな衝撃パーティクル
+    for(let i=0;i<3;i++){
+      const a2=Math.random()*Math.PI*2, s2=1+Math.random()*2;
+      particles.push({x:m.x,y:m.y,vx:Math.cos(a2)*s2,vy:Math.sin(a2)*s2,
+        hue:0,r:1+Math.random()*1.5,life:1,maxLife:0.2+Math.random()*0.15});
+    }
   }
+
+  // 演出：極性で色を変えた手描きの弧＋残像（プレイヤーの磁力ラインと同じ色分け）
+  sweepEffects.push({
+    cx: player.wx, cy: player.wy,
+    startAngle: player.angle - halfArc,
+    endAngle: player.angle + halfArc,
+    range,
+    color: isNPole ? '80,160,255' : '255,80,120', // N極=青／S極=ピンク
+    born: Date.now(),
+    dur: 380,
+  });
+
+  // 発動の瞬間に軽くカメラを揺らして、一撃のインパクトを強める
+  cam.shakeX=(Math.random()-0.5)*6;
+  cam.shakeY=(Math.random()-0.5)*6;
+
   showBanner('🧹 マグネットスイープ', '#ffe27a');
 }
 
@@ -2802,13 +2856,31 @@ function activateBeacon(){
     // 2回目：記憶地点へワープ（ストック消費あり）
     if(skillStock <= 0) return;
     skillStock--;
+    const fromX = player.wx, fromY = player.wy;
+
+    // 出発地点：吸い込まれるように収束するパーティクル＋閉じていくリング
+    for(let i=0;i<16;i++){
+      const a=Math.random()*Math.PI*2, s=3+Math.random()*5;
+      particles.push({x:fromX+Math.cos(a)*36,y:fromY+Math.sin(a)*36,vx:-Math.cos(a)*s,vy:-Math.sin(a)*s,
+        hue:140,r:2+Math.random()*2,life:1,maxLife:0.3+Math.random()*0.15});
+    }
+    shockwaves.push({x:fromX,y:fromY,r:40,maxR:2,life:1}); // maxRを小さくすることで"収縮する"リングにしている
+
     player.wx = beaconPos.x;
     player.wy = beaconPos.y;
-    for(let i=0;i<14;i++){
-      const a=Math.random()*Math.PI*2, s=2+Math.random()*4;
+
+    // 到着地点：勢いよく飛び散る大量のパーティクル＋時間差の三重リング波紋
+    for(let i=0;i<36;i++){
+      const a=Math.random()*Math.PI*2, s=3+Math.random()*7;
       particles.push({x:player.wx,y:player.wy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
-        hue:140,r:2+Math.random()*2,life:1,maxLife:0.5+Math.random()*0.3});
+        hue:140,r:2+Math.random()*3,life:1,maxLife:0.5+Math.random()*0.4});
     }
+    shockwaves.push({x:player.wx,y:player.wy,r:0,maxR:110,life:1});
+    setTimeout(()=>{ shockwaves.push({x:player.wx,y:player.wy,r:0,maxR:160,life:1}); }, 90);
+    setTimeout(()=>{ shockwaves.push({x:player.wx,y:player.wy,r:0,maxR:210,life:1}); }, 180);
+    cam.shakeX=(Math.random()-0.5)*8;
+    cam.shakeY=(Math.random()-0.5)*8;
+
     beaconPos = null;
     showBanner('🛰 ワープ！', '#aaffaa');
   }
@@ -3205,6 +3277,12 @@ function update(dt){
   }
   updateDashVfx(dtSec); // ダッシュ集中線（VFX）：RUSHブレンド・粒子の発生と移動を進める
 
+  // マグネットスイープ演出：寿命が切れたものを間引く
+  if(sweepEffects.length){
+    const now = Date.now();
+    sweepEffects = sweepEffects.filter(e => now - e.born < e.dur + 60);
+  }
+
   // ── 大砲：チャージ中の更新（出現アニメーション→ホールド解除で発射） ──
   if(cannonCharge){
     cannonCharge.timer = Math.min(CANNON_APPEAR_DUR, cannonCharge.timer + dtSec);
@@ -3434,6 +3512,10 @@ function update(dt){
         const tnx=tdx/tdist, tny=tdy/tdist;
         const pullF = 2.2 * dt; // ゆっくり吸い寄せ
         m.vx -= tnx*pullF; m.vy -= tny*pullF;
+        // 若干の回転成分（時計回り。既存の渦(S極)と同じ接線方向の考え方）
+        const tangentX = tny, tangentY = -tnx;
+        const spinF = 0.6 * dt;
+        m.vx += tangentX*spinF; m.vy += tangentY*spinF;
       }
     }
   }
@@ -3461,7 +3543,8 @@ function update(dt){
     if (a.nearGravity) marbleFriction = Math.pow(marbleFriction, 1.8); // 重力圏内は追加で減衰を強める（プレイヤーが強く弾いた直後の起爆判定には影響しない）
     a.vx*=Math.pow(marbleFriction,effDt); a.vy*=Math.pow(marbleFriction,effDt);
     const s2=Math.hypot(a.vx,a.vy);
-    const spdCap = a.inVortex ? 10 : (a.isCannonball ? 999 : (a.marbleType==='boost' ? 40 : 24)); // 渦中はゆったり、大砲玉は減速のみで直進、ぶっ飛び玉は上限も高め
+    // スマブラのふっとばしのように、スイープで弾かれた直後は上限を大きく緩めて、実際に遠くまで吹っ飛ばす
+    const spdCap = a.inVortex ? 10 : (a.isCannonball ? 999 : (a.marbleType==='boost' ? 40 : (a.speedCapBoostTimer>0 ? 80 : 24))); // 渦中はゆったり、大砲玉は減速のみで直進、ぶっ飛び玉は上限も高め
     if(s2>spdCap){a.vx=a.vx/s2*spdCap;a.vy=a.vy/s2*spdCap;}
     a.x=((a.x+a.vx*effDt)%WORLD_W+WORLD_W)%WORLD_W;
     a.y=((a.y+a.vy*effDt)%WORLD_H+WORLD_H)%WORLD_H;
@@ -3612,6 +3695,7 @@ function update(dt){
             if(spd3>0){ a.vx=a.vx/spd3*boost; a.vy=a.vy/spd3*boost; }
             // 跳ね返り直後の0.3秒は無敵にして、状態遷移や高速衝突による誤爆発を防ぐ
             a.spawnShield = Math.max(a.spawnShield, 0.3);
+            a.speedCapBoostTimer = 0.6; // この間だけ速度上限を緩めて、もっと遠くまで跳ねていくようにする
             addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
 
           } else if(rk.state === 'awake' && rk.ability === 'split'){
@@ -3720,6 +3804,7 @@ function update(dt){
           if(spd3v>0){ m.vx=m.vx/spd3v*boostV; m.vy=m.vy/spd3v*boostV; }
           // 跳ね返り直後の0.3秒は無敵にして、状態遷移や高速衝突による誤爆発を防ぐ
           m.spawnShield = Math.max(m.spawnShield, 0.3);
+          m.speedCapBoostTimer = 0.6; // この間だけ速度上限を緩めて、もっと遠くまで跳ねていくようにする
           addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
         } else if(rk.state === 'awake' && rk.ability === 'split'){
           // 分裂：覚醒中のみ、未分裂の玉が当たった瞬間に分裂する（通常・予兆時はノーマル岩と同じ扱い）
@@ -3771,7 +3856,7 @@ function update(dt){
     if(!g.alive || g.marbleType!=='gravity') continue;
     const GRAV_R = MARBLE_R * 20; // 引力範囲（420px）
     for(const m of marbles){
-      if(!m.alive || m===g || m.inVortex) continue;
+      if(!m.alive || m===g || m.inVortex || (m.isCannonball && !m.cannonArmed)) continue;
       let dx=g.x-m.x, dy=g.y-m.y;
       if(dx> WORLD_W/2) dx-=WORLD_W; else if(dx<-WORLD_W/2) dx+=WORLD_W;
       if(dy> WORLD_H/2) dy-=WORLD_H; else if(dy<-WORLD_H/2) dy+=WORLD_H;
@@ -3939,7 +4024,7 @@ function update(dt){
         rk.waveTimer = 1.5; // 1.5秒ごとに衝撃波
         const WAVE_R = 700 + Math.random()*200; // 600〜900px
         for(const m of marbles){
-          if(!m.alive || m.inVortex) continue;
+          if(!m.alive || m.inVortex || (m.isCannonball && !m.cannonArmed)) continue;
           let dx=m.x-rk.x, dy=m.y-rk.y;
           if(dx>WORLD_W/2) dx-=WORLD_W; else if(dx<-WORLD_W/2) dx+=WORLD_W;
           if(dy>WORLD_H/2) dy-=WORLD_H; else if(dy<-WORLD_H/2) dy+=WORLD_H;
@@ -4197,9 +4282,11 @@ function update(dt){
   }
 
   // 遅延玉：衝突では起爆せず、専用のfuseTimerが0になったら必ず起爆する
+  // （シールド発動中は、既に起爆(armed)して秒読み中の遅延玉もタイマーごと止める）
+  const shieldActive = skillActive && selectedSkillId==='shield';
   for(const m of marbles){
     if(!m.alive || m.marbleType !== 'delay' || m.fuseTimer === null) continue;
-    m.fuseTimer -= dtSec;
+    if(!shieldActive) m.fuseTimer -= dtSec;
     if(m.fuseTimer <= 0){
       m.alive = false;
       gainSPFromMarble(m.marbleType);
@@ -4221,6 +4308,7 @@ function update(dt){
     if(m.alive && m.flashTimer > 0) m.flashTimer = Math.max(0, m.flashTimer - dtSec);
     if(m.alive && m.spawnShield > 0) m.spawnShield = Math.max(0, m.spawnShield - dtSec);
     if(m.alive && m.recentPlayerForceTimer > 0) m.recentPlayerForceTimer = Math.max(0, m.recentPlayerForceTimer - dtSec);
+    if(m.alive && m.speedCapBoostTimer > 0) m.speedCapBoostTimer = Math.max(0, m.speedCapBoostTimer - dtSec);
   }
 
   updateHUD();
@@ -4426,7 +4514,7 @@ function updateWorldEvent(dtSec, dt) {
   // ── VORTEX：全玉に渦回転力を毎フレーム加算 ──
   if (ev.id === 'vortex') {
     for (const m of marbles) {
-      if (!m.alive || m.inVortex) continue;
+      if (!m.alive || m.inVortex || (m.isCannonball && !m.cannonArmed)) continue;
       let dx = m.x - player.wx, dy = m.y - player.wy;
       if (dx > WORLD_W/2) dx -= WORLD_W; else if (dx < -WORLD_W/2) dx += WORLD_W;
       if (dy > WORLD_H/2) dy -= WORLD_H; else if (dy < -WORLD_H/2) dy += WORLD_H;
@@ -4548,6 +4636,7 @@ function addScore(amount) {
 function updateHUD(){
   const bat=player.battery;
   document.getElementById('battery-fill').style.width=bat+'%';
+  document.getElementById('battery-fill').classList.toggle('recovering', skillActive && selectedSkillId==='energyConverter');
   document.getElementById('battery-row').classList.toggle('low-battery', bat < 20);
   document.getElementById('hud-score-val').textContent=score.toLocaleString();
   updateSkillUI();
@@ -4575,6 +4664,7 @@ function offscreenNavTargets(){
     if (m.marbleType === 'red')  list.push({ x:m.x, y:m.y, kind:'red' });
     if (m.marbleType === 'gold') list.push({ x:m.x, y:m.y, kind:'gold' });
   }
+  if (beaconPos) list.push({ x:beaconPos.x, y:beaconPos.y, kind:'beacon' });
   return list;
 }
 
@@ -4594,6 +4684,16 @@ function drawOffscreenNavIcon(kind, x, y, scale){
   ctx.translate(x, y);
   ctx.scale(scale, scale);
   if (kind === 'generator') {
+    // 稼働中アピール：薄グレーの波紋を一定間隔で外側へ（共鳴岩の波動演出を縮小して流用）
+    const wt = Date.now()*0.001;
+    for(let wi=0; wi<2; wi++){
+      const wavePhase = (wt*0.6 + wi/2) % 1;
+      const waveR = 13 + wavePhase*15;
+      const waveAlpha = (1-wavePhase)*0.4;
+      ctx.beginPath(); ctx.arc(0,0,waveR,0,Math.PI*2);
+      ctx.strokeStyle = `rgba(110,110,110,${waveAlpha})`; ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
     // 白丸＋黒渕＋小さな稲妻（手描き風・発電装置）
     ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI*2);
     ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fill();
@@ -4610,6 +4710,15 @@ function drawOffscreenNavIcon(kind, x, y, scale){
     ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI*2);
     ctx.fillStyle = 'rgba(210,166,0,0.78)'; ctx.fill();
     ctx.strokeStyle = 'rgba(26,26,26,0.55)'; ctx.lineWidth = 1.5; ctx.stroke();
+  } else if (kind === 'beacon') {
+    // 白丸＋緑の旗（ワープビーコン）
+    ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(120,255,180,0.9)'; ctx.lineWidth = 2.0; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,7); ctx.lineTo(0,-7);
+    ctx.strokeStyle = 'rgba(26,26,26,0.8)'; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-7); ctx.lineTo(6,-4); ctx.lineTo(0,-1); ctx.closePath();
+    ctx.fillStyle = 'rgba(120,220,170,0.95)'; ctx.fill();
   }
   ctx.restore();
 }
@@ -4732,7 +4841,9 @@ function draw(){
   // プレイヤーは常に中心（オフセットなし）
   drawBlinkGhosts();
   drawPlayer();
+  drawShieldBarrier();
   drawCannonCharge();
+  drawSweepEffects();
 
   ctx.restore();
 
@@ -6013,18 +6124,86 @@ function drawBeacon(){
   if(!beaconPos) return;
   const t = Date.now()*0.003;
   const pulse = 0.7 + Math.sin(t)*0.3;
+
+  // プレイヤーとの距離（ワールドループを考慮した最短距離）
+  let ddx = beaconPos.x - player.wx, ddy = beaconPos.y - player.wy;
+  if (ddx > WORLD_W/2) ddx -= WORLD_W; else if (ddx < -WORLD_W/2) ddx += WORLD_W;
+  if (ddy > WORLD_H/2) ddy -= WORLD_H; else if (ddy < -WORLD_H/2) ddy += WORLD_H;
+  const dist = Math.hypot(ddx, ddy);
+
   ctx.save();
   ctx.translate(beaconPos.x, beaconPos.y);
+
+  // ピン本体（リング・マーカー・旗ポール）はまとめて2倍サイズに
+  ctx.save();
+  ctx.scale(2, 2);
+
+  // 起動中のギミック装置のような、脈動する二重リング
+  ctx.beginPath(); ctx.arc(0,0,30*pulse,0,Math.PI*2);
+  ctx.strokeStyle = `rgba(120,255,180,${0.22*pulse})`; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,22*pulse,0,Math.PI*2);
+  ctx.strokeStyle = `rgba(120,255,180,${0.5*pulse})`; ctx.lineWidth = 2; ctx.stroke();
+
   // 軽量な円マーカー
   ctx.beginPath(); ctx.arc(0,0,18,0,Math.PI*2);
-  ctx.strokeStyle = `rgba(120,255,180,${0.7*pulse})`; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = 'rgba(120,255,180,0.9)'; ctx.lineWidth = 2.2; ctx.stroke();
   ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2);
-  ctx.fillStyle = `rgba(120,255,180,${0.9})`; ctx.fill();
+  ctx.fillStyle = 'rgba(120,255,180,0.95)'; ctx.fill();
   // 縦の旗ポール風アイコン
-  ctx.beginPath(); ctx.moveTo(0,-4); ctx.lineTo(0,-22); ctx.strokeStyle='rgba(120,255,180,0.9)'; ctx.lineWidth=1.5; ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0,-22); ctx.lineTo(10,-18); ctx.lineTo(0,-14); ctx.closePath();
-  ctx.fillStyle='rgba(120,255,180,0.9)'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(0,-4); ctx.lineTo(0,-24); ctx.strokeStyle='rgba(120,255,180,0.95)'; ctx.lineWidth=1.8; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-24); ctx.lineTo(12,-20); ctx.lineTo(0,-16); ctx.closePath();
+  ctx.fillStyle='rgba(120,255,180,0.95)'; ctx.fill();
   ctx.restore();
+
+  // プレイヤーとの距離（ピンの右上。ピンが2倍になった分、位置も合わせてずらす）
+  ctx.font = 'bold 12px Courier New';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+  ctx.fillStyle = 'rgba(20,20,20,0.85)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 3;
+  ctx.strokeText(`${Math.round(dist)}px`, 26, -44);
+  ctx.fillText(`${Math.round(dist)}px`, 26, -44);
+
+  ctx.restore();
+
+  // 半径600px以内のアイテムを検知して表示（最大4個・アイコンで一目でわかるように）
+  const NEARBY_R = 600;
+  const nearbyItems = items.filter(it=>{
+    if(it.collecting) return false;
+    let idx = it.x-beaconPos.x, idy = it.y-beaconPos.y;
+    if (idx > WORLD_W/2) idx -= WORLD_W; else if (idx < -WORLD_W/2) idx += WORLD_W;
+    if (idy > WORLD_H/2) idy -= WORLD_H; else if (idy < -WORLD_H/2) idy += WORLD_H;
+    return Math.hypot(idx,idy) < NEARBY_R;
+  }).slice(0,4);
+
+  if(nearbyItems.length > 0){
+    ctx.save();
+    ctx.translate(beaconPos.x, beaconPos.y);
+    // 検知範囲を薄い破線円で表示
+    ctx.beginPath(); ctx.arc(0,0,NEARBY_R,0,Math.PI*2);
+    ctx.strokeStyle = 'rgba(120,255,180,0.14)'; ctx.lineWidth = 1;
+    ctx.setLineDash([8,10]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.restore();
+
+    nearbyItems.forEach((it, idx)=>{
+      const img = (typeof IMAGE_ASSETS !== 'undefined') ? IMAGE_ASSETS.get('items', it.def.id) : null;
+      const spread = (idx - (nearbyItems.length-1)/2) * 26;
+      const bob = Math.sin(t*2 + idx*1.3)*2;
+      const px = beaconPos.x + spread, py = beaconPos.y - 62 + bob;
+      ctx.save();
+      ctx.translate(px, py);
+      // 吹き出し風の白丸バッジ
+      ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(120,255,180,0.95)'; ctx.lineWidth = 1.6; ctx.stroke();
+      if(img && img.complete && img.naturalWidth>0){
+        ctx.drawImage(img, -8, -8, 16, 16);
+      } else {
+        ctx.fillStyle = it.def.color || '#1a1a1a';
+        ctx.beginPath(); ctx.arc(0,0,5,0,Math.PI*2); ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
 }
 
 function drawWaveRings(){
@@ -6129,6 +6308,128 @@ function drawBlinkGhosts(){
     }
     ctx.restore();
   }
+}
+
+// シールド発動中：プレイヤーより一回り大きく、青色半透明のバリアを重ねて表示する
+// マグネットスイープ演出：極性で色分けした手描きの弧を左→右へ伸ばし、残像と砂鉄の粒を添える
+function drawSweepEffects(){
+  if(!sweepEffects.length) return;
+  const now = Date.now();
+  for(const e of sweepEffects){
+    const age = now - e.born;
+    const progress = Math.min(1, age/e.dur);
+    if(progress >= 1) continue;
+    const eased = 1 - Math.pow(1-progress, 2); // イーズアウト：勢いよく振り抜く
+
+    // 残像：少し前の進行度を複数枚、だんだん薄く重ねて描く（メインは最後に描いて一番前面に）
+    const trailCount = 4;
+    for(let k=trailCount; k>=0; k--){
+      const trailP = eased - k*0.09;
+      if(trailP <= 0.02) continue;
+      const alpha = (1 - k/(trailCount+1)) * (1-progress) * 0.85;
+      drawSweepArc(e, trailP, alpha, k===0);
+    }
+  }
+}
+
+function drawSweepArc(e, sweepProgress, alpha, isMain){
+  // ワイパーのように、プレイヤー付近を根本にして射程距離ぶんまっすぐ伸びる線が、
+  // startAngle→endAngleへ向かって角度を変えながら掃く
+  const curAngle = e.startAngle + (e.endAngle-e.startAngle)*sweepProgress;
+  const segs = 14;
+  const innerR = player.r * 0.6; // 根本はプレイヤーのすぐ近くから
+  const pts = [];
+  for(let i=0;i<=segs;i++){
+    const t = i/segs; // 0=根本（プレイヤー側）、1=先端（射程の端）
+    const r = innerR + (e.range-innerR)*t;
+    // 完全な直線ではなく、わずかに湾曲させて筆で払ったような曲線にする
+    const curveOffset = Math.sin(t*Math.PI) * e.range*0.05;
+    const perpAngle = curAngle + Math.PI/2;
+    const bx = e.cx + Math.cos(curAngle)*r, by = e.cy + Math.sin(curAngle)*r;
+    pts.push([bx + Math.cos(perpAngle)*curveOffset, by + Math.sin(perpAngle)*curveOffset]);
+  }
+  if(pts.length < 2) return;
+
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for(let i=0;i<pts.length-1;i++){
+    const t = i/(pts.length-1);
+    const widthFactor = Math.sin(t*Math.PI*0.85 + 0.1); // 根本はやや太め、先端に向けて細くなる「筆の抜き」
+    const lw = isMain ? (1.5 + widthFactor*6) : (1 + widthFactor*3);
+    ctx.beginPath();
+    ctx.moveTo(pts[i][0], pts[i][1]);
+    ctx.lineTo(pts[i+1][0], pts[i+1][1]);
+    ctx.strokeStyle = `rgba(${e.color},${alpha})`;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // メインの線の先端にだけ、砂鉄のような黒い粒を散らす（磁力で払っている感を追加）
+  if(isMain){
+    const [tipX,tipY] = pts[pts.length-1];
+    ctx.save();
+    for(let i=0;i<5;i++){
+      const ja = Math.random()*Math.PI*2, jr = Math.random()*16;
+      ctx.beginPath();
+      ctx.arc(tipX+Math.cos(ja)*jr, tipY+Math.sin(ja)*jr, 1+Math.random()*1.4, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(20,20,20,${alpha*0.55})`;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function drawShieldBarrier(){
+  if(!(skillActive && selectedSkillId==='shield')) return;
+  const dur = 10.0; // activateShieldの発動時間と合わせる
+  const elapsed = dur - skillTimer;
+  // 発動直後・終了直前はフェードイン/アウトさせて、唐突に出たり消えたりしないようにする
+  let alpha = 1;
+  if(elapsed < 0.3) alpha = elapsed / 0.3;
+  else if(skillTimer < 0.3) alpha = skillTimer / 0.3;
+  alpha = Math.max(0, Math.min(1, alpha));
+  if(alpha <= 0.01) return;
+
+  const t = Date.now()*0.001;
+  const r = player.r * 1.25; // プレイヤーより一回り大きく
+  const pulse = 1 + Math.sin(t*2.2)*0.02; // ごく控えめな呼吸
+
+  ctx.save();
+  ctx.translate(player.wx, player.wy);
+
+  // バリア本体：中心は薄く、縁に向かって青色が濃くなるグラデーション（ドーム感を出す）
+  const grad = ctx.createRadialGradient(0,0,r*0.5, 0,0,r*pulse);
+  grad.addColorStop(0,    `rgba(80,160,255,${0.04*alpha})`);
+  grad.addColorStop(0.75, `rgba(80,160,255,${0.12*alpha})`);
+  grad.addColorStop(1,    `rgba(120,190,255,${0.30*alpha})`);
+  ctx.beginPath();
+  ctx.arc(0,0,r*pulse,0,Math.PI*2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // 輪郭：手描き風にわずかにガタつかせた一本線
+  ctx.beginPath();
+  const segs = 32;
+  for(let i=0;i<=segs;i++){
+    const a = (i/segs)*Math.PI*2;
+    const wob = 1 + Math.sin(a*6 + t*1.5)*0.015;
+    const px = Math.cos(a)*r*pulse*wob, py = Math.sin(a)*r*pulse*wob;
+    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = `rgba(90,170,255,${0.55*alpha})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // ハイライト：光の反射のような細い弧を1本添える
+  ctx.beginPath();
+  ctx.arc(0,0,r*pulse*0.92,-Math.PI*0.65,-Math.PI*0.15);
+  ctx.strokeStyle = `rgba(210,235,255,${0.5*alpha})`;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.restore();
 }
 
 function drawPlayer(){
@@ -6790,8 +7091,12 @@ function showSkillSelect(){
     const card = document.createElement('div');
     card.className = 'skill-card';
     card.dataset.id = def.id;
+    const iconPath = (typeof IMAGE_ASSET_PATHS !== 'undefined') ? IMAGE_ASSET_PATHS.skills[def.id] : null;
+    const iconHtml = iconPath
+      ? `<img src="${iconPath}" alt="${def.name}">`
+      : `<span>${def.icon}</span>`;
     card.innerHTML = `
-      <div class="skill-card-icon">${def.icon}</div>
+      <div class="skill-card-icon">${iconHtml}</div>
       <div class="skill-card-info">
         <div class="skill-card-name">${def.name}</div>
         <div class="skill-card-desc">${def.desc}</div>
@@ -6836,7 +7141,10 @@ function updateSkillUI(){
   const def = SKILL_DEFS.find(s=>s.id===selectedSkillId);
   if(!def) return;
   // アイコン・説明文
-  document.getElementById('skill-btn-icon').textContent = def.icon;
+  const btnIconPath = (typeof IMAGE_ASSET_PATHS !== 'undefined') ? IMAGE_ASSET_PATHS.skills[def.id] : null;
+  document.getElementById('skill-btn-icon').innerHTML = btnIconPath
+    ? `<img src="${btnIconPath}" alt="${def.name}">`
+    : def.icon;
   document.getElementById('skill-btn').classList.toggle('holding', selectedSkillId==='stop' && stopHeld);
   document.getElementById('skill-btn').classList.toggle('active', skillActive && selectedSkillId !== 'stop');
   document.getElementById('skill-desc-name').textContent = def.name;
@@ -6845,7 +7153,7 @@ function updateSkillUI(){
   const cvs = document.getElementById('skill-sp-canvas');
   const c = cvs.getContext('2d');
   c.clearRect(0,0,140,140);
-  const cx=42, cy=70;  // canvasを右に28pxオフセットした分、描画中心を左にずらす
+  const cx=60, cy=70;  // キャンバスを176px幅に拡大した分、中心もあわせて調整（発光が左端で切れないよう左マージンを確保）
   const SP_RAD  = 33;
   const DOT_RAD = 54;
 

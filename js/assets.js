@@ -10,7 +10,8 @@
 //   /js/
 //      assets.js   ← このファイル
 //   /assets/
-//      items/      ← アイテムアイコン（今回追加分）
+//      items/      ← アイテムアイコン
+//      skills/     ← スキルアイコン（白色SVG。暗い背景の上に乗せる前提のデザイン）
 //
 // 使い方（index.html側）：
 //   <script src="js/assets.js"></script>   ← ゲーム本体のscriptタグより前に読み込む
@@ -34,6 +35,17 @@ const IMAGE_ASSET_PATHS = {
     rare_booster:  'assets/items/rare_booster.svg',
     skill_charger: 'assets/items/skill_charger.svg',
     ep_bonus:      'assets/items/ep_bonus.svg',
+  },
+  skills: {
+    blink:           'assets/skills/skill_blink.svg',
+    dash:            'assets/skills/skill_dash.svg',
+    cannon:          'assets/skills/skill_cannon.svg',
+    typhoon:         'assets/skills/skill_typhoon.svg',
+    shield:          'assets/skills/skill_shield.svg',
+    stop:            'assets/skills/skill_stop.svg',
+    beacon:          'assets/skills/skill_beacon.svg',
+    sweep:           'assets/skills/skill_sweep.svg',
+    energyConverter: 'assets/skills/skill_energyConverter.svg',
   },
   // 今後の追加予定（フォルダを作ってからここにカテゴリを追加）：
   // ui:          { ... },
