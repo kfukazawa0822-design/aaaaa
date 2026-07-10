@@ -7126,6 +7126,17 @@ function closeResetConfirm(){ resetConfirmOverlay.classList.remove('show'); }
 
 // モード選択画面のオプションボタンは設定ボタンに統合済み
 
+// ── ホールド系操作の保険 ──────────────────────────
+// スマホでは「押しっぱなし中にアプリがバックグラウンドに行く」（通知バー・アプリ切替・画面ロック・着信等）と
+// touchend/touchcancelがブラウザに届かないまま終わることがあり、玉運動停止や大砲のホールドが
+// 解除されず固まったままになってしまう。ページが非表示・非アクティブになった瞬間に強制解除しておく。
+function forceReleaseHolds(){
+  releaseSkillHold();
+  if(cannonCharge) cannonCharge.holding = false;
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) forceReleaseHolds(); });
+window.addEventListener('blur', forceReleaseHolds);
+
 // ゲームオーバーボタン
 document.getElementById('skill-btn').addEventListener('mousedown', ()=>useSkill());
 document.getElementById('skill-btn').addEventListener('mouseup', ()=>releaseSkillHold());
