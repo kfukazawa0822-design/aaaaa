@@ -1869,6 +1869,7 @@ window.addEventListener('resize', () => {
   if (gamePaused) drawPauseMap();
   // ウィンドウリサイズ時に速度バーのノブ座標を再計算
   if (typeof updateSpeedSlider === 'function') updateSpeedSlider();
+  if (typeof alignJoystickToSkillBtn === 'function') alignJoystickToSkillBtn();
 });
 resize();
 
@@ -3283,6 +3284,7 @@ function loop(ts){
         gameRunning = true;
         gameStartProtection = true;
         if (isTouchCapableDevice) joystickWrap.classList.add('show');
+        requestAnimationFrame(alignJoystickToSkillBtn);
         setTimeout(()=>{ gameStartProtection=false; }, 3000);
       }
     }
@@ -6710,6 +6712,18 @@ const isTouchCapableDevice = window.matchMedia('(pointer: coarse)').matches
 const joystickWrap = document.getElementById('joystick-wrap');
 const joystickBase  = document.getElementById('joystick-base');
 const joystickKnob  = document.getElementById('joystick-knob');
+// ジョイスティックの上端を、スキルボタン（円そのもの）の上端に揃える。
+// #skill-btnは#skill-ui（flex縦積み）の中で、ストックドット・説明文と一緒に積まれているため、
+// #skill-uiのbottom値だけを揃えてもボタン自体の位置とはズレる。実際のレンダリング結果を
+// getBoundingClientRectで測って、joystick-wrapのtopに反映することで確実に揃える。
+function alignJoystickToSkillBtn(){
+  const skillBtn = document.getElementById('skill-btn');
+  if(!skillBtn || !joystickWrap) return;
+  const btnRect = skillBtn.getBoundingClientRect();
+  if(btnRect.height === 0) return; // 非表示中は測れないのでスキップ
+  joystickWrap.style.top = btnRect.top + 'px';
+  joystickWrap.style.bottom = 'auto';
+}
 if (isTouchCapableDevice) joystickWrap.classList.add('show');
 
 let joyTouchId = null; // スティック担当のタッチID
