@@ -7136,6 +7136,11 @@ function forceReleaseHolds(){
 }
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) forceReleaseHolds(); });
 window.addEventListener('blur', forceReleaseHolds);
+// バックグラウンド以外の要因（特定ボタンのtouchendが端末・WebView側の事情で届かないケースなど）にも
+// 対応できるよう、画面のどこでtouchend/touchcancelが起きても「指の本数が0になった瞬間」を検知して
+// 強制解除する（ボタン単位のイベントに頼らない、より確実な保険）
+document.addEventListener('touchend',    e=>{ if(e.touches.length===0) forceReleaseHolds(); }, {passive:true});
+document.addEventListener('touchcancel', e=>{ if(e.touches.length===0) forceReleaseHolds(); }, {passive:true});
 
 // ゲームオーバーボタン
 document.getElementById('skill-btn').addEventListener('mousedown', ()=>useSkill());
