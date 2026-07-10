@@ -1804,11 +1804,11 @@ const HOLE_GOAL_POINTS   = 20; // 発動に必要なポイント
 const HOLE_R             = 96; // 穴の半径（プレイヤーと同等）
 // ギミック定義
 const HOLE_GIMMICKS = [
-  { id:'overcharge',    name:'オーバーチャージ',     color:'#ffdd44' },
+  { id:'overcharge',    name:'磁力超強化',           color:'#ffdd44' },
   { id:'rock_awaken',   name:'岩覚醒',              color:'#ff8844' },
-  { id:'vortex',        name:'ボルテックス',         color:'#aa66ff' },
+  { id:'vortex',        name:'ぐるぐる大旋風',        color:'#aa66ff' },
   { id:'marble_fever',  name:'ガラス玉フィーバー',    color:'#44ffcc' },
-  { id:'resonance_run', name:'共鳴暴走',             color:'#ff4488' },
+  { id:'resonance_run', name:'超爆発ラッシュ',        color:'#ff4488' },
 ];
 let holeSequenceIdx = 0;
 
@@ -1820,7 +1820,7 @@ const OVERCHARGE_N_MULT    = 2.2;
 const OVERCHARGE_SHOT_MULT = 1.8;
 const FEVER_SPAWN_MULT     = 3.0;
 const FEVER_RARE_MULT      = 4.0;
-const FEVER_SCORE_MULT     = 2.0;
+const ROCK_AWAKEN_SCORE_MULT = 2.0;
 const RESONANCE_BLAST_MULT = 3.0;
 const RESONANCE_CHAIN_MULT = 1.8;
 
@@ -4204,14 +4204,18 @@ function update(dt){
   } else { cam.shakeX=0;cam.shakeY=0; }
 
   // マーブル補充（3分割バッチ方式）
-  // 爆発なし・100個未満・バッチ未実行のときにバッチをキューに積む
+  // 爆発なし・閾値未満・バッチ未実行のときにバッチをキューに積む
+  // ガラス玉フィーバー中は閾値・バッチ数を増加させ、より多くの玉が場に維持されるようにする
+  const feverActive = activeWorldEvent && activeWorldEvent.id === 'marble_fever';
+  const replenishThreshold = feverActive ? 250 : 150;
+  const replenishBatchCount = feverActive ? 45 : 15;
   if(explosions.length === 0 && !marbleReplenishActive &&
-     marbles.filter(m=>m.alive).length < 150){
+     marbles.filter(m=>m.alive).length < replenishThreshold){
     marbleReplenishActive = true;
     marbleReplenishQueue = [
-      { timer: 0.0,  count: 15 },
-      { timer: 0.3,  count: 15 },
-      { timer: 0.6,  count: 15 },
+      { timer: 0.0,  count: replenishBatchCount },
+      { timer: 0.3,  count: replenishBatchCount },
+      { timer: 0.6,  count: replenishBatchCount },
     ];
   }
 
@@ -4441,7 +4445,9 @@ function spawnHoleMarbleBurst(x, y, count) {
 }
 
 function triggerHoleGimmick(hole) {
-  const DURATION = 30;
+  // イベントごとの持続時間（超爆発ラッシュだけ15秒、他は30秒）
+  const GIMMICK_DURATIONS = { overcharge:30, rock_awaken:30, vortex:30, marble_fever:30, resonance_run:15 };
+  const DURATION = GIMMICK_DURATIONS[hole.gimmickId] || 30;
   // 装置は即座にオフ状態になる（60秒カウンター自体は止めず、次の装置が早くオープンしないようにする）
   hole.isOpen = false;
   hole.animDir = -1;
@@ -4560,8 +4566,8 @@ function getEventMult(key) {
       if (key === 'nBoost')    return OVERCHARGE_N_MULT;
       if (key === 'shotSpeed') return OVERCHARGE_SHOT_MULT;
       return 1;
-    case 'marble_fever':
-      if (key === 'chainMulti') return FEVER_SCORE_MULT;
+    case 'rock_awaken':
+      if (key === 'chainMulti') return ROCK_AWAKEN_SCORE_MULT;
       return 1;
     case 'resonance_run':
       if (key === 'blastForce') return RESONANCE_BLAST_MULT;
