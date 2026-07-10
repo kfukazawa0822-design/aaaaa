@@ -1875,6 +1875,9 @@ const kbd = { left: false, right: false, accel: false, brake: false, up: false, 
 let kbdSpeedTimer = 0;
 
 // ── リサイズ ──────────────────────────────────────
+// スマホは画面が小さい分、同じ比率でも「引き」が強く感じられるため、タッチデバイスだけズームインする
+const isMobileZoom = window.matchMedia('(pointer: coarse)').matches
+  || ('ontouchstart' in window && !window.matchMedia('(pointer: fine)').matches);
 function resize() {
   W = canvas.clientWidth; H = canvas.clientHeight;
   // 実機の解像度倍率が高いほど塗る面積が倍率の2乗で増えるため、上限2倍に制限
@@ -1883,9 +1886,10 @@ function resize() {
   canvas.width  = W * DPR;
   canvas.height = H * DPR;
   ctx.scale(DPR, DPR);
-  // プレイヤーが短辺の20%に見えるzoomを計算
+  // プレイヤーが短辺の20%（スマホは24%）に見えるzoomを計算
   const shortSide = Math.min(W, H);
-  cam.baseZoom = (shortSide * 0.20) / (player.r * 2);
+  const zoomRatio = isMobileZoom ? 0.24 : 0.20;
+  cam.baseZoom = (shortSide * zoomRatio) / (player.r * 2);
   cam.zoom = cam.baseZoom;
   cam.targetZoom = cam.baseZoom;
 }
