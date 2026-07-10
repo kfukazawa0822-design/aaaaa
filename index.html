@@ -1824,7 +1824,7 @@ const FEVER_SCORE_MULT     = 2.0;
 const RESONANCE_BLAST_MULT = 3.0;
 const RESONANCE_CHAIN_MULT = 1.8;
 
-let chainCount = 0, maxChain = 0, chainTimer = 0, chainDisplay = '', chainTexts = [];
+let chainCount = 0, maxChain = 0, maxChainCount = 0, chainTimer = 0, chainDisplay = '', chainTexts = [];
 let score = 0, currentChainDepth = 0;
 let lastChainTier = 0; // 0=通常, 1=BIG CHAIN, 2=MEGA CHAIN（直近のチェイン段階）
 let currentChainCause = null; // null=非プレイヤー起因, 'S'=S極吸引起因, 'N'=N極反発起因（チェインの起点で確定）
@@ -1851,9 +1851,12 @@ let kbdSpeedTimer = 0;
 // ── リサイズ ──────────────────────────────────────
 function resize() {
   W = canvas.clientWidth; H = canvas.clientHeight;
-  canvas.width  = W * devicePixelRatio;
-  canvas.height = H * devicePixelRatio;
-  ctx.scale(devicePixelRatio, devicePixelRatio);
+  // 実機の解像度倍率が高いほど塗る面積が倍率の2乗で増えるため、上限2倍に制限
+  // （2倍を超えても体感のシャープさはほぼ変わらない一方、負荷だけ跳ね上がるため）
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  ctx.scale(DPR, DPR);
   // プレイヤーが短辺の20%に見えるzoomを計算
   const shortSide = Math.min(W, H);
   cam.baseZoom = (shortSide * 0.20) / (player.r * 2);
@@ -1883,7 +1886,7 @@ function initGame(mode) {
   upgrades = { sBoost:1, nBoost:1, rangeUp:1, chainMulti:1, explodeUp:1, rareBoost:0, skillCharge:100 };
   marbles=[]; rocks=[]; explosions=[]; particles=[]; shockwaves=[];
   items=[]; pickupEffects=[]; redBalls=[]; miniExplosions=[]; waveRings=[];
-  chainCount=0; maxChain=0; chainTimer=0; chainDisplay=''; chainTexts=[]; score=0;
+  chainCount=0; maxChain=0; maxChainCount=0; chainTimer=0; chainDisplay=''; chainTexts=[]; score=0;
   itemRewardCoinsThisSession = 0;
   lastChainTier=0; currentChainCause=null; chainSpreadDistance=0; chainLastExplosionX=null; chainLastExplosionY=null;
   pulseFrame={ amp:0, jitter:0, time:0, visibility:0 };
@@ -2283,12 +2286,33 @@ function spawnItem() {
   if(gameMode === 'quick') pool = pool.filter(d=>d.cat!=='battery');
   if (player.battery<40) pool=[...pool,...ITEM_DEFS.filter(d=>d.cat==='battery' && gameMode!=='quick')];
   const def = resolveItemDef(pool[Math.floor(Math.random()*pool.length)]);
-  // プレイヤーから1000〜1800px・岩・玉と重ならない位置に配置
+  // ビーコン設置中は、ビーコン周囲600px以内のアイテムが3個未満なら優先してそこにスポーンする
+  const BEACON_ITEM_R = 600, BEACON_ITEM_CAP = 3;
+  let useBeacon = false;
+  if (beaconPos) {
+    let nearBeaconCount = 0;
+    for (const it of items) {
+      let bdx = it.x - beaconPos.x, bdy = it.y - beaconPos.y;
+      if (bdx > WORLD_W/2) bdx -= WORLD_W; else if (bdx < -WORLD_W/2) bdx += WORLD_W;
+      if (bdy > WORLD_H/2) bdy -= WORLD_H; else if (bdy < -WORLD_H/2) bdy += WORLD_H;
+      if (Math.hypot(bdx, bdy) < BEACON_ITEM_R) nearBeaconCount++;
+    }
+    if (nearBeaconCount < BEACON_ITEM_CAP) useBeacon = true;
+  }
+  // プレイヤーから1000〜1800px・岩・玉と重ならない位置に配置（ビーコン優先時はビーコン周囲600px以内）
   let x, y, ok=false, tries=0;
   while(!ok && tries<50){
-    const ang=Math.random()*Math.PI*2, dist=1200+Math.random()*960;
-    x=((player.wx+Math.cos(ang)*dist)%WORLD_W+WORLD_W)%WORLD_W;
-    y=((player.wy+Math.sin(ang)*dist)%WORLD_H+WORLD_H)%WORLD_H;
+    let bx, by;
+    if (useBeacon) {
+      const ang=Math.random()*Math.PI*2, dist=Math.random()*BEACON_ITEM_R;
+      bx=((beaconPos.x+Math.cos(ang)*dist)%WORLD_W+WORLD_W)%WORLD_W;
+      by=((beaconPos.y+Math.sin(ang)*dist)%WORLD_H+WORLD_H)%WORLD_H;
+    } else {
+      const ang=Math.random()*Math.PI*2, dist=1200+Math.random()*960;
+      bx=((player.wx+Math.cos(ang)*dist)%WORLD_W+WORLD_W)%WORLD_W;
+      by=((player.wy+Math.sin(ang)*dist)%WORLD_H+WORLD_H)%WORLD_H;
+    }
+    x=bx; y=by;
     ok=true; tries++;
     for(const rk of rocks){
       if(!rk.alive) continue;
@@ -2345,11 +2369,11 @@ function applyItem(def) {
       itemRewardCoinsThisSession += EP_BONUS_AMOUNT;
       msg = `+${EP_BONUS_AMOUNT}EP 獲得！`; col = '#dddddd';
       break;
-    case 'bat_stable':   player.battery=Math.min(100,player.battery+30); msg='BATTERY +30%'; break;
+    case 'bat_stable':   player.battery=Math.min(100,player.battery+20); msg='BATTERY +20%'; break;
     case 'bat_unstable': {
-      const ok=Math.random()<0.7, amt=10+Math.floor(Math.random()*20);
-      if(ok){player.battery=Math.min(100,player.battery+amt);msg=`BATTERY +${amt}%`;col='#88ffaa';}
-      else  {player.battery=Math.max(0,player.battery-amt);msg=`BATTERY -${amt}%`;col='#ff6666';}
+      const ok=Math.random()<0.7;
+      if(ok){const amt=20+Math.floor(Math.random()*21); player.battery=Math.min(100,player.battery+amt); msg=`BATTERY +${amt}%`; col='#88ffaa';}
+      else  {const amt=10+Math.floor(Math.random()*21); player.battery=Math.max(0,player.battery-amt); msg=`BATTERY -${amt}%`; col='#ff6666';}
       break;
     }
     case 'rare_booster':
@@ -2360,8 +2384,8 @@ function applyItem(def) {
       msg=`スキルチャージャー ${upgrades.skillCharge}%`; col='#aaffff'; break;
     case 'bat_chaos':{
       const big=Math.random()<0.45;
-      if(big){const g=30+Math.floor(Math.random()*30);player.battery=Math.min(100,player.battery+g);msg=`BATTERY +${g}%!!`;col='#44ffaa';}
-      else   {const l=25+Math.floor(Math.random()*30);player.battery=Math.max(0,player.battery-l);msg=`BATTERY -${l}%!!`;col='#ff2244';}
+      if(big){const g=40+Math.floor(Math.random()*21);player.battery=Math.min(100,player.battery+g);msg=`BATTERY +${g}%!!`;col='#44ffaa';}
+      else   {const l=25+Math.floor(Math.random()*31);player.battery=Math.max(0,player.battery-l);msg=`BATTERY -${l}%!!`;col='#ff2244';}
       break;
     }
   }
@@ -2590,6 +2614,7 @@ function triggerExplosion(x, y, power, chainDepth, isRock, playerCaused=false, g
 
 function updateChainDisplay(n, depth, wx, wy, playerCaused=false) {
   chainTimer = 72;
+  if (n > maxChainCount) maxChainCount = n; // 表示されるCHAIN×nの最大値（=その回の最大チェイン数）を記録
   // チェインの起点（n===1）でのみ、このチェインがS極吸引/N極反発/非プレイヤーのどれ由来か確定する
   // （2発目以降は最初に確定した原因を引き継ぐ）
   if (n === 1) {
@@ -2914,7 +2939,7 @@ function triggerGameOver() {
   joyTouchId = null; joyReset();
   const m=Math.floor(playTime/60), s=Math.floor(playTime%60).toString().padStart(2,'0');
   document.getElementById('go-score').textContent=score.toLocaleString();
-  document.getElementById('go-chain').textContent=maxChain;
+  document.getElementById('go-chain').textContent=maxChainCount;
   document.getElementById('go-time').textContent=`${m}:${s}`;
   document.getElementById('go-title').textContent='FINISH';
   // アイテムLv一覧（バッテリー系・EPボーナスは対象外。取得したものだけ表示）
@@ -4664,7 +4689,16 @@ function offscreenNavTargets(){
     if (m.marbleType === 'red')  list.push({ x:m.x, y:m.y, kind:'red' });
     if (m.marbleType === 'gold') list.push({ x:m.x, y:m.y, kind:'gold' });
   }
-  if (beaconPos) list.push({ x:beaconPos.x, y:beaconPos.y, kind:'beacon' });
+  if (beaconPos) {
+    let beaconHasItems = false;
+    for (const it of items) {
+      let idx = it.x-beaconPos.x, idy = it.y-beaconPos.y;
+      if (idx > WORLD_W/2) idx -= WORLD_W; else if (idx < -WORLD_W/2) idx += WORLD_W;
+      if (idy > WORLD_H/2) idy -= WORLD_H; else if (idy < -WORLD_H/2) idy += WORLD_H;
+      if (Math.hypot(idx,idy) < 600) { beaconHasItems = true; break; }
+    }
+    list.push({ x:beaconPos.x, y:beaconPos.y, kind:'beacon', hasItems:beaconHasItems });
+  }
   return list;
 }
 
@@ -4679,7 +4713,7 @@ function offscreenNavClampToEllipse(angle, rectL, rectT, rectR, rectB, cx, cy){
   return [cx + dx * t, cy + dy * t];
 }
 
-function drawOffscreenNavIcon(kind, x, y, scale){
+function drawOffscreenNavIcon(kind, x, y, scale, hasItems){
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
@@ -4711,7 +4745,20 @@ function drawOffscreenNavIcon(kind, x, y, scale){
     ctx.fillStyle = 'rgba(210,166,0,0.78)'; ctx.fill();
     ctx.strokeStyle = 'rgba(26,26,26,0.55)'; ctx.lineWidth = 1.5; ctx.stroke();
   } else if (kind === 'beacon') {
-    // 白丸＋緑の旗（ワープビーコン）
+    // アイテム検知中：ビーコンの色に合わせた波紋を出す（発電装置のピンと同じ仕組み）
+    if (hasItems) {
+      const wt = Date.now()*0.001;
+      for(let wi=0; wi<2; wi++){
+        const wavePhase = (wt*0.6 + wi/2) % 1;
+        const waveR = 19 + wavePhase*20;
+        const waveAlpha = (1-wavePhase)*0.45;
+        ctx.beginPath(); ctx.arc(0,0,waveR,0,Math.PI*2);
+        ctx.strokeStyle = `rgba(120,220,170,${waveAlpha})`; ctx.lineWidth = 1.4;
+        ctx.stroke();
+      }
+    }
+    // 白丸＋緑の旗（ワープビーコン）：他のピンより一回り大きく（1.5倍）
+    ctx.save(); ctx.scale(1.5, 1.5);
     ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI*2);
     ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fill();
     ctx.strokeStyle = 'rgba(120,255,180,0.9)'; ctx.lineWidth = 2.0; ctx.stroke();
@@ -4719,6 +4766,7 @@ function drawOffscreenNavIcon(kind, x, y, scale){
     ctx.strokeStyle = 'rgba(26,26,26,0.8)'; ctx.lineWidth = 1.4; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(0,-7); ctx.lineTo(6,-4); ctx.lineTo(0,-1); ctx.closePath();
     ctx.fillStyle = 'rgba(120,220,170,0.95)'; ctx.fill();
+    ctx.restore();
   }
   ctx.restore();
 }
@@ -4800,7 +4848,7 @@ function drawOffscreenNav(){
     const tt = Math.max(0, Math.min(1, (dist - NEAR) / (FAR - NEAR)));
     const scale = 1.6 - tt * 0.7;
 
-    drawOffscreenNavIcon(t.kind, ix, iy, scale);
+    drawOffscreenNavIcon(t.kind, ix, iy, scale, t.hasItems);
   }
   ctx.restore();
 }
@@ -5097,6 +5145,43 @@ function drawPulseFrame(){
   ctx.restore();
 }
 
+// ── 背景方眼紙のキャッシュ ─────────────────────────
+// かすれた方眼線は毎フレーム同じ絵（座標ベースの乱数なので時間で変化しない）なので、
+// 初回だけワールド全体分を裏キャンバスに描いておき、以降はそれを貼るだけにする。
+// デザインを変えたい場合は下のbuildGridCache内の描画ロジックをそのまま編集すればOK
+// （ページを開き直せば新しい内容でキャッシュが再生成される）。
+let gridCache = null;
+function buildGridCache(){
+  const gc = document.createElement('canvas');
+  gc.width = WORLD_W; gc.height = WORLD_H;
+  const gctx = gc.getContext('2d');
+  const GS = 50, SEG = 18;
+  gctx.lineCap = 'round';
+  const drawScratchyLine = (x1,y1,x2,y2) => {
+    const len = Math.hypot(x2-x1, y2-y1);
+    const steps = Math.ceil(len / SEG);
+    for(let s=0; s<steps; s++){
+      const t0 = s / steps, t1 = (s+1) / steps;
+      const seed = Math.sin(x1*0.3 + y1*0.7 + s*13.7) * 43758.5;
+      const rand = seed - Math.floor(seed);
+      if(rand < 0.08) continue;
+      const alpha = 0.05 + rand * 0.07;
+      const lw = 0.4 + rand * 0.4;
+      const px0 = x1+(x2-x1)*t0, py0 = y1+(y2-y1)*t0;
+      const px1 = x1+(x2-x1)*t1, py1 = y1+(y2-y1)*t1;
+      gctx.beginPath();
+      gctx.moveTo(px0, py0); gctx.lineTo(px1, py1);
+      gctx.strokeStyle = `rgba(80,80,100,${alpha})`;
+      gctx.lineWidth = lw;
+      gctx.stroke();
+    }
+  };
+  for(let x=0; x<=WORLD_W; x+=GS) drawScratchyLine(x,0,x,WORLD_H);
+  for(let y=0; y<=WORLD_H; y+=GS) drawScratchyLine(0,y,WORLD_W,y);
+  gctx.lineCap = 'butt';
+  gridCache = gc;
+}
+
 function drawGrid(){
   const GS = 50;
   const vw = W/cam.zoom+200, vh = H/cam.zoom+200;
@@ -5114,37 +5199,12 @@ function drawGrid(){
   if(introHide) return;
 
   if(!waveActive){
-    // ── かすれた方眼紙：線を短いセグメントに分割して透明度をゆらがせる ──
-    const SEG = 18; // セグメント長（px）
-    ctx.lineCap = 'round';
-
-    const drawScratchyLine = (x1,y1,x2,y2) => {
-      const len = Math.hypot(x2-x1, y2-y1);
-      const steps = Math.ceil(len / SEG);
-      for(let s=0; s<steps; s++){
-        const t0 = s / steps, t1 = (s+1) / steps;
-        // セグメントごとにランダムなかすれ透明度
-        // seededランダム（座標ベース）で毎フレーム同じかすれにする
-        const seed = Math.sin(x1*0.3 + y1*0.7 + s*13.7) * 43758.5;
-        const rand = seed - Math.floor(seed); // 0〜1
-        // かすれ：0.3〜0.0の確率で消える、残りは薄さに変化
-        if(rand < 0.08) continue; // 8%の確率でそのセグメントを消す（かすれ）
-        const alpha = 0.05 + rand * 0.07; // 0.05〜0.12 の範囲でゆらぐ
-        const lw = 0.4 + rand * 0.4;     // 0.4〜0.8px
-
-        const px0 = x1+(x2-x1)*t0, py0 = y1+(y2-y1)*t0;
-        const px1 = x1+(x2-x1)*t1, py1 = y1+(y2-y1)*t1;
-        ctx.beginPath();
-        ctx.moveTo(px0, py0); ctx.lineTo(px1, py1);
-        ctx.strokeStyle = `rgba(80,80,100,${alpha})`;
-        ctx.lineWidth = lw;
-        ctx.stroke();
-      }
-    };
-
-    for(let x=Math.floor(ox/GS)*GS; x<ox+vw; x+=GS) drawScratchyLine(x,oy,x,oy+vh);
-    for(let y=Math.floor(oy/GS)*GS; y<oy+vh; y+=GS) drawScratchyLine(ox,y,ox+vw,y);
-    ctx.lineCap = 'butt';
+    // ── かすれた方眼紙：キャッシュ画像を貼るだけ（ループ境界はgetLoopOffsetsで同じ仕組みを流用） ──
+    if(!gridCache) buildGridCache();
+    const gridOffsets = getLoopOffsets();
+    for(const [gox, goy] of gridOffsets){
+      ctx.drawImage(gridCache, gox, goy);
+    }
 
   } else {
     // ウェーブ演出中：従来のdistortedLine（かすれなし・シンプル）
@@ -5354,12 +5414,12 @@ function drawRadarDevice(h, t) {
   ctx.beginPath(); ctx.arc(0,0,r*0.07,0,Math.PI*2);
   ctx.fillStyle='rgba(20,20,20,0.6)'; ctx.fill();
 
-  // ── 右上タイマー小円：黒から白へ（時間がなくなると白） ──
+  // ── 右上タイマー小円：青インクから白へ（時間がなくなると白） ──
   if(isActive){
     const tr_x = r*1.25, tr_y = -r*1.25, tr = r*0.28;
-    // 背景：黒（残り時間満タン時）
+    // 背景：青インク（残り時間満タン時）
     ctx.beginPath(); ctx.arc(tr_x, tr_y, tr, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(20,20,20,0.85)'; ctx.fill();
+    ctx.fillStyle = 'rgba(58,90,140,0.85)'; ctx.fill();
     // 白い扇形が時間経過で広がる（timeRatioが減るほど白が増える）
     const elapsed = 1 - timeRatio; // 0→1（経過時間）
     if(elapsed > 0){
@@ -5372,10 +5432,10 @@ function drawRadarDevice(h, t) {
     }
     // 外枠
     ctx.beginPath(); ctx.arc(tr_x, tr_y, tr, 0, Math.PI*2);
-    ctx.strokeStyle='rgba(20,20,20,0.5)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle='rgba(40,60,95,0.6)'; ctx.lineWidth=1; ctx.stroke();
     // 中央小点
     ctx.beginPath(); ctx.arc(tr_x, tr_y, 1.5, 0, Math.PI*2);
-    ctx.fillStyle='rgba(100,100,100,0.8)'; ctx.fill();
+    ctx.fillStyle='rgba(58,90,140,0.9)'; ctx.fill();
   }
 
   // ── 検知フラッシュ ──
