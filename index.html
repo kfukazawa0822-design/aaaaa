@@ -1490,6 +1490,7 @@ let ctx    = canvas.getContext('2d');
 // ── 定数 ─────────────────────────────────────────
 const WORLD_W = 3600, WORLD_H = 3600;
 const MARBLE_R = 21;
+const NORMAL_HUE = 41; // 通常玉の色（画像からスポイトした値、固定1色）
 const COLLISION_SPEED = 3.5;
 const SPEEDS = [2.0, 2.6, 3.2, 4.0, 5.0];
 const BASE_MAGNET_RANGE   = 470;
@@ -2054,7 +2055,7 @@ function makeMarble(x,y,vx,vy,mass=1,type=null,forcedR=null){
     ringLoops, fineRingLoopsA, fineRingLoopsB, coreStipple,
     coreSpriteHalf: coreExtent + baseR*0.06, // 点描スプライトの半径（点の最大半径ぶんの余白込み）
     highlightAngle: Math.random()*Math.PI*2, // ガラスの反射ハイライトの向き（玉ごとに固定）
-    hue: 30+Math.random()*310,
+    hue: NORMAL_HUE,
     phase: Math.random()*Math.PI*2,
     orbits:[
       {a:Math.random()*Math.PI*2, spd:0.02+Math.random()*0.02,  r:0.28+Math.random()*0.12},
@@ -5731,7 +5732,7 @@ function drawRocks(){
 
 // ── 玉のビジュアル・スキンシステム ──────────────────
 // 将来ショップで選べるようにする想定。activeMarbleSkinの値を切り替えると見た目が変わる。
-let activeMarbleSkin = 'fragileGlass'; // 現在の標準スキン
+let activeMarbleSkin = 'inkHalftone'; // 現在の標準スキン
 
 // ctxを一時的にオフスクリーンcanvasのコンテキストに差し替えて描画するヘルパー
 // （スプライト事前生成のために、既存の描画コードをそのまま使い回せるようにする）
@@ -5955,8 +5956,211 @@ function drawMarbleSkin_sketchScribble(m, t, pulse, ringColor, lineW){
   ctx.restore();
 }
 
+// ── 【新デザイン】うごメモ風×砂鉄風：太い一発描きリング＋网点ハーフトーンコア＋星ハイライト ──
+// 色は既存の玉タイプ別hsl（drawMarbles側で決定）をそのまま使うので、種類ごとに固定色になる
+function inkRand(min,max){ return min+Math.random()*(max-min); }
+
+function drawInkBoldRing(R,unit,hsl){
+  const segs=40, seed=inkRand(0,10), jitter=0.4*unit;
+  ctx.beginPath();
+  for(let i=0;i<=segs;i++){
+    const angle=(i/segs)*Math.PI*2;
+    const j=Math.sin(angle*3+seed)*jitter*0.6+Math.sin(angle*7+seed*1.6)*jitter*0.4;
+    const rr=R+j;
+    const x=Math.cos(angle)*rr, y=Math.sin(angle)*rr;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.strokeStyle=`hsla(${hsl.h},${hsl.s}%,${Math.max(hsl.l-8,6)}%,0.95)`;
+  ctx.lineWidth=Math.max(unit*3.6,1.6);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.stroke();
+}
+
+function drawInkDust(R,coreR,hsl,shadowAngle,spacing,maxDotR){
+  ctx.save();
+  ctx.beginPath(); ctx.arc(0,0,R*0.93,0,Math.PI*2); ctx.clip();
+  for(let y=-R;y<=R;y+=spacing){
+    for(let x=-R;x<=R;x+=spacing){
+      const jx=x+inkRand(-spacing*0.4,spacing*0.4), jy=y+inkRand(-spacing*0.4,spacing*0.4);
+      const dist=Math.sqrt(jx*jx+jy*jy);
+      if(dist>R*0.92||dist<coreR*1.08) continue;
+      const dirAngle=Math.atan2(jy,jx);
+      const diff=Math.abs(((dirAngle-shadowAngle+Math.PI*3)%(Math.PI*2))-Math.PI);
+      const weight=1-Math.min(diff/Math.PI,1);
+      const density=weight*0.65+0.18;
+      if(Math.random()>density) continue;
+      const dotR=Math.max(maxDotR*inkRand(0.55,1.0),0.35);
+      ctx.beginPath(); ctx.arc(jx,jy,dotR,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${hsl.h},${hsl.s}%,${Math.max(hsl.l-18+Math.random()*8,4)}%,${0.4+density*0.4})`;
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawInkHalftone(R,hsl,shadowAngle,spacing,maxDotR,edgeBias){
+  ctx.save();
+  ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.clip();
+  for(let y=-R;y<=R;y+=spacing){
+    for(let x=-R;x<=R;x+=spacing){
+      const jx=x+inkRand(-spacing*0.3,spacing*0.3), jy=y+inkRand(-spacing*0.3,spacing*0.3);
+      const dist=Math.sqrt(jx*jx+jy*jy);
+      if(dist>R) continue;
+      const dirAngle=Math.atan2(jy,jx);
+      const diff=Math.abs(((dirAngle-shadowAngle+Math.PI*3)%(Math.PI*2))-Math.PI);
+      const weight=1-Math.min(diff/Math.PI,1);
+      const edge=edgeBias*(dist/R);
+      const density=Math.max(0,weight*(1-edgeBias)+edge-0.08);
+      if(density<=0.02) continue;
+      const dotR=Math.max(maxDotR*Math.min(density*1.15,1)*inkRand(0.8,1.1),0.4);
+      ctx.beginPath(); ctx.arc(jx,jy,dotR,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${hsl.h},${hsl.s}%,${Math.max(hsl.l-16+Math.random()*8,4)}%,${0.55+density*0.4})`;
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawInkOuterDots(R,unit,hsl,count){
+  for(let i=0;i<count;i++){
+    const angle=Math.random()*Math.PI*2, rr=R+inkRand(3,11)*unit;
+    const x=Math.cos(angle)*rr, y=Math.sin(angle)*rr;
+    ctx.beginPath(); ctx.arc(x,y,Math.max(unit*inkRand(0.5,1.2),0.6),0,Math.PI*2);
+    ctx.fillStyle=`hsla(${hsl.h},${hsl.s}%,${Math.min(hsl.l+10,55)}%,${inkRand(0.6,0.95)})`;
+    ctx.fill();
+  }
+}
+
+function drawInkStar(x,y,size,color,alpha){
+  ctx.save(); ctx.translate(x,y);
+  const pts=[[0,-1],[0.16,-0.16],[1,0],[0.16,0.16],[0,1],[-0.16,0.16],[-1,0],[-0.16,-0.16]];
+  ctx.beginPath();
+  pts.forEach(([px,py],i)=>{ const x2=px*size, y2=py*size; i===0?ctx.moveTo(x2,y2):ctx.lineTo(x2,y2); });
+  ctx.closePath();
+  ctx.globalAlpha=alpha; ctx.fillStyle=color; ctx.fill();
+  ctx.restore();
+}
+function drawInkSparkleHighlight(coreR,unit,ha,rich){
+  const bx=Math.cos(ha)*coreR*0.5-coreR*0.18, by=Math.sin(ha)*coreR*0.5-coreR*0.22;
+  drawInkStar(bx,by,rich?3.6*unit:2.0*unit,'rgba(255,255,255,0.95)',1);
+  if(rich){
+    ctx.beginPath(); ctx.arc(bx+2.8*unit,by+1.6*unit,1.1*unit,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fill();
+    drawInkStar(bx-2.6*unit,by+2.4*unit,1.4*unit,'rgba(255,255,255,0.85)',1);
+  }
+}
+
+function drawInkBurstLines(R,hsl,count,rotationOffset,twinkle){
+  for(let i=0;i<count;i++){
+    const a=(i/count)*Math.PI*2+rotationOffset+inkRand(-0.04,0.04);
+    const len=R*inkRand(0.5,1.0)*(0.8+twinkle*0.4);
+    const rStart=R*1.18;
+    const x1=Math.cos(a)*rStart, y1=Math.sin(a)*rStart;
+    const x2=Math.cos(a)*(rStart+len), y2=Math.sin(a)*(rStart+len);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle=`hsla(${hsl.h},${hsl.s}%,${Math.min(hsl.l+20,80)}%,${inkRand(0.4,0.7)})`;
+    ctx.lineWidth=inkRand(0.9,1.8);
+    ctx.stroke();
+  }
+}
+
+function drawInkTypeIcon(type,R){
+  const icon={
+    boost:()=>{ctx.strokeStyle='rgba(255,150,40,0.9)';ctx.lineWidth=1.6;for(let si=0;si<3;si++){const y=(si-1)*R*0.34;ctx.beginPath();ctx.moveTo(-R*1.35,y);ctx.lineTo(-R*0.45,y);ctx.stroke();}},
+    homing:()=>{ctx.strokeStyle='rgba(255,70,130,0.9)';ctx.lineWidth=1.6;ctx.beginPath();
+      ctx.arc(0,0,R*0.32,0,Math.PI*2);
+      ctx.moveTo(-R*0.48,0);ctx.lineTo(-R*0.32,0);
+      ctx.moveTo(R*0.32,0);ctx.lineTo(R*0.48,0);
+      ctx.moveTo(0,-R*0.48);ctx.lineTo(0,-R*0.32);
+      ctx.moveTo(0,R*0.32);ctx.lineTo(0,R*0.48);
+      ctx.stroke();},
+    sOnly:()=>{ctx.strokeStyle='rgba(26,26,26,0.9)';ctx.lineWidth=1.8;ctx.font=`bold ${Math.round(R*0.55)}px "Segoe UI",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeText('S',0,1);},
+    nOnly:()=>{ctx.strokeStyle='rgba(26,26,26,0.9)';ctx.lineWidth=1.8;ctx.font=`bold ${Math.round(R*0.55)}px "Segoe UI",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeText('N',0,1);},
+    delay:()=>{ctx.strokeStyle='rgba(210,50,50,0.95)';ctx.lineWidth=1.6;ctx.beginPath();
+      ctx.moveTo(0,-R*0.3); ctx.quadraticCurveTo(R*0.26,-R*0.56,R*0.1,-R*0.78); ctx.stroke();},
+    gravity:()=>{ctx.strokeStyle='rgba(26,26,26,0.85)';ctx.lineWidth=1.3;ctx.beginPath();
+      for(let si=0;si<=16;si++){
+        const a=si/16*Math.PI*2.2, rr2=R*0.04+R*0.16*(si/16);
+        const px=Math.cos(a)*rr2, py=Math.sin(a)*rr2;
+        si===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      }
+      ctx.stroke();}
+  }[type];
+  if(icon) icon();
+}
+
+// 玉ごとに個別にスプライトを作るのをやめて、あらかじめ少数パターンだけ作っておき、
+// 各玉はそこから使い回す方式（重い網点走査が「玉が湧くたび」ではなく「ゲーム起動時に1回だけ」になる）
+const INK_VARIANTS_PER_COLOR = 1; // 色（種類）ごとに用意する見た目バリエーション数
+const INK_TYPE_HSL = {
+  normal:{h:0,s:0,l:27}, boost:{h:41,s:100,l:52}, gravity:{h:259,s:75,l:55}, homing:{h:176,s:75,l:54},
+  delay:{h:282,s:52,l:35}, sOnly:{h:220,s:100,l:67}, nOnly:{h:11,s:100,l:61},
+  red:{h:341,s:83,l:42}, gold:{h:44,s:52,l:58},
+};
+const INK_SIZE_MULT = {normal:1.0,boost:0.85,gravity:1.1,homing:1.05,delay:1.15,sOnly:1.0,nOnly:1.0,red:1.2,gold:1.3};
+let inkSpritePool = null; // { marbleType: [variant, ...] }
+
+function buildInkSpriteVariant(marbleType, hsl){
+  const r = MARBLE_R * (INK_SIZE_MULT[marbleType]||1.0);
+  const unit=r/32;
+  const coreR=r*0.56;
+  const special=(marbleType==='red'||marbleType==='gold');
+  const highlightAngle=Math.random()*Math.PI*2;
+  const shadowAngle=highlightAngle+Math.PI;
+  const half=r*(special?1.9:1.55);
+  const size=Math.max(2,Math.ceil(half*2));
+  const bodyCanvas=document.createElement('canvas');
+  bodyCanvas.width=size; bodyCanvas.height=size;
+  withOffscreenCtx(bodyCanvas.getContext('2d'), () => {
+    ctx.translate(half,half);
+    drawInkBoldRing(r,unit,hsl);
+    drawInkDust(r,coreR,hsl,shadowAngle,unit*2.6,unit*0.9);
+    if(special) drawInkOuterDots(r,unit,hsl,14);
+    drawInkTypeIcon(marbleType,r);
+  });
+  const ch=coreR*1.4;
+  const coreCanvas=document.createElement('canvas');
+  coreCanvas.width=Math.max(2,Math.ceil(ch*2)); coreCanvas.height=coreCanvas.width;
+  withOffscreenCtx(coreCanvas.getContext('2d'), () => {
+    ctx.translate(ch,ch);
+    drawInkHalftone(coreR,hsl,shadowAngle,unit*1.8,unit*1.3,0.22);
+  });
+  return { body:bodyCanvas, bodyHalf:half, core:coreCanvas, coreHalf:ch, coreR, unit, special, highlightAngle };
+}
+
+function buildInkSpritePool(){
+  if(inkSpritePool) return; // 一度作ったら二度と作り直さない
+  inkSpritePool = {};
+  for(const type of ['normal','boost','gravity','homing','delay','sOnly','nOnly','red','gold']){
+    inkSpritePool[type] = Array.from({length:INK_VARIANTS_PER_COLOR}, () => buildInkSpriteVariant(type, INK_TYPE_HSL[type]));
+  }
+}
+buildInkSpritePool(); // ページ読み込み時に1回だけ構築（プレイ中の玉湧きタイミングで作らせない）
+
+function drawMarbleSkin_inkHalftone(m,t,pulse,ringColor,lineW,hsl){
+  if(!inkSpritePool) buildInkSpritePool();
+  if(!m._inkSprite){
+    const variants = inkSpritePool[m.marbleType] || inkSpritePool['normal'];
+    m._inkSprite = variants[Math.floor(Math.random()*variants.length)];
+  }
+  const s = m._inkSprite;
+  ctx.save();
+  ctx.translate(m.x,m.y);
+  if(s.special){
+    const twinkle=0.5+0.5*Math.sin(t*2.2+m.phase);
+    drawInkBurstLines(m.r,hsl,16,t*0.2,twinkle);
+  }
+  ctx.drawImage(s.body,-s.bodyHalf,-s.bodyHalf);
+  const cs=s.coreHalf*2*pulse;
+  ctx.drawImage(s.core,-cs/2,-cs/2,cs,cs);
+  drawInkSparkleHighlight(s.coreR,s.unit,s.highlightAngle,s.special);
+  ctx.restore();
+}
+
 const MARBLE_SKINS = {
-  fragileGlass:   drawMarbleSkin_fragileGlass,   // 標準スキン
+  inkHalftone:    drawMarbleSkin_inkHalftone,    // 標準スキン（新デザイン）
+  fragileGlass:   drawMarbleSkin_fragileGlass,   // 旧標準スキン
   sketchScribble: drawMarbleSkin_sketchScribble, // ショップスキン①候補
 };
 
