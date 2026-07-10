@@ -7132,6 +7132,22 @@ function closeResetConfirm(){ resetConfirmOverlay.classList.remove('show'); }
 // touchend/touchcancelがブラウザに届かないまま終わることがあり、玉運動停止や大砲のホールドが
 // 解除されず固まったままになってしまう。ページが非表示・非アクティブになった瞬間に強制解除しておく。
 let skillTouchId = null; // スキルボタンをホールド中のタッチID
+// iOS Safari(WebKit)は、複数指を同時に触っている状態でpreventDefaultを連発すると、
+// 片方の指のtouchend/touchcancelイベント自体が配信されないことがある
+// （例：スキルボタンを押しっぱなしにしながらジョイスティックを操作する、まさにこのゲームの典型的な操作）。
+// 終了イベントを待つだけでは取りこぼす可能性があるため、他の指が動くたびに発生するtouchmove/touchstartを
+// 利用して「本当にまだ画面に触れているか」を能動的に照合し、消えていたら即座に強制解除する。
+function reconcileSkillTouch(e){
+  if(skillTouchId === null) return;
+  const stillActive = Array.from(e.touches).some(t => t.identifier === skillTouchId);
+  if(!stillActive){
+    console.log('[hold-debug] reconcile: skillTouchId missing from active touches -> release');
+    releaseSkillHold();
+    skillTouchId = null;
+  }
+}
+document.addEventListener('touchmove',  reconcileSkillTouch, {passive:true});
+document.addEventListener('touchstart', reconcileSkillTouch, {passive:true});
 function forceReleaseHolds(){
   releaseSkillHold();
   if(cannonCharge) cannonCharge.holding = false;
@@ -7144,6 +7160,9 @@ window.addEventListener('blur', forceReleaseHolds);
 // 強制解除する（ボタン単位のイベントに頼らない、より確実な保険）
 document.addEventListener('touchend',    e=>{ if(e.touches.length===0) forceReleaseHolds(); }, {passive:true});
 document.addEventListener('touchcancel', e=>{ if(e.touches.length===0) forceReleaseHolds(); }, {passive:true});
+// Pointer Events経由の保険（iOS Safariも対応）：Touch Eventsが取りこぼした場合の追加ルート
+document.addEventListener('pointerup',     ()=>{ forceReleaseHolds(); }, {passive:true});
+document.addEventListener('pointercancel', ()=>{ forceReleaseHolds(); }, {passive:true});
 
 // ゲームオーバーボタン
 document.getElementById('skill-btn').addEventListener('mousedown', ()=>useSkill());
