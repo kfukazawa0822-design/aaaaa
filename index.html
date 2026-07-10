@@ -614,7 +614,7 @@ canvas { display:block; width:100%; height:100%; }
 
 /* ── 仮想スティック（右下） ── */
 #joystick-wrap {
-  position:fixed; right:10vw; bottom:32px;
+  position:fixed; right:10vw; bottom:58px;
   width:104px; height:104px;
   z-index:40; pointer-events:auto;
   -webkit-tap-highlight-color:transparent;
@@ -1108,7 +1108,7 @@ canvas { display:block; width:100%; height:100%; }
   #hud-timer { font-size:14px; letter-spacing:3px; }
   #speed-slider-track { height:130px; }
   #speed-slider-wrap  { top:50%; bottom:auto; margin-top:-90px; }
-  #joystick-wrap { width:90px; height:90px; right:10vw; bottom:32px; }
+  #joystick-wrap { width:90px; height:90px; right:10vw; bottom:58px; }
   #joystick-knob { width:40px; height:40px; }
 }
 
@@ -1119,7 +1119,7 @@ canvas { display:block; width:100%; height:100%; }
   .hud-item-lv   { display:none; }
   #speed-slider-track { height:110px; }
   #speed-slider-wrap  { top:50%; bottom:auto; margin-top:-80px; }
-  #joystick-wrap { width:76px; height:76px; right:10vw; bottom:32px; }
+  #joystick-wrap { width:76px; height:76px; right:10vw; bottom:58px; }
   #joystick-knob { width:34px; height:34px; }
 }
 </style>
@@ -1869,7 +1869,6 @@ window.addEventListener('resize', () => {
   if (gamePaused) drawPauseMap();
   // ウィンドウリサイズ時に速度バーのノブ座標を再計算
   if (typeof updateSpeedSlider === 'function') updateSpeedSlider();
-  if (typeof alignJoystickToSkillBtn === 'function') alignJoystickToSkillBtn();
 });
 resize();
 
@@ -1937,6 +1936,10 @@ function initGame(mode) {
   td.style.display = 'none'; // タイマー廃止、クイックプレイもバッテリー基準に統一
   // イントロ演出開始
   introState = { phase:'drop', timer:0, dropOffsetY:-160, waveR:0, waveAlpha:0 };
+  // スキルUI・仮想スティックは、STARTアニメーション中(gameRunningがまだfalse)は
+  // 通常のupdate()ループが回らず表示更新されないため、ここで前倒しして表示しておく
+  updateSkillUI();
+  if (isTouchCapableDevice) joystickWrap.classList.add('show');
 }
 
 // ── マーブル生成 ──────────────────────────────────
@@ -3284,7 +3287,6 @@ function loop(ts){
         gameRunning = true;
         gameStartProtection = true;
         if (isTouchCapableDevice) joystickWrap.classList.add('show');
-        requestAnimationFrame(alignJoystickToSkillBtn);
         setTimeout(()=>{ gameStartProtection=false; }, 3000);
       }
     }
@@ -6712,18 +6714,6 @@ const isTouchCapableDevice = window.matchMedia('(pointer: coarse)').matches
 const joystickWrap = document.getElementById('joystick-wrap');
 const joystickBase  = document.getElementById('joystick-base');
 const joystickKnob  = document.getElementById('joystick-knob');
-// ジョイスティックの上端を、スキルボタン（円そのもの）の上端に揃える。
-// #skill-btnは#skill-ui（flex縦積み）の中で、ストックドット・説明文と一緒に積まれているため、
-// #skill-uiのbottom値だけを揃えてもボタン自体の位置とはズレる。実際のレンダリング結果を
-// getBoundingClientRectで測って、joystick-wrapのtopに反映することで確実に揃える。
-function alignJoystickToSkillBtn(){
-  const skillBtn = document.getElementById('skill-btn');
-  if(!skillBtn || !joystickWrap) return;
-  const btnRect = skillBtn.getBoundingClientRect();
-  if(btnRect.height === 0) return; // 非表示中は測れないのでスキップ
-  joystickWrap.style.top = btnRect.top + 'px';
-  joystickWrap.style.bottom = 'auto';
-}
 if (isTouchCapableDevice) joystickWrap.classList.add('show');
 
 let joyTouchId = null; // スティック担当のタッチID
