@@ -426,14 +426,210 @@ canvas { display:block; width:100%; height:100%; }
   background:#efefef; border-radius:2px; padding:1px 5px;
 }
 #mode-to-title {
-  width:min(340px, 88vw); margin-top:10px;
-  padding:11px 0; background:none; border:none;
+  width:min(160px, 55vw); margin-top:22px;
+  padding:11px 0; background:#fff; border:1.5px solid #ccc; border-radius:999px;
   font-family:'Courier New',monospace; font-size:10px;
   letter-spacing:2px; color:#bbb; cursor:pointer;
   -webkit-tap-highlight-color:transparent;
-  transition:color 0.15s;
+  transition:color 0.15s, border-color 0.15s, background 0.15s;
 }
-#mode-to-title:hover, #mode-to-title:active { color:#555; }
+#mode-to-title:hover, #mode-to-title:active { color:#555; border-color:#999; background:#f5f5f5; }
+
+/* ── コレクション画面 ── */
+#collection-screen {
+  position:fixed; inset:0;
+  background:#fff;
+  display:flex; align-items:center; justify-content:flex-start;
+  z-index:200;
+  flex-direction:column; gap:0;
+  overflow-y:auto;
+  padding-top:calc(93px + 48px);
+}
+#collection-screen.hide { display:none; }
+#collection-title {
+  font-family:'Courier New',monospace;
+  font-size:22px; letter-spacing:4px; font-weight:bold; color:#111;
+  margin-bottom:24px;
+}
+#collection-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  width:min(340px, 88vw);
+}
+.collection-card {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:22px 10px; min-height:112px;
+  background:#f8f8f8; border:1.5px solid #ddd; border-radius:8px;
+  cursor:pointer; font-family:'Courier New',monospace; color:#111;
+  transition:background 0.12s, border-color 0.12s, transform 0.1s;
+  -webkit-tap-highlight-color:transparent;
+  text-align:center;
+}
+.collection-card:hover, .collection-card:active {
+  background:#efefef; border-color:#888; transform:scale(1.02);
+}
+.collection-card-icon {
+  width:28px; height:28px; margin-bottom:8px; object-fit:contain;
+}
+.collection-card-icon:not([src]) { display:none; } /* 画像未設定時は場所を取らない */
+.collection-card-title { font-size:14px; letter-spacing:2px; margin-bottom:6px; color:#111; font-weight:bold; }
+.collection-card-desc { font-size:8px; color:#bbb; letter-spacing:0.5px; line-height:1.5; }
+#collection-to-mode {
+  width:min(160px, 55vw); margin-top:28px;
+  padding:11px 0; background:#fff; border:1.5px solid #ccc; border-radius:999px;
+  font-family:'Courier New',monospace; font-size:10px;
+  letter-spacing:2px; color:#bbb; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:color 0.15s, border-color 0.15s, background 0.15s;
+}
+#collection-to-mode:hover, #collection-to-mode:active { color:#555; border-color:#999; background:#f5f5f5; }
+
+/* ── サブ画面共通（チュートリアル一覧・実績称号一覧）：上部ステータスバーは非表示にして使う ── */
+.subscreen {
+  position:fixed; inset:0; background:#fff; z-index:210;
+  display:flex; flex-direction:column; align-items:center;
+  padding:24px 0 16px;
+  box-sizing:border-box;
+}
+.subscreen.hide { display:none; }
+.subscreen-back {
+  position:absolute; top:20px; left:20px;
+  background:none; border:none; cursor:pointer;
+  padding:8px; opacity:0.7; transition:opacity 0.15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.subscreen-back:hover, .subscreen-back:active { opacity:1; }
+.subscreen-title {
+  font-family:'Courier New',monospace; font-size:16px; letter-spacing:4px;
+  font-weight:bold; color:#111; margin:12px 0 40px;
+}
+.subscreen-list {
+  width:min(400px, 88vw); flex:1; min-height:0; overflow-y:auto;
+  display:flex; flex-direction:column; gap:8px;
+  padding-right:8px;
+}
+.subscreen-list::-webkit-scrollbar { width:6px; }
+.subscreen-list::-webkit-scrollbar-thumb { background:#ccc; border-radius:3px; }
+.subscreen-list::-webkit-scrollbar-track { background:#f0f0f0; }
+
+/* チュートリアルカード（ボタンとして機能、押すと過去のポップを見返せる想定） */
+.tutorial-card {
+  background:#f8f8f8; border:1px solid #ddd; border-radius:6px;
+  padding:12px 14px; cursor:pointer; text-align:left;
+  font-family:'Courier New',monospace;
+  transition:background 0.12s, border-color 0.12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.tutorial-card:hover, .tutorial-card:active { background:#eee; border-color:#bbb; }
+.tutorial-card-no { font-size:9px; color:#999; letter-spacing:1px; }
+.tutorial-card-title { font-size:15px; color:#111; font-weight:bold; margin-top:3px; }
+
+/* 実績称号カード（ボタンではない、ただの表示） */
+.achv-card {
+  border-radius:6px; padding:14px; font-family:'Courier New',monospace;
+}
+.achv-card.unlocked { background:#f8f8f8; border:1px solid #ddd; }
+.achv-card.locked   { background:#2a2a2a; border:1px solid #2a2a2a; }
+.achv-title { font-size:15px; font-weight:bold; }
+.achv-card.unlocked .achv-title { color:#111; }
+.achv-card.locked .achv-title { color:#fff; letter-spacing:3px; }
+.achv-desc { font-size:11px; margin-top:5px; line-height:1.5; }
+.achv-card.unlocked .achv-desc { color:#444; }
+.achv-card.locked .achv-desc { color:#ddd; }
+.achv-meta { font-size:9px; color:#999; margin-top:9px; letter-spacing:0.5px; }
+
+/* ── 図鑑画面 ── */
+#zukan-screen { overflow:hidden; } /* .subscreenのposition:fixedはそのまま活かす（引き出しの絶対配置はfixedでも問題なく機能する） */
+#zukan-menu-btn {
+  position:absolute; top:76px; left:20px;
+  background:#fff; border:1.5px solid #1a1a1a; border-radius:8px;
+  width:40px; height:36px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+  transition:background 0.12s;
+}
+#zukan-menu-btn:hover, #zukan-menu-btn:active { background:#eee; }
+#zukan-grid {
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;
+  width:min(340px, 88vw);
+  margin-top:16px;
+}
+.zukan-cell {
+  aspect-ratio:1; border-radius:8px; background:#f8f8f8; border:1.5px solid #ddd;
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+  transition:background 0.12s, border-color 0.12s, transform 0.1s;
+  display:flex; align-items:center; justify-content:center; padding:6px; box-sizing:border-box;
+}
+.zukan-cell:hover, .zukan-cell:active { background:#eee; border-color:#999; transform:scale(1.03); }
+.zukan-cell.locked { background:#f2f2f2; }
+.zukan-cell-icon { width:100%; height:100%; object-fit:contain; }
+#zukan-pager {
+  display:flex; align-items:center; justify-content:center; gap:16px;
+  margin-top:auto; padding-top:20px;
+}
+.zukan-pager-arrow {
+  width:34px; height:34px; border-radius:50%; border:1.5px solid #1a1a1a; background:#fff;
+  font-size:16px; color:#1a1a1a; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  -webkit-tap-highlight-color:transparent; transition:background 0.12s;
+}
+.zukan-pager-arrow:hover, .zukan-pager-arrow:active { background:#eee; }
+#zukan-dots { display:flex; gap:7px; }
+.zukan-dot {
+  width:7px; height:7px; border-radius:50%; background:#ddd; border:none; padding:0;
+  cursor:pointer; -webkit-tap-highlight-color:transparent; transition:background 0.15s, transform 0.15s;
+}
+.zukan-dot.active { background:#1a1a1a; transform:scale(1.3); }
+
+/* カテゴリ引き出し：左からスライドイン＋背景を薄暗く */
+#zukan-drawer-overlay {
+  position:absolute; inset:0; background:rgba(0,0,0,0.25);
+  opacity:0; pointer-events:none; transition:opacity 0.25s ease;
+  z-index:220;
+}
+#zukan-drawer-overlay.show { opacity:1; pointer-events:auto; }
+#zukan-drawer {
+  position:absolute; top:0; left:0; bottom:0; width:82%;
+  background:rgba(45,45,45,0.9);
+  transform:translateX(-100%);
+  transition:transform 0.28s cubic-bezier(.2,.8,.3,1);
+  z-index:221;
+  display:flex; flex-direction:column;
+  padding:24px 0 24px 0;
+  box-sizing:border-box;
+}
+#zukan-drawer.open { transform:translateX(0); }
+#zukan-drawer-header { display:flex; justify-content:flex-end; padding:0 20px 16px; }
+#zukan-drawer-close {
+  width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,0.15);
+  color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  -webkit-tap-highlight-color:transparent; transition:background 0.12s;
+}
+#zukan-drawer-close:hover, #zukan-drawer-close:active { background:rgba(255,255,255,0.3); }
+.zukan-drawer-item {
+  font-family:'Courier New',monospace; font-size:16px; color:#fff;
+  padding:16px 24px; border-bottom:1px solid rgba(255,255,255,0.25);
+  cursor:pointer; -webkit-tap-highlight-color:transparent; transition:background 0.12s;
+}
+.zukan-drawer-item:hover, .zukan-drawer-item:active { background:rgba(255,255,255,0.1); }
+.zukan-drawer-item.current { color:#ffd966; }
+
+/* 詳細ポップ */
+#zukan-popup-overlay {
+  position:absolute; inset:0; background:rgba(0,0,0,0.4);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.2s ease;
+  z-index:230;
+}
+#zukan-popup-overlay.show { opacity:1; pointer-events:auto; }
+#zukan-popup {
+  position:relative; width:min(300px, 80vw); background:#fff; border-radius:10px;
+  padding:26px 20px 22px; text-align:center;
+  font-family:'Courier New',monospace;
+}
+#zukan-popup-close {
+  position:absolute; top:8px; right:10px; background:none; border:none;
+  font-size:18px; color:#999; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+#zukan-popup-title { font-size:15px; font-weight:bold; color:#111; margin-bottom:10px; letter-spacing:1px; }
+#zukan-popup-body { font-size:11px; color:#666; line-height:1.7; }
 
 /* ── リザルト画面 ── */
 #gameover {
@@ -1410,7 +1606,6 @@ canvas { display:block; width:100%; height:100%; }
     <div class="mode-sub-btn" id="mode-collection">
       <div class="mode-sub-icon">📖</div>
       <div class="mode-sub-label">コレクション</div>
-      <div class="mode-sub-soon">準備中</div>
     </div>
   </div>
   <!-- 4行目：タイトルに戻る -->
@@ -1422,7 +1617,9 @@ canvas { display:block; width:100%; height:100%; }
        上のレイヤーで表示されるようにしている。CSSの仕様上、position+z-indexを持つ
        #mode-select の内側に置くと、そこで新しいスタッキングコンテキストが生まれてしまい、
        中の要素にどれだけ高いz-indexを指定しても兄弟要素の#sand-canvasを追い越せないため。
-       表示/非表示は隣接セレクタ(#mode-select.hide + #player-status-bar)で連動させている。 -->
+       表示/非表示は隣接セレクタ(#mode-select.hide + #player-status-bar)で連動させている。
+       コレクション画面などモード選択以外の画面でも表示したい場合は、collection.js側で
+       #player-status-barのdisplayをJSで明示的に上書きしている（インラインstyleはCSSより優先される）。 -->
 <div id="player-status-bar">
   <div id="psb-level-badge">
     <span id="psb-level-label">Lv</span>
@@ -1445,6 +1642,102 @@ canvas { display:block; width:100%; height:100%; }
     </div>
   </div>
   <button id="psb-settings-btn">⚙</button>
+</div>
+
+<!-- コレクション画面 -->
+<div id="collection-screen" class="hide">
+  <div id="collection-title">コレクション</div>
+  <div id="collection-grid">
+    <div class="collection-card" id="collection-profile">
+      <img class="collection-card-icon" alt="">
+      <div class="collection-card-title">プロフィール</div>
+      <div class="collection-card-desc">簡単な説明文（概要）</div>
+    </div>
+    <div class="collection-card" id="collection-tutorial">
+      <img class="collection-card-icon" alt="">
+      <div class="collection-card-title">チュートリアル</div>
+      <div class="collection-card-desc">簡単な説明文（概要）</div>
+    </div>
+    <div class="collection-card" id="collection-zukan">
+      <img class="collection-card-icon" alt="">
+      <div class="collection-card-title">図鑑</div>
+      <div class="collection-card-desc">簡単な説明文（概要）</div>
+    </div>
+    <div class="collection-card" id="collection-achievements">
+      <img class="collection-card-icon" alt="">
+      <div class="collection-card-title">実績称号</div>
+      <div class="collection-card-desc">簡単な説明文（概要）</div>
+    </div>
+  </div>
+  <button id="collection-to-mode">← もどる</button>
+</div>
+
+<!-- チュートリアル一覧画面 -->
+<div id="tutorial-screen" class="subscreen hide">
+  <button class="subscreen-back" id="tutorial-back" title="コレクションに戻る">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="22" y1="14" x2="6" y2="14" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+      <polyline points="13,7 6,14 13,21" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </button>
+  <div class="subscreen-title">- チュートリアル -</div>
+  <div class="subscreen-list" id="tutorial-list"></div>
+</div>
+
+<!-- 実績称号一覧画面 -->
+<div id="achievement-screen" class="subscreen hide">
+  <button class="subscreen-back" id="achievement-back" title="コレクションに戻る">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="22" y1="14" x2="6" y2="14" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+      <polyline points="13,7 6,14 13,21" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </button>
+  <div class="subscreen-title">- 実績称号 -</div>
+  <div class="subscreen-list" id="achievement-list"></div>
+</div>
+
+<!-- 図鑑画面 -->
+<div id="zukan-screen" class="subscreen hide">
+  <button class="subscreen-back" id="zukan-back" title="コレクションに戻る">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="22" y1="14" x2="6" y2="14" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+      <polyline points="13,7 6,14 13,21" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </button>
+  <div class="subscreen-title">- 図鑑 -</div>
+  <button id="zukan-menu-btn" title="カテゴリ一覧">
+    <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="0" y1="2"  x2="20" y2="2"  stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+      <line x1="0" y1="8"  x2="20" y2="8"  stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+      <line x1="0" y1="14" x2="20" y2="14" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+  <div id="zukan-grid"></div>
+
+  <div id="zukan-pager">
+    <button id="zukan-prev" class="zukan-pager-arrow">‹</button>
+    <div id="zukan-dots"></div>
+    <button id="zukan-next" class="zukan-pager-arrow">›</button>
+  </div>
+
+  <!-- カテゴリ引き出し -->
+  <div id="zukan-drawer-overlay"></div>
+  <div id="zukan-drawer">
+    <div id="zukan-drawer-header">
+      <button id="zukan-drawer-close">×</button>
+    </div>
+    <div id="zukan-drawer-list"></div>
+  </div>
+
+  <!-- 詳細ポップ -->
+  <div id="zukan-popup-overlay">
+    <div id="zukan-popup">
+      <button id="zukan-popup-close">×</button>
+      <div id="zukan-popup-title"></div>
+      <div id="zukan-popup-body"></div>
+    </div>
+  </div>
 </div>
 
 <!-- スキル選択画面 -->
@@ -2010,12 +2303,12 @@ function makeMarble(x,y,vx,vy,mass=1,type=null,forcedR=null){
     MARBLE_R;
   // ぶっ飛び玉：旧・軽玉の吹き飛ばし力(blastMult=1.8)を継承
   const blastMult = marbleType==='boost' ? 1.8 : 1.0;
-  // 遅延玉：旧・重玉のチェイン範囲拡大(rangeMult=1.5)を継承（10秒後の自爆に反映）
+  // 遅延玉：旧・重玉のチェイン範囲拡大(rangeMult=1.5)を継承（起爆後7秒での自爆に反映）
   const rangeMult = marbleType==='delay' ? 1.5 : 1.0;
-  // 起爆時間（追尾玉は少し猶予を長く。遅延玉は衝突では起爆せず、別途fuseTimerで10秒後に必ず起爆）
+  // 起爆時間（追尾玉は少し猶予を長く。遅延玉は衝突では起爆せず、別途fuseTimerで起爆トリガーから7秒後に必ず起爆）
   const detonateTime =
-    marbleType==='homing' ? 0.7 :
-    marbleType==='delay'  ? 10.0 : 0.4;
+    marbleType==='homing' ? 1.5 :
+    marbleType==='delay'  ? 7.0 : 0.4;
 
   // 手描きリングの本数（玉の種類・価値による差）
   const ringCountMap = { boost:1, gravity:2, homing:2, delay:2, sOnly:2, nOnly:2, red:3, gold:4 };
@@ -2064,7 +2357,7 @@ function makeMarble(x,y,vx,vy,mass=1,type=null,forcedR=null){
     inVortex: false,
     nearGravity: false, // 重力玉の影響圏内フラグ（毎フレーム更新）
     hasSplit: false,    // 分裂済みフラグ（trueなら分裂岩に接触しても分裂しない）
-    fuseTimer: null, // 遅延玉専用：起爆(armed=true)した瞬間に10.0がセットされ、0になったら必ず爆発する
+    fuseTimer: null, // 遅延玉専用：起爆(armed=true)した瞬間に7.0がセットされ、0になったら必ず爆発する
     armed: false,    // 遅延玉専用：一度衝突などで起爆した後はtrueになり、以後は再トリガーされない
     hp: (marbleType==='red' || marbleType==='gold') ? 2 : 1,
     hpCooldown: 0,
@@ -2077,12 +2370,12 @@ function makeMarble(x,y,vx,vy,mass=1,type=null,forcedR=null){
     mass};
 }
 
-// 遅延玉専用：衝突などで「起爆の引き金」を引かれた瞬間に呼ぶ。以後10秒のカウントダウンに入り、
+// 遅延玉専用：衝突などで「起爆の引き金」を引かれた瞬間に呼ぶ。以後7秒のカウントダウンに入り、
 // 再度呼ばれても（armed済みなら）何もしない
 function armDelayMarble(m){
   if(m.marbleType !== 'delay' || m.armed) return;
   m.armed = true;
-  m.fuseTimer = 10.0;
+  m.fuseTimer = 7.0;
 }
 
 function spawnMarbles() {
@@ -5203,13 +5496,16 @@ function drawPulseFrame(){
 
 // ── 背景方眼紙のキャッシュ ─────────────────────────
 // かすれた方眼線は毎フレーム同じ絵（座標ベースの乱数なので時間で変化しない）なので、
-// 初回だけワールド全体分を裏キャンバスに描いておき、以降はそれを貼るだけにする。
+// 小さいタイル1枚だけ裏キャンバスに描いておき、繰り返しパターンとして敷き詰める。
+// （以前はワールド全体3600x3600pxを1枚の巨大キャンバスとして保持していたが、
+// 　約52MBもの常時メモリ確保になり、モバイルでメモリ逼迫時に描画が乱れる原因になっていたため縮小）
 // デザインを変えたい場合は下のbuildGridCache内の描画ロジックをそのまま編集すればOK
 // （ページを開き直せば新しい内容でキャッシュが再生成される）。
-let gridCache = null;
+const GRID_TILE_SIZE = 600; // 方眼の間隔(50px)の倍数にして継ぎ目を目立たなくしている
+let gridPattern = null;
 function buildGridCache(){
   const gc = document.createElement('canvas');
-  gc.width = WORLD_W; gc.height = WORLD_H;
+  gc.width = GRID_TILE_SIZE; gc.height = GRID_TILE_SIZE;
   const gctx = gc.getContext('2d');
   const GS = 50, SEG = 18;
   gctx.lineCap = 'round';
@@ -5232,10 +5528,10 @@ function buildGridCache(){
       gctx.stroke();
     }
   };
-  for(let x=0; x<=WORLD_W; x+=GS) drawScratchyLine(x,0,x,WORLD_H);
-  for(let y=0; y<=WORLD_H; y+=GS) drawScratchyLine(0,y,WORLD_W,y);
+  for(let x=0; x<=GRID_TILE_SIZE; x+=GS) drawScratchyLine(x,0,x,GRID_TILE_SIZE);
+  for(let y=0; y<=GRID_TILE_SIZE; y+=GS) drawScratchyLine(0,y,GRID_TILE_SIZE,y);
   gctx.lineCap = 'butt';
-  gridCache = gc;
+  gridPattern = ctx.createPattern(gc, 'repeat');
 }
 
 function drawGrid(){
@@ -5255,12 +5551,12 @@ function drawGrid(){
   if(introHide) return;
 
   if(!waveActive){
-    // ── かすれた方眼紙：キャッシュ画像を貼るだけ（ループ境界はgetLoopOffsetsで同じ仕組みを流用） ──
-    if(!gridCache) buildGridCache();
-    const gridOffsets = getLoopOffsets();
-    for(const [gox, goy] of gridOffsets){
-      ctx.drawImage(gridCache, gox, goy);
-    }
+    // ── かすれた方眼紙：小さいタイルの繰り返しパターンで敷き詰める ──
+    if(!gridPattern) buildGridCache();
+    ctx.save();
+    ctx.fillStyle = gridPattern;
+    ctx.fillRect(ox, oy, vw, vh);
+    ctx.restore();
 
   } else {
     // ウェーブ演出中：従来のdistortedLine（かすれなし・シンプル）
@@ -5470,28 +5766,33 @@ function drawRadarDevice(h, t) {
   ctx.beginPath(); ctx.arc(0,0,r*0.07,0,Math.PI*2);
   ctx.fillStyle='rgba(20,20,20,0.6)'; ctx.fill();
 
-  // ── 右上タイマー小円：青インクから白へ（時間がなくなると白） ──
+  // ── 右上タイマー：ストップウォッチ風（上のツマミ＋二重丸の枠＋扇形で欠けていく塗り） ──
   if(isActive){
     const tr_x = r*1.25, tr_y = -r*1.25, tr = r*0.28;
-    // 背景：青インク（残り時間満タン時）
-    ctx.beginPath(); ctx.arc(tr_x, tr_y, tr, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(58,90,140,0.85)'; ctx.fill();
-    // 白い扇形が時間経過で広がる（timeRatioが減るほど白が増える）
     const elapsed = 1 - timeRatio; // 0→1（経過時間）
-    if(elapsed > 0){
-      const tAlpha = isUrgent ? 0.85+Math.abs(Math.sin(t*6))*0.15 : 0.9;
-      ctx.beginPath();
-      ctx.moveTo(tr_x, tr_y);
-      ctx.arc(tr_x, tr_y, tr, -Math.PI/2, -Math.PI/2 + elapsed*Math.PI*2);
-      ctx.closePath();
-      ctx.fillStyle = `rgba(245,245,245,${tAlpha})`; ctx.fill();
-    }
-    // 外枠
+    const startAngle = -Math.PI/2;
+    const endAngle = startAngle + elapsed*Math.PI*2;
+    const tAlpha = isUrgent ? 0.85+Math.abs(Math.sin(t*6))*0.15 : 0.9;
+    const col = `rgba(91,91,91,${tAlpha})`;
+
+    // 上部のツマミ
+    const tabW = tr*0.5, tabH = tr*0.36;
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(tr_x-tabW/2, tr_y-tr*1.28, tabW, tabH, tr*0.1);
+    else ctx.rect(tr_x-tabW/2, tr_y-tr*1.28, tabW, tabH);
+    ctx.fillStyle = col; ctx.fill();
+
+    // 外枠（二重丸：外側の細い輪）
     ctx.beginPath(); ctx.arc(tr_x, tr_y, tr, 0, Math.PI*2);
-    ctx.strokeStyle='rgba(40,60,95,0.6)'; ctx.lineWidth=1; ctx.stroke();
-    // 中央小点
-    ctx.beginPath(); ctx.arc(tr_x, tr_y, 1.5, 0, Math.PI*2);
-    ctx.fillStyle='rgba(58,90,140,0.9)'; ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = tr*0.13; ctx.stroke();
+
+    // 内側の塗り：残り時間ぶんの扇形（elapsed分だけ上から時計回りに欠ける）
+    const innerR = tr*0.76;
+    ctx.beginPath();
+    ctx.moveTo(tr_x, tr_y);
+    ctx.arc(tr_x, tr_y, innerR, endAngle, startAngle + Math.PI*2);
+    ctx.closePath();
+    ctx.fillStyle = col; ctx.fill();
   }
 
   // ── 検知フラッシュ ──
@@ -5863,7 +6164,7 @@ function drawMarbleSkin_fragileGlass(m, t, pulse, ringColor, lineW, hsl){
   // 遅延玉：残り時間が少ないほど「膨張と収縮」が大きく速くなり、赤い発光が強まる（爆ぜる予感を演出）
   let bombScale = 1;
   if(m.marbleType === 'delay' && m.fuseTimer !== null && m.fuseTimer !== undefined){
-    const urgency = 1 - Math.min(1, Math.max(0, m.fuseTimer / 10)); // 0(開始)→1(爆発直前)
+    const urgency = 1 - Math.min(1, Math.max(0, m.fuseTimer / 7)); // 0(開始)→1(爆発直前)
     const beatSpeed = 3 + urgency * 14;   // 明滅・拍動の速さ
     const beatAmp   = 0.05 + urgency * 0.22; // 拍動の振れ幅
     bombScale = 1 + Math.sin(t * beatSpeed) * beatAmp;
@@ -6145,11 +6446,61 @@ function drawMarbleSkin_inkHalftone(m,t,pulse,ringColor,lineW,hsl){
     m._inkSprite = variants[Math.floor(Math.random()*variants.length)];
   }
   const s = m._inkSprite;
+
+  // 遅延玉：残り時間が少ないほど「膨張と収縮」が大きく速くなり、赤い発光が強まる（爆ぜる予感を演出）
+  let bombScale = 1;
+  if(m.marbleType === 'delay' && m.fuseTimer !== null && m.fuseTimer !== undefined){
+    const urgency = 1 - Math.min(1, Math.max(0, m.fuseTimer / 7)); // 0(開始)→1(爆発直前)
+    const beatSpeed = 3 + urgency * 14;      // 明滅・拍動の速さ
+    const beatAmp   = 0.05 + urgency * 0.22; // 拍動の振れ幅
+    bombScale = 1 + Math.sin(t * beatSpeed) * beatAmp;
+    if(urgency > 0.15){
+      ctx.save();
+      ctx.translate(m.x, m.y);
+      ctx.beginPath();
+      ctx.arc(0, 0, s.bodyHalf * bombScale * 1.15, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(220,30,20,${(urgency-0.15)*0.5*(0.6+Math.sin(t*beatSpeed)*0.4)})`;
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   ctx.save();
   ctx.translate(m.x,m.y);
+  if(bombScale !== 1) ctx.scale(bombScale, bombScale);
   if(s.special){
     const twinkle=0.5+0.5*Math.sin(t*2.2+m.phase);
     drawInkBurstLines(m.r,hsl,16,t*0.2,twinkle);
+  }
+  // 追尾玉：常時ゆっくり回転する走査リングで「狙ってる感」を出す（浮遊中から視認できるように）
+  if(m.marbleType === 'homing' && !m.detonating){
+    ctx.save();
+    ctx.rotate(t*0.9 + m.phase);
+    ctx.beginPath();
+    for(let k=0;k<4;k++){
+      const a0 = k*(Math.PI/2), a1 = a0 + Math.PI*0.28;
+      ctx.moveTo(Math.cos(a0)*m.r*1.35, Math.sin(a0)*m.r*1.35);
+      ctx.arc(0,0,m.r*1.35,a0,a1);
+    }
+    ctx.strokeStyle = 'rgba(255,70,130,0.55)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+  }
+  // 追尾玉：起爆猶予中、曲がっていく方向にロックオン線を伸ばす（残り時間が少ないほど濃く）
+  if(m.marbleType === 'homing' && m.detonating){
+    const spd = Math.hypot(m.vx, m.vy);
+    if(spd > 0.05){
+      const urgency = 1 - Math.min(1, Math.max(0, m.detonateTimer / (m.detonateTime||1.5)));
+      const ang = Math.atan2(m.vy, m.vx);
+      const lineLen = m.r*(2.2+urgency*1.8);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ang)*m.r*1.2, Math.sin(ang)*m.r*1.2);
+      ctx.lineTo(Math.cos(ang)*lineLen, Math.sin(ang)*lineLen);
+      ctx.strokeStyle = `rgba(255,70,130,${0.35+urgency*0.5})`;
+      ctx.lineWidth = 1.2+urgency*1.2;
+      ctx.stroke();
+    }
   }
   ctx.drawImage(s.body,-s.bodyHalf,-s.bodyHalf);
   const cs=s.coreHalf*2*pulse;
@@ -6751,6 +7102,7 @@ function drawShieldBarrier(){
   ctx.restore();
 }
 
+let shipSketchJitter = null; // 機体の手描き風ライン用の固定ジッター（drawPlayerの外＝毎フレームリセットされない場所に置く）
 function drawPlayer(){
   const px=player.wx, py=player.wy, angle=player.angle, r=player.r;
   const t=Date.now()*0.005;
@@ -6782,13 +7134,15 @@ function drawPlayer(){
   ctx.beginPath();ctx.arc(px,py,mRange*0.6,0,Math.PI*2);
   ctx.strokeStyle=`rgba(${glowCol},0.07)`;ctx.stroke();
 
-  // グロウ（白背景では薄めに・渦中はさらに薄く）
+  // グロウ（機体周囲をS/N極の色でぼんやり発光。渦中はさらに薄く）
   const vortexAlpha = player.isCharging ? 0.5 + player.charge * 0.3 : 1.0;
   ctx.save();
   ctx.globalAlpha = vortexAlpha;
-  const gg=ctx.createRadialGradient(px,py,0,px,py,r*2.2);
-  gg.addColorStop(0,`rgba(${glowCol},0.18)`);gg.addColorStop(1,'transparent');
-  ctx.beginPath();ctx.arc(px,py,r*2.2,0,Math.PI*2);ctx.fillStyle=gg;ctx.fill();
+  const gg=ctx.createRadialGradient(px,py,0,px,py,r*2.8);
+  gg.addColorStop(0,`rgba(${glowCol},0.38)`);
+  gg.addColorStop(0.5,`rgba(${glowCol},0.16)`);
+  gg.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(px,py,r*2.8,0,Math.PI*2);ctx.fillStyle=gg;ctx.fill();
   ctx.restore();
 
   ctx.save();
@@ -6810,19 +7164,29 @@ function drawPlayer(){
     ctx.lineTo(-r*0.35, ny+r*0.18);
     ctx.closePath();
     ctx.fillStyle='rgba(232,234,236,0.97)';ctx.fill();
-    ctx.strokeStyle='rgba(72,78,85,0.85)';ctx.lineWidth=0.8;ctx.stroke();
+    ctx.strokeStyle='rgba(72,78,85,0.85)';ctx.lineWidth=1.6;ctx.stroke();
     // 噴射炎
     const nozzleGrad=ctx.createLinearGradient(-r*0.80, ny, -r*0.80-r*(0.6+sf*0.9), ny);
     nozzleGrad.addColorStop(0,`rgba(${glowCol},${nozzleAlpha})`);
     nozzleGrad.addColorStop(0.5,`rgba(${glowCol},${nozzleAlpha*0.4})`);
     nozzleGrad.addColorStop(1,`rgba(${glowCol},0)`);
     ctx.beginPath();
-    ctx.moveTo(-r*0.78, ny-r*0.09);
+    ctx.moveTo(-r*0.78, ny-r*0.17);
     ctx.lineTo(-r*0.80-r*(0.6+sf*0.9+(Math.random()*0.15)), ny+(Math.random()-0.5)*r*0.06);
-    ctx.lineTo(-r*0.78, ny+r*0.09);
+    ctx.lineTo(-r*0.78, ny+r*0.17);
     ctx.closePath();
     ctx.fillStyle=nozzleGrad;ctx.fill();
   }
+
+  // ── 機体本体：画像素材があればそれを使用、なければ手描き六角形にフォールバック ──
+  const playerImg = (typeof IMAGE_ASSETS !== 'undefined')
+    ? IMAGE_ASSETS.get('player', `default_${player.magnet.toLowerCase()}`) : null;
+  const usingPlayerImage = !!(playerImg && playerImg.complete && playerImg.naturalWidth > 0);
+  if (usingPlayerImage) {
+    // 画像は「右向き・中心配置」で作ってもらっている前提（回転はここまでのctx.rotateで既に適用済み）
+    const imgSize = r*2.3; // 六角形版の見た目の大きさに合わせた目安値。実機で見て調整可
+    ctx.drawImage(playerImg, -imgSize/2, -imgSize/2, imgSize, imgSize);
+  } else {
 
   // ── 六角形頂点定義（外形） ──
   const HEX=[
@@ -6858,6 +7222,70 @@ function drawPlayer(){
     for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
     ctx.closePath();
   }
+  // 手描き風のガサついた線で六角形パスを描く（頂点のズレ・辺の膨らみは固定値でキャッシュし、
+  // 毎フレーム変えるとブレて見えるので初回だけ生成する。線を2回描いて「描き直した」感を出す）
+  function getShipSketchJitter(){
+    if(shipSketchJitter) return shipSketchJitter;
+    const mk = () => Array.from({length:6}, () => ({
+      vx:(Math.random()-0.5)*r*0.045, vy:(Math.random()-0.5)*r*0.045, bow:(Math.random()-0.5)*r*0.05,
+    }));
+    shipSketchJitter = { outer:mk(), mid:mk(), inner:mk() };
+    return shipSketchJitter;
+  }
+  // gapFrac=0なら完全に閉じたループ、>0なら頂点0(先端)の周辺をgapFracぶん空ける
+  function drawSketchyHexPath(pts, jit, gapFrac, passOffsetScale){
+    const n=pts.length;
+    const jitPt = (i) => [pts[i][0]+jit[i].vx*passOffsetScale, pts[i][1]+jit[i].vy*passOffsetScale];
+    const bowMid = (a,b,bow) => {
+      const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2;
+      const dx=b[0]-a[0], dy=b[1]-a[1], len=Math.hypot(dx,dy)||1;
+      const nx=-dy/len, ny=dx/len;
+      return [mx+nx*bow*passOffsetScale, my+ny*bow*passOffsetScale];
+    };
+    ctx.beginPath();
+    if(gapFrac <= 0){
+      const order=[0,1,2,3,4,5,0];
+      let first=true;
+      for(let k=0;k<order.length-1;k++){
+        const a=jitPt(order[k]), b=jitPt(order[k+1]);
+        const m=bowMid(a,b,jit[order[k]].bow);
+        if(first){ ctx.moveTo(a[0],a[1]); first=false; }
+        ctx.quadraticCurveTo(m[0],m[1],b[0],b[1]);
+      }
+    } else {
+      const tip=jitPt(0), prev=jitPt(n-1), next=jitPt(1);
+      const gapStart=[tip[0]+(prev[0]-tip[0])*gapFrac, tip[1]+(prev[1]-tip[1])*gapFrac];
+      const gapEnd  =[tip[0]+(next[0]-tip[0])*gapFrac, tip[1]+(next[1]-tip[1])*gapFrac];
+      ctx.moveTo(gapEnd[0], gapEnd[1]);
+      for(let k=1;k<n-1;k++){
+        const a=jitPt(k), b=jitPt(k+1);
+        const m=bowMid(a,b,jit[k].bow);
+        ctx.quadraticCurveTo(m[0],m[1],b[0],b[1]);
+      }
+      ctx.lineTo(gapStart[0], gapStart[1]);
+    }
+  }
+  function strokeSketchyHex(pts, jitKey, gapFrac, strokeStyle, lineWidth, passes){
+    const jit = getShipSketchJitter()[jitKey];
+    ctx.strokeStyle = strokeStyle; ctx.lineWidth = lineWidth; ctx.lineCap='round'; ctx.lineJoin='round';
+    drawSketchyHexPath(pts, jit, gapFrac, 1.0); ctx.stroke();
+    if(passes > 1){
+      drawSketchyHexPath(pts, jit, gapFrac, 0.4); ctx.stroke();
+    }
+    ctx.lineCap='butt'; ctx.lineJoin='miter';
+  }
+  // 先端（頂点0）だけ途切れさせた六角形パス（手描きのスケッチ線が繋がりきらない感じを出す）
+  function drawHexPathGapAtTip(pts){
+    const n=pts.length;
+    const gapFrac=0.15; // 頂点0の前後どれだけ空けるか
+    const prev=pts[n-1], tip=pts[0], next=pts[1];
+    const gapStart=[tip[0]+(prev[0]-tip[0])*gapFrac, tip[1]+(prev[1]-tip[1])*gapFrac];
+    const gapEnd  =[tip[0]+(next[0]-tip[0])*gapFrac, tip[1]+(next[1]-tip[1])*gapFrac];
+    ctx.beginPath();
+    ctx.moveTo(gapEnd[0], gapEnd[1]);
+    for(let i=1;i<n;i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.lineTo(gapStart[0], gapStart[1]);
+  }
 
   const HEX2=hexOffset(HEX, 6);   // 第1同心（外から6px内側）
   const HEX3=hexOffset(HEX, 13);  // 第2同心（外から13px内側）
@@ -6871,13 +7299,11 @@ function drawPlayer(){
   bodyHL.addColorStop(1,'rgba(255,255,255,0)');
   ctx.fillStyle=bodyHL;ctx.fill();
 
-  // ── 第2同心六角形（最内・細線） ──
-  drawHexPath(HEX3);
-  ctx.strokeStyle='rgba(58,65,72,0.7)';ctx.lineWidth=0.6;ctx.stroke();
+  // ── 第2同心六角形（最内・細線・先端で途切れる・手描きタッチ） ──
+  strokeSketchyHex(HEX3, 'outer', 0.15, 'rgba(58,65,72,0.7)', 0.6, 2);
 
-  // ── 第1同心六角形（中間・細線） ──
-  drawHexPath(HEX2);
-  ctx.strokeStyle='rgba(58,65,72,0.82)';ctx.lineWidth=0.8;ctx.stroke();
+  // ── 第1同心六角形（中間・細線・先端で途切れる・手描きタッチ） ──
+  strokeSketchyHex(HEX2, 'outer', 0.04, 'rgba(58,65,72,0.82)', 0.8, 2);
 
   // ── 各辺の内側オフセット平行線（断面図ディテール） ──
   // 各辺ごとに辺の内側3pxに短い平行線を1本引く
@@ -6898,20 +7324,42 @@ function drawPlayer(){
     ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex2,ey2);ctx.stroke();
   }
 
-  // ── 前方プロウ（先端パネル：磁極色の発光充填） ──
+  // ── 外形アウトライン（最前面・太め・手描きタッチ） ──
+  strokeSketchyHex(HEX, 'outer', 0, 'rgba(30,32,35,0.95)', 3.4, 1);
+
+  // ── 先端脇の小さいチョンチョン線（アクセント） ──
+  ctx.strokeStyle='rgba(30,32,35,0.85)'; ctx.lineWidth=1.4; ctx.lineCap='round';
+  for(const sign of [-1,1]){
+    // 頂点0(先端)から隣接頂点方向へ20%進んだ位置に、辺と垂直な短い線を1本
+    const edgeTo = sign<0 ? HEX[5] : HEX[1];
+    const px = HEX[0][0]+(edgeTo[0]-HEX[0][0])*0.22;
+    const py = HEX[0][1]+(edgeTo[1]-HEX[0][1])*0.22;
+    const dx=edgeTo[0]-HEX[0][0], dy=edgeTo[1]-HEX[0][1], len=Math.hypot(dx,dy)||1;
+    const nx=-dy/len*sign, ny=dx/len*sign; // 外向き法線
+    const tickLen=r*0.1;
+    ctx.beginPath();
+    ctx.moveTo(px+nx*r*0.03, py+ny*r*0.03);
+    ctx.lineTo(px+nx*(r*0.03+tickLen), py+ny*(r*0.03+tickLen));
+    ctx.stroke();
+  }
+  ctx.lineCap='butt';
+
+  // ── 方向インジケーター（◆▶：機体内側、進行方向を分かりやすく、磁極色） ──
+  ctx.fillStyle=`rgba(${glowCol},0.9)`;
+  const diaX=r*0.65, diaS=r*0.09;
   ctx.beginPath();
-  ctx.moveTo(r*1.1,  0);
-  ctx.lineTo(r*0.55, r*0.38);
-  ctx.lineTo(r*0.55,-r*0.38);
-  ctx.closePath();
-  ctx.fillStyle=`rgba(${glowCol},0.18)`;ctx.fill();
-  ctx.strokeStyle='rgba(58,65,72,0.72)';ctx.lineWidth=0.8;ctx.stroke();
+  ctx.moveTo(diaX-diaS,0); ctx.lineTo(diaX,-diaS); ctx.lineTo(diaX+diaS,0); ctx.lineTo(diaX,diaS);
+  ctx.closePath(); ctx.fill();
+  // 三角（ひし形の少し前方）
+  const triX=r*0.87, triS=r*0.08;
+  ctx.beginPath();
+  ctx.moveTo(triX+triS,0); ctx.lineTo(triX-triS*0.6,-triS*0.8); ctx.lineTo(triX-triS*0.6,triS*0.8);
+  ctx.closePath(); ctx.fill();
 
-  // ── 外形アウトライン（最前面・太め） ──
-  drawHexPath(HEX);
-  ctx.strokeStyle='rgba(58,65,72,0.92)';ctx.lineWidth=1.2;ctx.stroke();
+  } // ── 六角形フォールバックここまで ──
 
-  // ── 中央エネルギーコア（回転多重リング） ──
+  // ── 中央エネルギーコア（回転多重リング）：画像使用時は画像側のコアを使うためスキップ ──
+  if (!usingPlayerImage) {
   const coreX=r*0.05, coreY=0;
   const coreR=r*0.28;
   // コア外リング（反時計回り）
@@ -6935,6 +7383,7 @@ function drawPlayer(){
   coreGlow.addColorStop(1,`rgba(${glowCol},0)`);
   ctx.beginPath();ctx.arc(coreX,coreY,coreR*0.45,0,Math.PI*2);
   ctx.fillStyle=coreGlow;ctx.fill();
+  } // ── コアここまで ──
 
   ctx.restore();
 
@@ -7709,7 +8158,7 @@ document.getElementById('title-play-btn').addEventListener('touchstart', e => {
 document.getElementById('title-settings-btn').addEventListener('click', () => openOption());
 document.getElementById('psb-settings-btn').addEventListener('click', () => openOption());
 document.getElementById('mode-shop').addEventListener('click', () => showBanner('準備中です', '#888888'));
-document.getElementById('mode-collection').addEventListener('click', () => showBanner('準備中です', '#888888'));
+// mode-collectionの実際の遷移処理は js/collection.js 側で登録している
 // タイトルに戻る
 const _modeToTitle = document.getElementById('mode-to-title');
 _modeToTitle.addEventListener('click', ()=>{
@@ -7921,5 +8370,7 @@ document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preven
 // ── 起動 ─────────────────────────────────────────
 requestAnimationFrame(loop);
 </script>
+<script src="js/collection.js"></script>
+<script src="js/zukan.js"></script>
 </body>
 </html>

@@ -47,9 +47,19 @@ const IMAGE_ASSET_PATHS = {
     sweep:           'assets/skills/skill_sweep.svg',
     energyConverter: 'assets/skills/skill_energyConverter.svg',
   },
+  player: {
+    default_s: 'assets/player/player_default_s.png',
+    default_n: 'assets/player/player_default_n.png',
+    // skin2_s/skin2_n, skin3_s/skin3_n はデザインができ次第ここに追加
+  },
+  collection: {
+    profile:      'assets/collection/profile.png',
+    tutorial:     'assets/collection/tutorial.png',
+    zukan:        'assets/collection/zukan.png',
+    achievements: 'assets/collection/achievements.png',
+  },
   // 今後の追加予定（フォルダを作ってからここにカテゴリを追加）：
   // ui:          { ... },
-  // player:      { ... },
   // enemies:     { ... },
   // backgrounds: { ... },
 };
