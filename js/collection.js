@@ -59,6 +59,7 @@
     // （インラインstyleはCSSのセレクタより優先される）
     statusBar.style.display = 'flex';
     if (typeof updatePlayerStatusBar === 'function') updatePlayerStatusBar();
+    if (window.Achievements) window.Achievements.unlock('ach_004'); // コレクション機能解放の実績（実際に解除されるのは初回のみ）
   }
   function closeCollection(){
     if (!modeSelect || !collection || !statusBar) return;
@@ -130,35 +131,130 @@
   }
 
   // ── 実績称号一覧 ──
-  const ACHIEVEMENT_ITEMS = Array.from({length:20}, (_,i) => ({
-    unlocked: i % 4 !== 2 && i % 4 !== 3,
-    title: '称号名（仮）',
-    desc: '称号の説明文が入ります（仮）。',
-    date: '2026/07/10',
-    level: 18,
-    condition: '達成条件が入ります（仮）。',
-  }));
-
+  // 実績の定義・解除/受け取り状態は js/achievements.js（window.Achievements）が管理している。
+  // ここでは一覧の描画と、カードタップ時のEP受け取り操作（受け取り演出込み）だけを担当する。
+  // 実績には「単発」（達成したら即その場で確定）と「段階」（統計値が閾値を超えるたびに
+  // tierが1つずつ進む。tierごとに個別にEPを受け取れる）の2種類がある。
   const achievementScreen = document.getElementById('achievement-screen');
   const achievementList   = byId('achievement-list');
-  if (achievementList){
-    ACHIEVEMENT_ITEMS.forEach(item => {
-      const card = document.createElement('div');
-      if (item.unlocked){
-        card.className = 'achv-card unlocked';
-        card.innerHTML = `
-          <div class="achv-title">${item.title}</div>
-          <div class="achv-desc">${item.desc}</div>
-          <div class="achv-meta">取得日：${item.date}　取得Lv：${item.level}</div>`;
-      } else {
-        card.className = 'achv-card locked';
-        card.innerHTML = `
-          <div class="achv-title">？？？？？</div>
-          <div class="achv-desc">${item.condition}</div>`;
-      }
-      achievementList.appendChild(card);
-    });
+
+  // タップした瞬間だけ出る「+◯◯EP獲得」ポップ（単発・段階どちらのカードでも共通で使う）
+  function showClaimPopup(card, ep){
+    const popup = document.createElement('div');
+    popup.className = 'achv-claim-popup';
+    popup.textContent = `+${ep}EP獲得`;
+    card.appendChild(popup);
+    requestAnimationFrame(()=> requestAnimationFrame(()=> popup.classList.add('show')));
+    setTimeout(()=>{
+      popup.classList.remove('show');
+      setTimeout(()=> popup.remove(), 300);
+    }, 900);
   }
+
+  function renderSingleCard(card, def, state){
+    if (!state.unlocked) {
+      card.className = 'achv-card locked';
+      card.innerHTML = `
+        <div class="achv-title">？？？？？</div>
+        <div class="achv-desc">${def.condition}</div>`;
+      return;
+    }
+    card.className = 'achv-card unlocked' + (state.claimed ? '' : ' glow');
+    const metaText = state.claimed
+      ? `取得日：${state.claimedAt || '-'}　取得Lv：${state.claimedLevel ?? '-'}`
+      : `獲得EP：${def.ep}（タップで受け取り）`;
+    card.innerHTML = `
+      <div class="achv-title">${def.title}</div>
+      <div class="achv-desc">${def.desc}</div>
+      <div class="achv-meta">${metaText}</div>`;
+    if (!state.claimed) {
+      card.addEventListener('click', () => {
+        const result = window.Achievements.claim(def.id);
+        if (result == null) return;
+        card.classList.remove('glow');
+        const metaEl = card.querySelector('.achv-meta');
+        if (metaEl) metaEl.textContent = `取得日：${result.claimedAt}　取得Lv：${result.claimedLevel}`;
+        showClaimPopup(card, result.ep);
+      }, { once:true });
+    }
+  }
+
+  function renderTieredCard(card, def, state){
+    const notified = state.notifiedTiers || [];
+    const claimed  = state.claimedTiers  || [];
+    const unit = def.progressUnit ?? '回';
+
+    // まだ最初の段階にも届いていない：条件を伏せて表示（通常の未解除カードと同じ見た目）
+    if (!notified.some(Boolean)) {
+      card.className = 'achv-card locked';
+      const condText = `${def.progressLabel}：${def.tiers.map(t => t.threshold.toLocaleString() + unit).join('/')}`;
+      card.innerHTML = `
+        <div class="achv-title">？？？？？</div>
+        <div class="achv-desc">${condText}</div>`;
+      return;
+    }
+
+    const allClaimed = def.tiers.every((_, i) => claimed[i]);
+    if (allClaimed) {
+      // 最終段階まで受け取り済み：単発実績と同じ「説明文＋取得日／Lv」表示に切り替える
+      const finalTier = def.tiers[def.tiers.length - 1];
+      card.className = 'achv-card unlocked';
+      card.innerHTML = `
+        <div class="achv-title">${finalTier.title}</div>
+        <div class="achv-desc">${def.desc}</div>
+        <div class="achv-meta">取得日：${state.claimedAt || '-'}　取得Lv：${state.claimedLevel ?? '-'}</div>`;
+      return;
+    }
+
+    const pendingIndex = notified.findIndex((n, i) => n && !claimed[i]);
+    if (pendingIndex !== -1) {
+      // 受け取り待ちの段階がある：グロー＋タップで受け取り。
+      // まだ最終段階ではないので、説明文はまだ出さずタイトルとEP受け取りのみ表示する
+      const tier = def.tiers[pendingIndex];
+      card.className = 'achv-card unlocked glow';
+      card.innerHTML = `
+        <div class="achv-title">${tier.title}</div>
+        <div class="achv-meta">獲得EP：${tier.ep}（タップで受け取り）</div>`;
+      card.addEventListener('click', () => {
+        const result = window.Achievements.claim(def.id, pendingIndex);
+        if (result == null) return;
+        // 受け取り後の見た目は「次はこうなるはず」と決め打ちで書き換えるのではなく、
+        // 最新state（1回の記録更新で複数段階を同時に突破していた場合、次の段階も
+        // 既に受け取り待ちになっている可能性がある）から同じカードを描き直す。
+        // これをしないと、赤バッジ側は「まだ受け取っていない段階がある」と正しく
+        // 判定しているのに、カード側は次段階の受け取りボタンが出ないまま
+        // 進捗表示に固定されてしまい、バッジが消えないバグになる。
+        renderTieredCard(card, def, window.Achievements.getState(def.id));
+        showClaimPopup(card, result.ep);
+      }, { once:true });
+      return;
+    }
+
+    // 直近の段階は受け取り済みだが、まだ次の段階には届いていない：進捗表示のみ（説明文はまだ出さない）
+    let lastClaimedIndex = -1;
+    for (let i = 0; i < claimed.length; i++) { if (claimed[i]) lastClaimedIndex = i; }
+    const currentTitle = def.tiers[lastClaimedIndex].title;
+    const nextTier = def.tiers[lastClaimedIndex + 1];
+    const value = window.Achievements.getStatValue(def.statKey);
+    card.className = 'achv-card unlocked';
+    card.innerHTML = `
+      <div class="achv-title">${currentTitle}</div>
+      <div class="achv-meta">${def.progressLabel}：${value.toLocaleString()}/${nextTier.threshold.toLocaleString()}${unit}</div>`;
+  }
+
+  function renderAchievementList(){
+    if (!achievementList || typeof window.Achievements === 'undefined') return;
+    achievementList.innerHTML = '';
+    for (const def of window.Achievements.defs) {
+      const state = window.Achievements.getState(def.id);
+      const card = document.createElement('div');
+      card.dataset.achId = def.id;
+      if (def.tiers) renderTieredCard(card, def, state);
+      else           renderSingleCard(card, def, state);
+      achievementList.appendChild(card);
+    }
+  }
+  renderAchievementList();
 
   const collectionAchievementsBtn = byId('collection-achievements');
   const achievementBackBtn = byId('achievement-back');
@@ -171,7 +267,9 @@
     achievementBackBtn.addEventListener('touchstart', e=>{ e.preventDefault(); closeSubscreen(achievementScreen); }, {passive:false});
   }
 
-  // 他のコレクション系ファイル（js/zukan.js など）から同じ開閉処理を使えるように公開
-  window.CollectionUI = { openSubscreen, closeSubscreen };
+  // 他のコレクション系ファイル（js/zukan.js など）から同じ開閉処理を使えるように公開。
+  // refreshAchievementsは、実績解除／段階到達の瞬間にコレクション画面を開いていた場合に
+  // js/achievements.js側から呼ばれ、一覧を最新状態に描き直すためのもの。
+  window.CollectionUI = { openSubscreen, closeSubscreen, refreshAchievements: renderAchievementList };
   console.log('[collection.js] 初期化完了。window.CollectionUI を公開しました。');
 })();
