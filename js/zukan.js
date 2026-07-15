@@ -354,8 +354,13 @@
       if (item.iconPath){
         const img = document.createElement('img');
         img.className = 'zukan-cell-icon';
-        img.src = item.iconPath;
+        // 読み込み確認が終わるまで非表示にしておく。こうしないと、ファイルが無い場合に
+        // 「画像が壊れています」アイコンが一瞬だけ表示され、それが消えた瞬間にレイアウトが
+        // ガタッと変わって見える（＝「開くと一瞬サイズがおかしい」という見え方の原因だった）
+        img.style.display = 'none';
+        img.onload = () => { img.style.display = ''; };
         img.onerror = () => img.remove();
+        img.src = item.iconPath;
         cell.appendChild(img);
       }
       cell.addEventListener('click', () => openPopup(item));
