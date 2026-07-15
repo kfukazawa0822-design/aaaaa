@@ -308,6 +308,23 @@
     }
   }
 
+  // ── 実績達成率（プロフィール画面用）：メタ実績を除いた全枠のうち、受け取り済みの割合 ──
+  function getCompletionRate(){
+    let total = 0, done = 0;
+    for (const def of ACHIEVEMENT_DEFS) {
+      if (def.metaAllComplete) continue; // メタ実績自身は分母に含めない
+      const s = getState(def.id);
+      if (def.tiers) {
+        total += def.tiers.length;
+        done  += (s.claimedTiers || []).filter(Boolean).length;
+      } else {
+        total += 1;
+        if (s.claimed) done += 1;
+      }
+    }
+    return total ? done / total : 0;
+  }
+
   window.Achievements = {
     defs: ACHIEVEMENT_DEFS,
     getState,
@@ -320,6 +337,7 @@
     checkLevelAchievements,
     checkMetaAchievement,
     updateBadges,
+    getCompletionRate,
   };
 
   // 起動時に一度チェック：この機能の追加より前から遊んでいたセーブデータでも、

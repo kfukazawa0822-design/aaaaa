@@ -431,6 +431,15 @@ canvas { display:block; width:100%; height:100%; }
   font-size:8px; letter-spacing:1px; color:#bbb;
   background:#efefef; border-radius:2px; padding:1px 5px;
 }
+.mode-btn-lock {
+  font-size:9px; letter-spacing:1px; color:#bbb;
+  background:#efefef; border-radius:3px; padding:2px 7px;
+  display:inline-block; margin-top:4px;
+}
+#mode-endless.locked .mode-btn-title,
+#mode-endless.locked .mode-btn-desc,
+#mode-endless.locked .mode-btn-arrow { opacity:0.4; }
+#mode-endless:not(.locked) .mode-btn-lock { display:none; }
 #mode-to-title {
   width:min(160px, 55vw); margin-top:22px;
   padding:11px 0; background:#fff; border:1.5px solid #ccc; border-radius:999px;
@@ -517,6 +526,66 @@ canvas { display:block; width:100%; height:100%; }
 .subscreen-list::-webkit-scrollbar { width:6px; }
 .subscreen-list::-webkit-scrollbar-thumb { background:#ccc; border-radius:3px; }
 .subscreen-list::-webkit-scrollbar-track { background:#f0f0f0; }
+
+/* ── プロフィール画面：見出し＋カードをまとめて上下中央揃え ── */
+#profile-main {
+  flex:1; min-height:0; width:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:36px;
+}
+#profile-main .subscreen-title { margin:0; }
+
+/* ── プロフィール画面：研究員証カード ── */
+#profile-card {
+  width:min(340px, 88vw); font-family:'Courier New',monospace; color:#1a1a1a;
+  border:1.6px solid #1a1a1a; border-radius:14px 10px 16px 9px / 10px 14px 8px 16px;
+  padding:28px 26px 30px; position:relative; box-sizing:border-box;
+  overflow-y:auto; max-height:calc(100vh - 160px);
+}
+/* 二重線で手描き感を出す（1本目の線を少しズラして薄く重ねる） */
+#profile-card::after {
+  content:''; position:absolute; inset:3px; pointer-events:none;
+  border:1px solid #1a1a1a; opacity:0.4;
+  border-radius:10px 14px 9px 13px / 12px 9px 15px 10px;
+}
+#profile-card-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding-bottom:16px; margin-bottom:26px; border-bottom:1.5px dashed #ccc;
+}
+#profile-card-lab { font-size:10px; letter-spacing:1px; color:#999; }
+#profile-card-heading { font-size:15px; font-weight:bold; letter-spacing:3px; }
+#profile-card-top { display:flex; gap:20px; align-items:flex-start; }
+#profile-icon-box { flex-shrink:0; width:88px; text-align:center; }
+#profile-icon-placeholder {
+  width:88px; height:88px; border:1.5px solid #1a1a1a; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; background:#fafafa;
+}
+#profile-icon-hint { font-size:8px; color:#aaa; margin-top:8px; line-height:1.4; }
+#profile-name-block { flex:1; min-width:0; padding-top:4px; }
+.profile-field-label { font-size:9px; color:#999; letter-spacing:1px; display:block; margin-bottom:5px; }
+#profile-name-input {
+  width:100%; border:none; border-bottom:1px solid #ddd; background:transparent;
+  font-family:'Courier New',monospace; font-size:16px; font-weight:bold; color:#1a1a1a;
+  padding:0 0 7px; margin-bottom:18px; box-sizing:border-box;
+}
+#profile-name-input:focus { outline:none; border-bottom-color:#1a1a1a; }
+#profile-title-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  border:1.5px dashed #999; border-radius:20px; padding:5px 12px;
+}
+#profile-title-select {
+  border:none; background:transparent; font-family:'Courier New',monospace;
+  font-size:11px; font-weight:bold; color:#1a1a1a; max-width:150px;
+}
+.profile-card-divider { border-top:1.5px dashed #ccc; margin:28px 0 20px; }
+#profile-stats-label { font-size:10px; color:#999; letter-spacing:1px; margin-bottom:14px; }
+.profile-stat-row {
+  display:flex; justify-content:space-between; font-size:12px;
+  padding:9px 0; border-top:0.5px solid #eee;
+}
+.profile-stat-row:first-of-type { border-top:none; }
+.profile-stat-row span:first-child { color:#666; }
+.profile-stat-row span:last-child { font-weight:bold; }
 
 /* チュートリアルカード（ボタンとして機能、押すと過去のポップを見返せる想定） */
 .tutorial-card {
@@ -613,6 +682,14 @@ canvas { display:block; width:100%; height:100%; }
 
 /* ── 図鑑画面 ── */
 #zukan-screen { overflow:hidden; } /* .subscreenのposition:fixedはそのまま活かす（引き出しの絶対配置はfixedでも問題なく機能する） */
+/* 見出し・3×4グリッド・ページャーの3点を1つのまとまりとして、画面の残り空間の中で中央揃えにする。
+   gapは「図鑑」見出しと上段アイコンの間隔（.subscreen-titleの元のmargin-bottom:40px）の2倍を指定 */
+#zukan-main {
+  flex:1; min-height:0; width:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:80px;
+}
+#zukan-main .subscreen-title { margin:0; }
 #zukan-menu-btn {
   position:absolute; top:76px; left:20px;
   background:#fff; border:1.5px solid #1a1a1a; border-radius:8px;
@@ -621,23 +698,32 @@ canvas { display:block; width:100%; height:100%; }
   transition:background 0.12s;
 }
 #zukan-menu-btn:hover, #zukan-menu-btn:active { background:#eee; }
+#zukan-grid-wrap { width:min(340px, 88vw); }
+/* パンくず風のカテゴリラベル：グリッド直上・左揃え・小さめグレー */
+#zukan-category-label {
+  font-size:11px; color:#999; text-align:left; margin-bottom:8px; letter-spacing:0.5px;
+}
 #zukan-grid {
   display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;
-  width:min(340px, 88vw);
-  margin-top:16px;
+  width:100%;
 }
 .zukan-cell {
-  aspect-ratio:1; border-radius:8px; background:#f8f8f8; border:1.5px solid #ddd;
+  aspect-ratio:1; border-radius:8px; background:#fff; border:1.5px solid #ddd;
   cursor:pointer; -webkit-tap-highlight-color:transparent;
   transition:background 0.12s, border-color 0.12s, transform 0.1s;
   display:flex; align-items:center; justify-content:center; padding:6px; box-sizing:border-box;
 }
 .zukan-cell:hover, .zukan-cell:active { background:#eee; border-color:#999; transform:scale(1.03); }
-.zukan-cell.locked { background:#f2f2f2; }
+.zukan-cell.locked { background:#fff; }
+/* ロック中はアイコン画像をbrightness(0)で真っ黒シルエット化（透過部分はそのまま透明）。
+   アンロックすると.lockedクラスが外れてこのfilterが解除され、フルカラーで見える */
+.zukan-cell.locked .zukan-cell-icon { filter:brightness(0); }
+/* データ自体がまだ無い空きマス：ロック中カードよりさらに薄く、押しても何も起きないようにする */
+.zukan-cell.empty { background:#fafafa; border-color:#eee; cursor:default; }
+.zukan-cell.empty:hover, .zukan-cell.empty:active { background:#fafafa; border-color:#eee; transform:none; }
 .zukan-cell-icon { width:100%; height:100%; object-fit:contain; }
 #zukan-pager {
   display:flex; align-items:center; justify-content:center; gap:16px;
-  margin-top:auto; padding-top:20px;
 }
 .zukan-pager-arrow {
   width:34px; height:34px; border-radius:50%; border:1.5px solid #1a1a1a; background:#fff;
@@ -651,6 +737,127 @@ canvas { display:block; width:100%; height:100%; }
   cursor:pointer; -webkit-tap-highlight-color:transparent; transition:background 0.15s, transform 0.15s;
 }
 .zukan-dot.active { background:#1a1a1a; transform:scale(1.3); }
+
+/* ── ショップ画面 ── */
+/* 上部固定UI（高さ約93px）の直下から開始し、残りの縦スペースを
+   博士エリア：商品欄：ページャー＝3：5：1の比率で分け合う */
+#shop-screen {
+  padding:calc(93px + 8px) 0 8px; height:100vh; box-sizing:border-box;
+}
+#shop-doctor-area {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  flex:2 1 0; min-height:0; margin:0;
+}
+#shop-doctor-bubble {
+  font-family:'Courier New',monospace; font-size:11px; color:#444;
+  background:#fff; border:1.5px solid #1a1a1a; border-radius:12px;
+  padding:8px 14px; max-width:min(280px, 80vw); text-align:center;
+}
+#shop-grid-wrap { width:min(340px, 88vw); flex:5 1 0; min-height:0; overflow-y:auto; }
+#shop-category-label { font-size:11px; color:#999; text-align:left; margin-bottom:8px; letter-spacing:0.5px; }
+#shop-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+#shop-grid.shop-grid-list { display:flex; flex-direction:column; gap:10px; }
+#shop-pager { flex:1 1 0; min-height:0; display:flex; align-items:center; justify-content:center; gap:16px; }
+#shop-dots { display:flex; gap:7px; }
+/* 戻るボタンはステータスバー(高さ約93px)のすぐ下に独立して固定配置。
+   博士エリアに被ってもOK（ステータスバー自体の設定・stacking contextには一切触れない） */
+.shop-back-standalone { position:fixed; top:100px; left:20px; z-index:220; }
+.shop-back-standalone.hide { display:none; }
+
+.shop-card {
+  position:relative; border:1.5px solid #1a1a1a; border-radius:8px; background:#fff;
+  padding:12px 10px; text-align:center; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  font-family:'Courier New',monospace; transition:background 0.12s;
+}
+.shop-card:hover, .shop-card:active { background:#f5f5f5; }
+.shop-card-icon { font-size:26px; margin-bottom:6px; }
+.shop-card-name { font-size:11px; font-weight:bold; color:#1a1a1a; margin-bottom:6px; line-height:1.3; }
+.shop-card-price { font-size:12px; font-weight:bold; color:#1a1a1a; }
+.shop-card-desc { font-size:10px; color:#666; line-height:1.5; margin:2px 0 6px; }
+.shop-card-price .shop-price-strike { text-decoration:line-through; color:#bbb; font-weight:normal; margin-right:6px; }
+
+.shop-card-featured {
+  grid-column:1 / -1; display:flex; align-items:center; gap:14px; text-align:left; padding:14px 16px;
+}
+.shop-card-featured .shop-card-icon { font-size:30px; margin-bottom:0; }
+.shop-card-featured .shop-card-body { flex:1; min-width:0; }
+.shop-card-featured .shop-card-name { margin-bottom:4px; font-size:13px; }
+
+.shop-card.purchased { background:#f2f2f2; cursor:default; }
+.shop-card.purchased:hover, .shop-card.purchased:active { background:#f2f2f2; }
+.shop-card.purchased .shop-card-name,
+.shop-card.purchased .shop-card-price { color:#aaa; }
+.shop-card-check {
+  position:absolute; top:6px; right:8px; font-size:14px; color:#4caf82;
+}
+
+.shop-card-list {
+  border:1.5px solid #1a1a1a; border-radius:8px; background:#fff; padding:14px 16px;
+  font-family:'Courier New',monospace; text-align:left;
+}
+.shop-card-list .shop-card-list-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+.shop-card-list .shop-card-name { font-size:13px; }
+.shop-card-list .shop-card-price { font-size:12px; }
+.shop-card-list .shop-card-desc { font-size:11px; color:#666; line-height:1.6; margin-bottom:10px; }
+.shop-card-list .shop-card-buy-btn {
+  border:1.5px solid #1a1a1a; border-radius:20px; background:#fff; padding:6px 18px;
+  font-family:'Courier New',monospace; font-size:11px; font-weight:bold; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.shop-card-list .shop-card-buy-btn:hover, .shop-card-list .shop-card-buy-btn:active { background:#f5f5f5; }
+.shop-card-list.purchased .shop-card-buy-btn { color:#aaa; border-color:#ccc; cursor:default; }
+
+/* ── ショップ：購入完了ポップアップ ── */
+#shop-reward-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.45);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.2s ease; z-index:400;
+}
+#shop-reward-overlay.show { opacity:1; pointer-events:auto; }
+#shop-reward-popup {
+  width:min(260px, 78vw); background:#fff; border-radius:12px; border:1.6px solid #1a1a1a;
+  padding:28px 20px; text-align:center; font-family:'Courier New',monospace; cursor:pointer;
+}
+#shop-reward-title { font-size:20px; font-weight:bold; letter-spacing:2px; margin-bottom:16px; }
+#shop-reward-icon { font-size:44px; margin-bottom:12px; }
+#shop-reward-name { font-size:13px; font-weight:bold; margin-bottom:16px; }
+#shop-reward-tap { font-size:10px; color:#999; }
+
+/* ── ショップ：購入確認ポップアップ ── */
+#shop-confirm-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.45);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.2s ease; z-index:410;
+}
+#shop-confirm-overlay.show { opacity:1; pointer-events:auto; }
+#shop-confirm-popup {
+  width:min(260px, 78vw); background:#fff; border-radius:12px; border:1.6px solid #1a1a1a;
+  padding:24px 20px; text-align:center; font-family:'Courier New',monospace;
+}
+#shop-confirm-text { font-size:13px; line-height:1.7; margin-bottom:20px; }
+#shop-confirm-buttons { display:flex; gap:10px; }
+#shop-confirm-buttons button {
+  flex:1; font-family:'Courier New',monospace; font-size:12px; font-weight:bold;
+  border-radius:20px; padding:9px 0; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+#shop-confirm-no { background:#fff; border:1.5px solid #ccc; color:#888; }
+#shop-confirm-no:hover, #shop-confirm-no:active { background:#f5f5f5; }
+#shop-confirm-yes { background:#1a1a1a; border:1.5px solid #1a1a1a; color:#fff; }
+#shop-confirm-yes:hover, #shop-confirm-yes:active { background:#333; }
+
+/* ── ショップ：EP不足ポップアップ ── */
+#shop-error-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.45);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.2s ease; z-index:410;
+}
+#shop-error-overlay.show { opacity:1; pointer-events:auto; }
+#shop-error-popup {
+  width:min(240px, 74vw); background:#fff; border-radius:12px; border:1.6px solid #1a1a1a;
+  padding:22px 20px; text-align:center; font-family:'Courier New',monospace; cursor:pointer;
+}
+#shop-error-text { font-size:14px; font-weight:bold; color:#1a1a1a; margin-bottom:14px; }
+#shop-error-tap { font-size:10px; color:#999; }
 
 /* カテゴリ引き出し：左からスライドイン＋背景を薄暗く */
 #zukan-drawer-overlay {
@@ -695,7 +902,7 @@ canvas { display:block; width:100%; height:100%; }
 #zukan-popup-overlay.show { opacity:1; pointer-events:auto; }
 #zukan-popup {
   position:relative; width:min(300px, 80vw); background:#fff; border-radius:10px;
-  padding:26px 20px 22px; text-align:center;
+  padding:26px 20px 22px; text-align:left;
   font-family:'Courier New',monospace;
 }
 #zukan-popup-close {
@@ -703,7 +910,7 @@ canvas { display:block; width:100%; height:100%; }
   font-size:18px; color:#999; cursor:pointer; -webkit-tap-highlight-color:transparent;
 }
 #zukan-popup-title { font-size:15px; font-weight:bold; color:#111; margin-bottom:10px; letter-spacing:1px; }
-#zukan-popup-body { font-size:11px; color:#666; line-height:1.7; }
+#zukan-popup-body { font-size:11px; color:#666; line-height:1.7; white-space:pre-line; }
 
 /* ── リザルト画面 ── */
 #gameover {
@@ -1668,6 +1875,7 @@ canvas { display:block; width:100%; height:100%; }
   <div class="mode-btn" id="mode-endless">
     <div class="mode-btn-title">エンドレスモード</div>
     <div class="mode-btn-desc">バッテリーが尽きるまで密度崩壊を続けろ</div>
+    <div class="mode-btn-lock" id="mode-endless-lock">🔒 ショップで解放</div>
     <div class="mode-btn-arrow">›</div>
   </div>
   <!-- 3行目：ショップ＋コレクション横並び -->
@@ -1675,7 +1883,6 @@ canvas { display:block; width:100%; height:100%; }
     <div class="mode-sub-btn" id="mode-shop">
       <div class="mode-sub-icon">🛒</div>
       <div class="mode-sub-label">ショップ</div>
-      <div class="mode-sub-soon">準備中</div>
     </div>
     <div class="mode-sub-btn" id="mode-collection">
       <div class="mode-sub-icon">📖</div>
@@ -1718,6 +1925,68 @@ canvas { display:block; width:100%; height:100%; }
   <button id="psb-settings-btn">⚙</button>
 </div>
 
+<!-- ショップの戻るボタン：ステータスバーがある画面なので、#shop-screen（.subscreenのスタッキング
+     コンテキスト）には入れず独立させ、ステータスバーのすぐ下・博士エリアに被ってOKな高さに固定配置する -->
+<button class="subscreen-back shop-back-standalone hide" id="shop-back" title="モード選択に戻る">
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="22" y1="14" x2="6" y2="14" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+    <polyline points="13,7 6,14 13,21" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </svg>
+</button>
+
+<!-- ショップ画面 -->
+<div id="shop-screen" class="subscreen hide">
+  <div id="shop-doctor-area">
+    <svg width="56" height="64" viewBox="0 0 56 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="28" cy="18" r="13" stroke="#1a1a1a" stroke-width="1.8"/>
+      <path d="M14,62 C14,42 42,42 42,62" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M17,15 C17,4 39,4 39,15" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="23" cy="19" r="1.6" fill="#1a1a1a"/>
+      <circle cx="33" cy="19" r="1.6" fill="#1a1a1a"/>
+    </svg>
+    <div id="shop-doctor-bubble">ほれ、新しい装備じゃ！</div>
+  </div>
+
+  <div id="shop-grid-wrap">
+    <div id="shop-category-label"></div>
+    <div id="shop-grid"></div>
+  </div>
+  <div id="shop-pager">
+    <button id="shop-prev" class="zukan-pager-arrow">‹</button>
+    <div id="shop-dots"></div>
+    <button id="shop-next" class="zukan-pager-arrow">›</button>
+  </div>
+</div>
+
+<!-- ショップ：EP不足ポップアップ -->
+<div id="shop-error-overlay">
+  <div id="shop-error-popup">
+    <div id="shop-error-text">EPが足りません</div>
+    <div id="shop-error-tap">タップして閉じる</div>
+  </div>
+</div>
+
+<!-- ショップ：購入確認ポップアップ -->
+<div id="shop-confirm-overlay">
+  <div id="shop-confirm-popup">
+    <div id="shop-confirm-text"></div>
+    <div id="shop-confirm-buttons">
+      <button id="shop-confirm-no">いいえ</button>
+      <button id="shop-confirm-yes">はい</button>
+    </div>
+  </div>
+</div>
+
+<!-- ショップ：購入完了ポップアップ -->
+<div id="shop-reward-overlay">
+  <div id="shop-reward-popup">
+    <div id="shop-reward-title">獲得！</div>
+    <div id="shop-reward-icon"></div>
+    <div id="shop-reward-name"></div>
+    <div id="shop-reward-tap">タップして閉じる</div>
+  </div>
+</div>
+
 <!-- コレクション画面 -->
 <div id="collection-screen" class="hide">
   <div id="collection-title">コレクション</div>
@@ -1747,6 +2016,58 @@ canvas { display:block; width:100%; height:100%; }
 </div>
 
 <!-- チュートリアル一覧画面 -->
+<!-- プロフィール画面 -->
+<div id="profile-screen" class="subscreen hide">
+  <button class="subscreen-back" id="profile-back" title="コレクションに戻る">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="22" y1="14" x2="6" y2="14" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+      <polyline points="13,7 6,14 13,21" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </button>
+  <div id="profile-main">
+    <div class="subscreen-title">- プロフィール -</div>
+
+    <div id="profile-card">
+      <div id="profile-card-header">
+        <span id="profile-card-lab">MSK LAB</span>
+        <span id="profile-card-heading">研究員証</span>
+      </div>
+
+      <div id="profile-card-top">
+        <div id="profile-icon-box">
+          <div id="profile-icon-placeholder">
+            <svg width="42" height="42" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="15" cy="11" r="6" stroke="#bbb" stroke-width="2"/>
+              <path d="M4,27 C4,19 24,19 26,27" stroke="#bbb" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div id="profile-icon-hint">ショップ実装後に選択可</div>
+        </div>
+        <div id="profile-name-block">
+          <label class="profile-field-label" for="profile-name-input">氏名</label>
+          <input type="text" id="profile-name-input" maxlength="12" placeholder="名前を入力">
+          <div id="profile-title-badge">
+            <span class="profile-field-label">称号</span>
+            <select id="profile-title-select"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card-divider"></div>
+
+      <div id="profile-stats">
+        <div id="profile-stats-label">調査記録</div>
+        <div class="profile-stat-row"><span>レベル</span><span id="profile-stat-level">Lv 1</span></div>
+        <div class="profile-stat-row"><span>クイックモード最高スコア</span><span id="profile-stat-quick">0</span></div>
+        <div class="profile-stat-row"><span>エンドレスモード最高スコア</span><span id="profile-stat-endless">0</span></div>
+        <div class="profile-stat-row"><span>図鑑達成率</span><span id="profile-stat-zukan">0%</span></div>
+        <div class="profile-stat-row"><span>実績達成率</span><span id="profile-stat-achievement">0%</span></div>
+        <div class="profile-stat-row"><span>総プレイ時間</span><span id="profile-stat-playtime">0時間0分</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="tutorial-screen" class="subscreen hide">
   <button class="subscreen-back" id="tutorial-back" title="コレクションに戻る">
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1778,7 +2099,6 @@ canvas { display:block; width:100%; height:100%; }
       <polyline points="13,7 6,14 13,21" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
     </svg>
   </button>
-  <div class="subscreen-title">- 図鑑 -</div>
   <button id="zukan-menu-btn" title="カテゴリ一覧">
     <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <line x1="0" y1="2"  x2="20" y2="2"  stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
@@ -1787,12 +2107,17 @@ canvas { display:block; width:100%; height:100%; }
     </svg>
   </button>
 
-  <div id="zukan-grid"></div>
-
-  <div id="zukan-pager">
-    <button id="zukan-prev" class="zukan-pager-arrow">‹</button>
-    <div id="zukan-dots"></div>
-    <button id="zukan-next" class="zukan-pager-arrow">›</button>
+  <div id="zukan-main">
+    <div class="subscreen-title">- 図鑑 -</div>
+    <div id="zukan-grid-wrap">
+      <div id="zukan-category-label"></div>
+      <div id="zukan-grid"></div>
+    </div>
+    <div id="zukan-pager">
+      <button id="zukan-prev" class="zukan-pager-arrow">‹</button>
+      <div id="zukan-dots"></div>
+      <button id="zukan-next" class="zukan-pager-arrow">›</button>
+    </div>
   </div>
 
   <!-- カテゴリ引き出し -->
@@ -1857,7 +2182,7 @@ let ctx    = canvas.getContext('2d');
 // ── 定数 ─────────────────────────────────────────
 const WORLD_W = 3600, WORLD_H = 3600;
 const MARBLE_R = 21;
-const NORMAL_HUE = 41; // 通常玉の色（画像からスポイトした値、固定1色）
+const NORMAL_HUE = 41; // 磁晶核の色（画像からスポイトした値、固定1色）
 const COLLISION_SPEED = 3.5;
 const SPEEDS = [2.0, 2.6, 3.2, 4.0, 5.0];
 const BASE_MAGNET_RANGE   = 470;
@@ -1966,9 +2291,9 @@ let screenShake = { x:0, y:0, power:0 };
 const SKILL_DEFS = [
   { id:'blink',   name:'ブリンク',     icon:'⚡', spCost:100, maxStock:3, desc:'指定方向へ瞬間移動（約500px）' },
   { id:'dash',    name:'ダッシュ',     icon:'💨', spCost:80,  maxStock:1, desc:'約3秒間、高速移動' },
-  { id:'cannon',  name:'大砲',         icon:'💣', spCost:100, maxStock:3, desc:'前方へ巨大なガラス玉を発射' },
+  { id:'cannon',  name:'大砲',         icon:'💣', spCost:100, maxStock:3, desc:'前方へ巨大な磁晶核を発射' },
   { id:'typhoon', name:'台風の目',     icon:'🌪', spCost:200, maxStock:1, desc:'約3秒間、周囲の玉をゆっくり吸い寄せる' },
-  { id:'shield',  name:'シールド',     icon:'🛡', spCost:100, maxStock:1, desc:'約10秒間、引き寄せた玉が壊れない＋遅延玉の起爆タイマーも停止' },
+  { id:'shield',  name:'シールド',     icon:'🛡', spCost:100, maxStock:1, desc:'約10秒間、引き寄せた玉が壊れない＋遅延磁晶核の起爆タイマーも停止' },
   { id:'stop',    name:'玉運動停止',   icon:'⏸', spCost:50,  maxStock:6, desc:'押している間、磁力範囲内の玉を停止' },
   { id:'beacon',  name:'ワープビーコン', icon:'🛰', spCost:100, maxStock:1, desc:'1回目で地点記憶(周囲600pxのアイテムを検知)、2回目でワープ' },
   { id:'sweep',   name:'マグネットスイープ', icon:'🧹', spCost:100, maxStock:2, desc:'前方を扇形に薙ぎ払う（N極中の方が距離が伸びる）' },
@@ -2001,7 +2326,11 @@ function defaultSaveData() {
     level: 1,
     xp: 0,
     coins: 0,
-    shopPurchases: {},   // 未実装：ショップでの購入状況
+    shopPurchases: {},   // ショップでの購入状況（{ [商品id]: true }。スキン/エフェクト/差し入れ/応援パックなど一度きりの購入品用）
+    unlockedSkills: ['blink', 'stop', 'sweep'], // 所持スキン（初期3つ＋ショップ購入分）
+    endlessUnlocked: false, // エンドレスモード解放（ショップ初回訪問時のチュートリアル購入で自動true）
+    ownedIcons: [],          // アイコンガチャで獲得済みのアイコンid（重複無し、最大12）
+    freePackClaimedDate: null, // 無料応援パックを最後に受け取った日付（1日1回のリセット判定用）
     titles: {},            // 実績称号の解除・受け取り状況（{ [実績id]: {unlocked, claimed} }）js/achievements.js側で管理
     collection: {},        // 未実装：図鑑の解放状況
     profile: {},             // 未実装：プロフィール情報
@@ -2018,6 +2347,10 @@ function migrateSaveData(parsed) {
   if (typeof parsed.xp === 'number' && parsed.xp >= 0) data.xp = parsed.xp;
   if (typeof parsed.coins === 'number' && parsed.coins >= 0) data.coins = parsed.coins;
   if (parsed.shopPurchases && typeof parsed.shopPurchases === 'object') data.shopPurchases = parsed.shopPurchases;
+  if (Array.isArray(parsed.unlockedSkills)) data.unlockedSkills = parsed.unlockedSkills;
+  if (typeof parsed.endlessUnlocked === 'boolean') data.endlessUnlocked = parsed.endlessUnlocked;
+  if (Array.isArray(parsed.ownedIcons)) data.ownedIcons = parsed.ownedIcons;
+  if (typeof parsed.freePackClaimedDate === 'string') data.freePackClaimedDate = parsed.freePackClaimedDate;
   if (parsed.titles && typeof parsed.titles === 'object' && !Array.isArray(parsed.titles)) data.titles = parsed.titles;
   // 旧スキーマ（未実装当時の空配列）だった場合は何もしない＝初期値の{}のまま
   if (parsed.collection && typeof parsed.collection === 'object') data.collection = parsed.collection;
@@ -2073,6 +2406,15 @@ function resetSaveData() {
 
 let saveData = loadSaveData();
 saveSaveData(); // 旧データからの移行結果・バージョン番号を確定させて即保存
+
+// エンドレスモードのロック表示（saveData.endlessUnlockedに応じて.lockedクラスを切り替える）。
+// ボイルアニメーション側のisLockedButton()もこのクラスを見て自動的にボイルをスキップする。
+function updateEndlessLockUI(){
+  const el = document.getElementById('mode-endless');
+  if (!el) return;
+  el.classList.toggle('locked', !saveData.endlessUnlocked);
+}
+updateEndlessLockUI();
 
 // ── レベル・経験値・コインシステム ──────────────────
 const LEVEL_UP_BASE_XP  = 100; // Lv1→2 に必要なXP
@@ -2203,10 +2545,65 @@ const HOLE_GIMMICKS = [
   { id:'overcharge',    name:'磁力超強化',           color:'#ffdd44' },
   { id:'rock_awaken',   name:'岩覚醒',              color:'#ff8844' },
   { id:'vortex',        name:'ぐるぐる大旋風',        color:'#aa66ff' },
-  { id:'marble_fever',  name:'ガラス玉フィーバー',    color:'#44ffcc' },
+  { id:'marble_fever',  name:'磁晶核フィーバー',    color:'#44ffcc' },
   { id:'resonance_run', name:'超爆発ラッシュ',        color:'#ff4488' },
 ];
 let holeSequenceIdx = 0;
+
+// ── 図鑑（研究対象：磁晶核／岩・ギミック）の解放マッピング ──
+// js/zukan.js側のwindow.Zukan.unlock(id)を、対応するタイミングで呼び出すための対応表。
+// 図鑑側にまだ無いidを渡してもunlock()内部で無視されるだけなので、安全に呼び出せる。
+const ZUKAN_MATTER_ID_BY_MARBLE_TYPE = {
+  normal:'matter_1', boost:'matter_2', gravity:'matter_3', homing:'matter_4',
+  delay:'matter_5',  sOnly:'matter_6', nOnly:'matter_7',  red:'matter_8', gold:'matter_9',
+};
+const ZUKAN_GIMMICK_ID_BY_ROCK_ABILITY = {
+  bumper:'gimmick_1', wave:'gimmick_2', split:'gimmick_3', resonance:'gimmick_4',
+};
+const ZUKAN_GIMMICK_ID_BY_HOLE_GIMMICK = {
+  overcharge:'gimmick_5', rock_awaken:'gimmick_6', vortex:'gimmick_7',
+  marble_fever:'gimmick_8', resonance_run:'gimmick_9',
+};
+// 「アイテム」ページの解放マッピング：ITEM_DEFS/EP_BONUS_ITEM_DEFのidと対応
+const ZUKAN_ITEM_ID_BY_ITEM_DEF_ID = {
+  s_boost:'item_1', n_boost:'item_2', range_up:'item_3', chain_multi:'item_4',
+  explode_up:'item_5', bat_stable:'item_6', bat_unstable:'item_7', bat_chaos:'item_8',
+  rare_booster:'item_9', skill_charger:'item_10', ep_bonus:'item_11',
+};
+// 「スキル」ページの解放マッピング：SKILL_DEFSのidと対応
+const ZUKAN_SKILL_ID_BY_SKILL_DEF_ID = {
+  blink:'skill_1', stop:'skill_2', sweep:'skill_3', shield:'skill_4', typhoon:'skill_5',
+  beacon:'skill_6', dash:'skill_7', cannon:'skill_8', energyConverter:'skill_9',
+};
+// 「研究対象：磁晶核」解放条件：そのタイプの磁晶核が爆発したら
+function unlockMatterZukan(marbleType){
+  if (!window.Zukan) return;
+  const id = ZUKAN_MATTER_ID_BY_MARBLE_TYPE[marbleType];
+  if (id) window.Zukan.unlock(id);
+}
+// 「岩・ギミック」解放条件：その岩の特殊能力／ギミック装置の効果が発動したら
+function unlockRockGimmickZukan(ability){
+  if (!window.Zukan) return;
+  const id = ZUKAN_GIMMICK_ID_BY_ROCK_ABILITY[ability];
+  if (id) window.Zukan.unlock(id);
+}
+function unlockHoleGimmickZukan(gimmickId){
+  if (!window.Zukan) return;
+  const id = ZUKAN_GIMMICK_ID_BY_HOLE_GIMMICK[gimmickId];
+  if (id) window.Zukan.unlock(id);
+}
+// 「アイテム」解放条件：プレイ中にそのアイテムを1回でも取得したら
+function unlockItemZukan(itemDefId){
+  if (!window.Zukan) return;
+  const id = ZUKAN_ITEM_ID_BY_ITEM_DEF_ID[itemDefId];
+  if (id) window.Zukan.unlock(id);
+}
+// 「スキル」解放条件：スキル選択画面でSTART GAMEを押した時（実績「収集開始/装備充実/完全武装」と同じタイミング）
+function unlockSkillZukan(skillDefId){
+  if (!window.Zukan) return;
+  const id = ZUKAN_SKILL_ID_BY_SKILL_DEF_ID[skillDefId];
+  if (id) window.Zukan.unlock(id);
+}
 
 // ── アクティブ世界イベント ────────────────────────
 let activeWorldEvent = null; // { id, timer, totalDuration } | null
@@ -2380,11 +2777,11 @@ function makeMarble(x,y,vx,vy,mass=1,type=null,forcedR=null){
     marbleType==='red'      ? MARBLE_R * 1.2  :
     marbleType==='gold'     ? MARBLE_R * 1.3  :
     MARBLE_R;
-  // ぶっ飛び玉：旧・軽玉の吹き飛ばし力(blastMult=1.8)を継承
+  // 跳躍磁晶核：旧・軽玉の吹き飛ばし力(blastMult=1.8)を継承
   const blastMult = marbleType==='boost' ? 1.8 : 1.0;
-  // 遅延玉：旧・重玉のチェイン範囲拡大(rangeMult=1.5)を継承（起爆後7秒での自爆に反映）
+  // 遅延磁晶核：旧・重玉のチェイン範囲拡大(rangeMult=1.5)を継承（起爆後7秒での自爆に反映）
   const rangeMult = marbleType==='delay' ? 1.5 : 1.0;
-  // 起爆時間（追尾玉は少し猶予を長く。遅延玉は衝突では起爆せず、別途fuseTimerで起爆トリガーから7秒後に必ず起爆）
+  // 起爆時間（追尾磁晶核は少し猶予を長く。遅延磁晶核は衝突では起爆せず、別途fuseTimerで起爆トリガーから7秒後に必ず起爆）
   const detonateTime =
     marbleType==='homing' ? 1.5 :
     marbleType==='delay'  ? 7.0 : 0.4;
@@ -2401,14 +2798,14 @@ function makeMarble(x,y,vx,vy,mass=1,type=null,forcedR=null){
   const ringLoops = ringRadiiRatios.map(f =>
     genBlobLoop(baseR*f, 10+Math.floor(Math.random()*3), 0.055+Math.random()*0.03)
   );
-  // 繊細ガラス玉スキン用：鉛筆で2度なぞったような線にするため、独立した2本の輪を薄く重ねて描く
+  // 繊細磁晶核スキン用：鉛筆で2度なぞったような線にするため、独立した2本の輪を薄く重ねて描く
   const fineRingLoopsA = ringRadiiRatios.map(f =>
     genBlobLoop(baseR*f, 9+Math.floor(Math.random()*3), 0.05+Math.random()*0.035)
   );
   const fineRingLoopsB = ringRadiiRatios.map(f =>
     genBlobLoop(baseR*f, 9+Math.floor(Math.random()*3), 0.05+Math.random()*0.035)
   );
-  // 繊細ガラス玉スキン用：コアは塗りつぶしではなく点描（顕微鏡スケッチの粒子表現）で密度を出す
+  // 繊細磁晶核スキン用：コアは塗りつぶしではなく点描（顕微鏡スケッチの粒子表現）で密度を出す
   const coreDotCount = 18 + Math.floor(Math.random()*9);
   const coreExtent = baseR*0.36; // コアが広がる範囲（点の大きさはr側で別管理）
   const coreStipple = Array.from({length:coreDotCount}, () => {
@@ -2434,10 +2831,10 @@ function makeMarble(x,y,vx,vy,mass=1,type=null,forcedR=null){
       {a:Math.random()*Math.PI*2, spd:-(0.015+Math.random()*0.02), r:0.18+Math.random()*0.1},
     ],
     inVortex: false,
-    nearGravity: false, // 重力玉の影響圏内フラグ（毎フレーム更新）
+    nearGravity: false, // 重力磁晶核の影響圏内フラグ（毎フレーム更新）
     hasSplit: false,    // 分裂済みフラグ（trueなら分裂岩に接触しても分裂しない）
-    fuseTimer: null, // 遅延玉専用：起爆(armed=true)した瞬間に7.0がセットされ、0になったら必ず爆発する
-    armed: false,    // 遅延玉専用：一度衝突などで起爆した後はtrueになり、以後は再トリガーされない
+    fuseTimer: null, // 遅延磁晶核専用：起爆(armed=true)した瞬間に7.0がセットされ、0になったら必ず爆発する
+    armed: false,    // 遅延磁晶核専用：一度衝突などで起爆した後はtrueになり、以後は再トリガーされない
     hp: (marbleType==='red' || marbleType==='gold') ? 2 : 1,
     hpCooldown: 0,
     flashTimer: 0,
@@ -2449,7 +2846,7 @@ function makeMarble(x,y,vx,vy,mass=1,type=null,forcedR=null){
     mass};
 }
 
-// 遅延玉専用：衝突などで「起爆の引き金」を引かれた瞬間に呼ぶ。以後7秒のカウントダウンに入り、
+// 遅延磁晶核専用：衝突などで「起爆の引き金」を引かれた瞬間に呼ぶ。以後7秒のカウントダウンに入り、
 // 再度呼ばれても（armed済みなら）何もしない
 function armDelayMarble(m){
   if(m.marbleType !== 'delay' || m.armed) return;
@@ -2771,6 +3168,7 @@ function spawnComboItem(wx, wy) {
 function applyItem(def) {
   let msg=def.label, col=def.color;
   const batteryBefore = player.battery; // 実績「起死回生」判定用（適用前の残量を記録）
+  unlockItemZukan(def.id); // 図鑑「アイテム」解放（取得した時点で1回でも解放）
   switch(def.id){
     case 's_boost':
       upgrades.sBoost = Math.min(upgrades.sBoost+0.4,3);
@@ -2916,7 +3314,7 @@ function triggerExplosion(x, y, power, chainDepth, isRock, playerCaused=false, g
       h.detectFlash = Math.min(1, h.detectFlash + 0.6);
       h.detectWaves.push({ r: h.r, maxR: DETECT_R * 0.85, life: 1 });
       // ゲージ加算（開放中のみ・岩の爆発はノーカウント）
-      // 通常玉+1、赤玉+10、金玉+20（gaugePointsで指定、既定値1）
+      // 磁晶核+1、赤玉+10、金玉+20（gaugePointsで指定、既定値1）
       if (!isRock && h.isOpen && h.openAnim > 0.85 && gaugePoints > 0) {
         h.points = Math.min(h.points + gaugePoints, HOLE_GOAL_POINTS);
         h.chargeFlash = 1.0;
@@ -2951,7 +3349,7 @@ function triggerExplosion(x, y, power, chainDepth, isRock, playerCaused=false, g
     if(gameStartProtection) return; // 開始保護中は連鎖伝播をスキップ
     let chainHit=0;
 
-    // ── ガラス玉への連鎖 ──
+    // ── 磁晶核への連鎖 ──
     for(const m of marbles){
       if(!m.alive || m.detonating) continue;
       let dx=m.x-x, dy=m.y-y;
@@ -2984,7 +3382,7 @@ function triggerExplosion(x, y, power, chainDepth, isRock, playerCaused=false, g
           } else {
             baseHitScore = 50; // 非プレイヤー起因：段階によらず固定
           }
-          // S反応玉・N反応玉：片方の極にしか反応しない制約への見返りとして基本ヒット点2倍
+          // S磁晶核・N磁晶核：片方の極にしか反応しない制約への見返りとして基本ヒット点2倍
           const typeScoreMult = (m.marbleType === 'sOnly' || m.marbleType === 'nOnly') ? 2 : 1;
           addScore(Math.floor(baseHitScore * typeScoreMult * upgrades.chainMulti * getEventMult('chainMulti')));
         }
@@ -3171,7 +3569,7 @@ function activateDash(){
   showBanner('💨 DASH', '#aaffdd');
 }
 
-const CANNON_R = MARBLE_R * 3;   // 通常玉の3倍サイズ（S/N極には一切反応しない専用玉として扱う）
+const CANNON_R = MARBLE_R * 3;   // 磁晶核の3倍サイズ（S/N極には一切反応しない専用玉として扱う）
 const CANNON_APPEAR_DUR = 0.5;   // 出現にかける時間（秒）
 
 function activateCannon(){
@@ -3210,7 +3608,7 @@ function fireCannon(){
   // 大砲玉は爆発範囲もサイズに比例（rangeMult=3。2000px到達時に被弾数ぶんさらに増加する）
   m.rangeMult = 3;
   m.cannonTravelDist = 0; // 発射地点からの移動距離（これが2000pxに達すると起爆準備に入る）
-  m.cannonHitCount = 0;   // 無敵飛行中にすり抜けて消費したガラス玉の数（爆発の大きさに反映）
+  m.cannonHitCount = 0;   // 無敵飛行中にすり抜けて消費した磁晶核の数（爆発の大きさに反映）
   m.cannonArmed = false;  // true になったら通常の起爆(0.4秒後に爆発)フローに合流する
   marbles.push(m);
   showBanner('💣 大砲', '#ffddaa');
@@ -3269,7 +3667,7 @@ function activateSweep(){
     while(angDiff < -Math.PI) angDiff += Math.PI*2;
     if(Math.abs(angDiff) > halfArc) continue;
 
-    const nx = dx/dist, ny = dy/dist; // このガラス玉自身の、プレイヤーから見た方向
+    const nx = dx/dist, ny = dy/dist; // この磁晶核自身の、プレイヤーから見た方向
     // 左(-halfArc)から右(+halfArc)へ薙ぎ払う＝各玉の位置を基準にした時計回りの接線方向
     const tangentX = ny, tangentY = -nx;
     // 接線方向(薙ぎ払いの向き)と外側方向(プレイヤーから離れる向き)をブレンドして、
@@ -3436,8 +3834,12 @@ function triggerGameOver() {
     if (gameMode === 'quick')   window.Achievements.unlock('ach_001');
     if (gameMode === 'endless') window.Achievements.unlock('ach_003');
     window.Achievements.incrementStat('totalPlayCount');       // 総プレイ回数
+    window.Achievements.incrementStat('totalPlayTimeSec', playTime); // 総プレイ時間（プロフィール画面用、秒で累計）
     window.Achievements.setStatIfHigher('bestChainCount', maxChainCount); // 1プレイでの最大チェイン
     window.Achievements.setStatIfHigher('bestScore', score);               // 1プレイでの最高スコア
+    // プロフィール画面用：モード別の最高スコア
+    if (gameMode === 'quick')   window.Achievements.setStatIfHigher('bestScoreQuick', score);
+    if (gameMode === 'endless') window.Achievements.setStatIfHigher('bestScoreEndless', score);
   }
 
   document.getElementById('gameover').classList.add('show');
@@ -3632,7 +4034,7 @@ function drawPauseMap() {
     c.lineWidth = 1; c.stroke();
   }
 
-  // ガラス玉（密度ヒートマップ）
+  // 磁晶核（密度ヒートマップ）
   const cellSz = 6;
   const cols = Math.ceil(sz / cellSz);
   const rows = Math.ceil(sz / cellSz);
@@ -3658,7 +4060,7 @@ function drawPauseMap() {
     }
   }
 
-  // ガラス玉ドット
+  // 磁晶核ドット
   for (const m of marbles) {
     if (!m.alive) continue;
     c.beginPath();
@@ -3936,9 +4338,9 @@ function update(dt){
     const dist=Math.hypot(dx,dy);
     const nx=dist>0.1?dx/dist:0, ny=dist>0.1?dy/dist:0;
 
-    // S極に反応しない玉：N反応玉（nOnly）、および起爆して暴走中の追尾玉（homing）
+    // S極に反応しない玉：N磁晶核（nOnly）、および起爆して暴走中の追尾磁晶核（homing）
     const ignoresS = m.marbleType === 'nOnly' || (m.marbleType === 'homing' && m.detonating) || m.isCannonball;
-    // N極に反応しない玉：S反応玉（sOnly）
+    // N極に反応しない玉：S磁晶核（sOnly）
     const ignoresN = m.marbleType === 'sOnly' || m.isCannonball;
 
     if(player.isCharging && player.charge > 0 && !ignoresS){
@@ -3987,7 +4389,7 @@ function update(dt){
       if(m.inVortex && !player.isCharging && !justReleased){
         m.inVortex = false;
       }
-      // N極：反発（S反応玉は反応しない）
+      // N極：反発（S磁晶核は反応しない）
       if(!ignoresN && dist < mRange && dist > 1){
         const ratio = 1 - dist/mRange;
         const f = ratio*fN*dt*player.nPower;
@@ -4032,7 +4434,7 @@ function update(dt){
       if(Math.hypot(sdx,sdy) < stopRange) effDt = 0;
     }
     // 渦中でも摩擦・位置更新は行う（動きが止まる問題の修正）
-    // ぶっ飛び玉：摩擦をほぼ無視し、いちど勢いがつくと長く飛び続ける（他の玉との一番わかりやすい差＝移動距離）
+    // 跳躍磁晶核：摩擦をほぼ無視し、いちど勢いがつくと長く飛び続ける（他の玉との一番わかりやすい差＝移動距離）
     // ただし重力圏内では、引力→跳ね返りの往復でエネルギーが際限なく貯まり続け、
     // 気づいたら勝手に起爆閾値を超えてしまう（＝プレイヤーが操作していないのに離れた場所で連鎖が起きる）ため、
     // 重力圏内にいる間だけこの低摩擦特性を一時的に無効化する（圏外に出れば通常通り復活する）
@@ -4042,7 +4444,7 @@ function update(dt){
     a.vx*=Math.pow(marbleFriction,effDt); a.vy*=Math.pow(marbleFriction,effDt);
     const s2=Math.hypot(a.vx,a.vy);
     // スマブラのふっとばしのように、スイープで弾かれた直後は上限を大きく緩めて、実際に遠くまで吹っ飛ばす
-    const spdCap = a.inVortex ? 10 : (a.isCannonball ? 999 : (a.marbleType==='boost' ? 40 : (a.speedCapBoostTimer>0 ? 80 : 24))); // 渦中はゆったり、大砲玉は減速のみで直進、ぶっ飛び玉は上限も高め
+    const spdCap = a.inVortex ? 10 : (a.isCannonball ? 999 : (a.marbleType==='boost' ? 40 : (a.speedCapBoostTimer>0 ? 80 : 24))); // 渦中はゆったり、大砲玉は減速のみで直進、跳躍磁晶核は上限も高め
     if(s2>spdCap){a.vx=a.vx/s2*spdCap;a.vy=a.vy/s2*spdCap;}
     a.x=((a.x+a.vx*effDt)%WORLD_W+WORLD_W)%WORLD_W;
     a.y=((a.y+a.vy*effDt)%WORLD_H+WORLD_H)%WORLD_H;
@@ -4074,7 +4476,7 @@ function update(dt){
         const nx=dx/dist, ny=dy/dist;
         const rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
 
-        // 大砲玉：2000px到達まで無敵（岩への衝突を除く）。当たったガラス玉はバンパー岩と同様に
+        // 大砲玉：2000px到達まで無敵（岩への衝突を除く）。当たった磁晶核はバンパー岩と同様に
         // 強く弾き飛ばし、そのまま通常の起爆(0.4秒後に爆発)に入れる。大砲玉自身は無傷で直進を続け、
         // 被弾した数だけ後の自爆時の威力(rangeMult)に上乗せされる
         if(a.isCannonball && !a.cannonArmed && !b.isCannonball){
@@ -4108,7 +4510,7 @@ function update(dt){
           continue;
         }
 
-        // どちらかが起爆中 → 連鎖起爆＋物理弾き（排出直後の無敵中は巻き込まれない・遅延玉は爆発せず起爆armedに入る）
+        // どちらかが起爆中 → 連鎖起爆＋物理弾き（排出直後の無敵中は巻き込まれない・遅延磁晶核は爆発せず起爆armedに入る）
         if(a.detonating || b.detonating){
           // 未起爆の玉にのみタイマーをセット（既に起爆中なら上書きしない）
           const causedFlag = a.playerCaused || b.playerCaused;
@@ -4133,7 +4535,7 @@ function update(dt){
           continue;
         }
 
-        // 両方通常玉：十分な速度なら起爆、それ以下なら押し返し（排出直後の無敵中は起爆しない・遅延玉は爆発せず起爆armedに入る）
+        // 両方磁晶核：十分な速度なら起爆、それ以下なら押し返し（排出直後の無敵中は起爆しない・遅延磁晶核は爆発せず起爆armedに入る）
         // 重力圏内かつ、直近でプレイヤーの磁力を受けていないペアだけ、受動的な力では絶対届かない高さまで閾値を引き上げる
         // （プレイヤーが直接弾いた場合の速度は数十〜60なので、この閾値でも全く届かなくなることはない）
         const ambientGravityPair = (a.nearGravity || b.nearGravity)
@@ -4174,7 +4576,7 @@ function update(dt){
           const nx=dx/dist, ny=dy/dist;
 
           if(a.marbleType === 'delay'){
-            // 遅延玉：岩に当たっても爆発しない。最初の衝突で起爆(armed)し、以後は軽く弾かれるだけ
+            // 遅延磁晶核：岩に当たっても爆発しない。最初の衝突で起爆(armed)し、以後は軽く弾かれるだけ
             armDelayMarble(a);
             const dot = a.vx*nx + a.vy*ny;
             a.vx -= 1.8*dot*nx;
@@ -4183,6 +4585,7 @@ function update(dt){
 
           } else if(rk.state === 'awake' && rk.ability === 'bumper'){
             // バンパー：覚醒中のみ爆発せず強く跳ね返す（通常・予兆時はノーマル岩と同じ扱い＝下のelseへ）
+            unlockRockGimmickZukan('bumper'); // 図鑑「岩・ギミック」解放
             const dot = a.vx*nx + a.vy*ny;
             a.vx -= 2.2*dot*nx;
             a.vy -= 2.2*dot*ny;
@@ -4211,6 +4614,7 @@ function update(dt){
               addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
             } else {
               a.alive = false;
+              unlockRockGimmickZukan('split'); // 図鑑「岩・ギミック」解放
               for(let si=0; si<4; si++){
                 const ang = (si/4)*Math.PI*2 + Math.random()*0.5;
                 const spd4 = 3 + Math.random()*3;
@@ -4229,6 +4633,8 @@ function update(dt){
           } else if(rk.state === 'awake' && rk.ability === 'resonance'){
             // 共鳴：通常爆発 + 他の共鳴岩を順番に爆発
             a.alive=false;
+            unlockMatterZukan(a.marbleType);     // 図鑑「研究対象：磁晶核」解放
+            unlockRockGimmickZukan('resonance'); // 図鑑「岩・ギミック」解放
             triggerExplosion((a.x+rk.x)/2,(a.y+rk.y)/2,1.4,0,false,a.playerCaused||false);
             addScore(Math.floor(50*upgrades.chainMulti));
             currentChainDepth=0; chainCount++;updateChainDisplay(chainCount,0,(a.x+rk.x)/2,(a.y+rk.y)/2, a.playerCaused||false);
@@ -4247,6 +4653,7 @@ function update(dt){
           } else {
             // 通常状態 or 波動（波動は玉の衝突では反応しない）
             a.alive=false;
+            unlockMatterZukan(a.marbleType); // 図鑑「研究対象：磁晶核」解放
             triggerExplosion((a.x+rk.x)/2,(a.y+rk.y)/2,1.4,0,false,a.playerCaused||false);
             addScore(Math.floor(50*upgrades.chainMulti));
             currentChainDepth=0; chainCount++;updateChainDisplay(chainCount,0,(a.x+rk.x)/2,(a.y+rk.y)/2, a.playerCaused||false);
@@ -4291,6 +4698,7 @@ function update(dt){
       if(dist < m.r + rk.r){
         if(rk.state === 'awake' && rk.ability === 'bumper'){
           // バンパー：覚醒中のみ爆発せず跳ね返す（通常・予兆時はノーマル岩と同じ扱い＝下のelseへ）
+          unlockRockGimmickZukan('bumper'); // 図鑑「岩・ギミック」解放
           m.inVortex=false;
           const nx2=dx/dist, ny2=dy/dist;
           const dot=m.vx*nx2+m.vy*ny2;
@@ -4320,6 +4728,7 @@ function update(dt){
             addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
           } else {
             m.alive=false; m.inVortex=false;
+            unlockRockGimmickZukan('split'); // 図鑑「岩・ギミック」解放
             for(let si=0;si<4;si++){
               const ang=(si/4)*Math.PI*2+Math.random()*0.5;
               const spd4=3+Math.random()*3;
@@ -4332,10 +4741,12 @@ function update(dt){
           }
         } else {
           m.alive=false; m.inVortex=false;
+          unlockMatterZukan(m.marbleType); // 図鑑「研究対象：磁晶核」解放
           triggerExplosion((m.x+rk.x)/2,(m.y+rk.y)/2,1.4*(m.rangeMult||1),0,false,m.playerCaused||false);
           addScore(Math.floor(50*upgrades.chainMulti));
           currentChainDepth=0; chainCount++;updateChainDisplay(chainCount,0,(m.x+rk.x)/2,(m.y+rk.y)/2, m.playerCaused||false);
           if(rk.state === 'awake' && rk.ability === 'resonance'){
+            unlockRockGimmickZukan('resonance'); // 図鑑「岩・ギミック」解放
             const otherRes=rocks.filter(r=>r.alive&&r!==rk&&r.ability==='resonance');
             otherRes.sort((ra,rb2)=>Math.hypot(ra.x-rk.x,ra.y-rk.y)-Math.hypot(rb2.x-rk.x,rb2.y-rk.y));
             setResonanceEdgeFX(rk.x, rk.y, otherRes);
@@ -4348,7 +4759,7 @@ function update(dt){
     }
   }
 
-  // ── 重力玉：周囲の玉をゆっくり引き寄せる ──
+  // ── 重力磁晶核：周囲の玉をゆっくり引き寄せる ──
   for(const m of marbles) m.nearGravity = false; // 毎フレームリセット
   for(const g of marbles){
     if(!g.alive || g.marbleType!=='gravity') continue;
@@ -4443,7 +4854,7 @@ function update(dt){
           a.hp--; b.hp--;
           a.hpCooldown = 0.5; b.hpCooldown = 0.5;
           a.flashTimer = 0.35; b.flashTimer = 0.35; // ダメージオーラパルス
-          // HP0で渦の外に射出→通常起爆（遅延玉は爆発せず起爆armedに入る。triggerExplosionは呼ばない＝密集連鎖を防ぐ）
+          // HP0で渦の外に射出→通常起爆（遅延磁晶核は爆発せず起爆armedに入る。triggerExplosionは呼ばない＝密集連鎖を防ぐ）
           if(a.hp <= 0){
             a.inVortex=false;
             let dax=a.x-player.wx, day=a.y-player.wy;
@@ -4485,7 +4896,7 @@ function update(dt){
       const pdist = Math.hypot(dx,dy);
       if(pdist < playerCollisionR + m.r){
         if(m.marbleType === 'delay'){
-          // 遅延玉：接触してもダメージは受けず爆破もしない。ただし接触自体が起爆の引き金(armed)になる
+          // 遅延磁晶核：接触してもダメージは受けず爆破もしない。ただし接触自体が起爆の引き金(armed)になる
           armDelayMarble(m);
           if(pdist > 0.1){
             const pnx=dx/pdist, pny=dy/pdist;
@@ -4520,6 +4931,7 @@ function update(dt){
       rk.waveTimer -= dtSec;
       if(rk.waveTimer <= 0){
         rk.waveTimer = 1.5; // 1.5秒ごとに衝撃波
+        unlockRockGimmickZukan('wave'); // 図鑑「岩・ギミック」解放
         const WAVE_R = 700 + Math.random()*200; // 600〜900px
         for(const m of marbles){
           if(!m.alive || m.inVortex || (m.isCannonball && !m.cannonArmed)) continue;
@@ -4678,7 +5090,7 @@ function update(dt){
 
   // マーブル補充（3分割バッチ方式）
   // 爆発なし・閾値未満・バッチ未実行のときにバッチをキューに積む
-  // ガラス玉フィーバー中は閾値・バッチ数を増加させ、より多くの玉が場に維持されるようにする
+  // 磁晶核フィーバー中は閾値・バッチ数を増加させ、より多くの玉が場に維持されるようにする
   const feverActive = activeWorldEvent && activeWorldEvent.id === 'marble_fever';
   const replenishThreshold = feverActive ? 250 : 150;
   const replenishBatchCount = feverActive ? 45 : 15;
@@ -4732,7 +5144,7 @@ function update(dt){
   for(const m of marbles){
     if(!m.alive || !m.detonating) continue;
 
-    // 追尾玉：起爆猶予中はS極を無視し（上のS/Nループで対応済み）、
+    // 追尾磁晶核：起爆猶予中はS極を無視し（上のS/Nループで対応済み）、
     // 周囲で玉が最も密集している方向へ自ら軌道を曲げていく
     if(m.marbleType === 'homing'){
       let cx=0, cy=0, wsum=0;
@@ -4759,6 +5171,7 @@ function update(dt){
     if(m.detonateTimer <= 0){
       m.alive = false;
       gainSPFromMarble(m.marbleType); // 赤玉・金玉破壊時SP加算
+      unlockMatterZukan(m.marbleType); // 図鑑「研究対象：磁晶核」解放
       if(m.marbleType === 'red'){
         // 赤玉：0.4秒後に通常の爆発(範囲×1.0)→0.8秒後に大きい爆発(範囲×1.5)の二段構え
         const pc = m.playerCaused||false;
@@ -4769,7 +5182,7 @@ function update(dt){
           triggerExplosion(m.x, m.y, 1.5, 0, false, pc, 0); // 二段目：大・ゲージ加算なし（同一個体のため）
         }, 800);
       } else if(m.marbleType === 'gold'){
-        // 金玉：0.4秒後に大きい爆発(範囲×2.0)→0.8秒後にガラス玉を10個散布（ギミック達成時と同様の演出）
+        // 金玉：0.4秒後に大きい爆発(範囲×2.0)→0.8秒後に磁晶核を10個散布（ギミック達成時と同様の演出）
         const pc = m.playerCaused||false;
         setTimeout(()=>{
           triggerExplosion(m.x, m.y, 2.0, 0, false, pc, 20); // ゲージ+20
@@ -4783,8 +5196,8 @@ function update(dt){
     }
   }
 
-  // 遅延玉：衝突では起爆せず、専用のfuseTimerが0になったら必ず起爆する
-  // （シールド発動中は、既に起爆(armed)して秒読み中の遅延玉もタイマーごと止める）
+  // 遅延磁晶核：衝突では起爆せず、専用のfuseTimerが0になったら必ず起爆する
+  // （シールド発動中は、既に起爆(armed)して秒読み中の遅延磁晶核もタイマーごと止める）
   const shieldActive = skillActive && selectedSkillId==='shield';
   for(const m of marbles){
     if(!m.alive || m.marbleType !== 'delay' || m.fuseTimer === null) continue;
@@ -4792,6 +5205,7 @@ function update(dt){
     if(m.fuseTimer <= 0){
       m.alive = false;
       gainSPFromMarble(m.marbleType);
+      unlockMatterZukan(m.marbleType); // 図鑑「研究対象：磁晶核」解放
       triggerExplosion(m.x, m.y, 1.3 * m.rangeMult, 0, false, m.playerCaused||false, 1);
       // 爆発時にプレイヤーが巻き込まれていたらバッテリーが減る（取り扱い注意）
       let pdx=player.wx-m.x, pdy=player.wy-m.y;
@@ -4901,7 +5315,7 @@ function updateHoles(dtSec) {
 }
 
 function spawnHoleMarbleBurst(x, y, count) {
-  // 発電装置の中心から、ガラス玉がふわっと（ゆっくり静かに）広がるように排出される
+  // 発電装置の中心から、磁晶核がふわっと（ゆっくり静かに）広がるように排出される
   // 排出直後1秒間は無敵（どんなダメージでも壊れない）
   for (let i = 0; i < count; i++) {
     const a = Math.random() * Math.PI * 2;
@@ -4938,6 +5352,7 @@ function triggerHoleGimmick(hole) {
     }
   }
   activeWorldEvent = { id: hole.gimmickId, timer: DURATION, totalDuration: DURATION };
+  unlockHoleGimmickZukan(hole.gimmickId); // 図鑑「岩・ギミック」解放
 
   switch (hole.gimmickId) {
 
@@ -6173,7 +6588,7 @@ function withOffscreenCtx(targetCtx, fn){
   try { fn(); } finally { ctx = prev; }
 }
 
-// 繊細ガラス玉スキンの見た目（脈動しない部分＝色づきグラデーション・リング・装飾・ハイライト）を
+// 繊細磁晶核スキンの見た目（脈動しない部分＝色づきグラデーション・リング・装飾・ハイライト）を
 // 玉ごとに一度だけオフスクリーンcanvasへ焼き込む。以後は draw のたびに毎フレーム再計算せず、
 // drawImageで貼るだけにして負荷を大きく下げる（連鎖で玉が増えるとカクつく問題への対策）。
 function buildFragileGlassSprites(m, ringColor, lineW, hsl){
@@ -6206,7 +6621,7 @@ function buildFragileGlassSprites(m, ringColor, lineW, hsl){
     ctx.globalAlpha = 1;
 
     if(m.marbleType === 'boost'){
-      // ぶっ飛び玉：後方に流れるスピード線（見るからに速そうな見た目）
+      // 跳躍磁晶核：後方に流れるスピード線（見るからに速そうな見た目）
       ctx.strokeStyle='rgba(255,140,40,0.65)'; ctx.lineWidth=0.6;
       for(let si=0;si<3;si++){
         const yOff=(si-1)*m.r*0.34;
@@ -6215,7 +6630,7 @@ function buildFragileGlassSprites(m, ringColor, lineW, hsl){
         ctx.stroke();
       }
     } else if(m.marbleType === 'homing'){
-      // 追尾玉：中心の照準マーク（狙いを定める意思を表現）
+      // 追尾磁晶核：中心の照準マーク（狙いを定める意思を表現）
       ctx.strokeStyle='rgba(255,60,120,0.6)'; ctx.lineWidth=0.6;
       ctx.beginPath();
       ctx.arc(0,0,m.r*0.32,0,Math.PI*2);
@@ -6225,19 +6640,19 @@ function buildFragileGlassSprites(m, ringColor, lineW, hsl){
       ctx.moveTo(0,m.r*0.32);  ctx.lineTo(0,m.r*0.48);
       ctx.stroke();
     } else if(m.marbleType === 'sOnly'){
-      // S反応玉：S極にしか反応しないことを手描き文字で明示
+      // S磁晶核：S極にしか反応しないことを手描き文字で明示
       ctx.strokeStyle='rgba(60,120,255,0.75)'; ctx.lineWidth=0.8;
       ctx.font=`bold ${Math.round(m.r*0.5)}px Courier New`;
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.strokeText('S', 0, 0.5);
     } else if(m.marbleType === 'nOnly'){
-      // N反応玉：N極にしか反応しないことを手描き文字で明示
+      // N磁晶核：N極にしか反応しないことを手描き文字で明示
       ctx.strokeStyle='rgba(255,90,60,0.75)'; ctx.lineWidth=0.8;
       ctx.font=`bold ${Math.round(m.r*0.5)}px Courier New`;
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.strokeText('N', 0, 0.5);
     } else if(m.marbleType === 'delay'){
-      // 遅延玉：導火線マーク（明滅・膨張収縮の動的演出は毎フレーム側＝drawMarbleSkin_fragileGlassで行う）
+      // 遅延磁晶核：導火線マーク（明滅・膨張収縮の動的演出は毎フレーム側＝drawMarbleSkin_fragileGlassで行う）
       ctx.strokeStyle='rgba(190,40,40,0.8)'; ctx.lineWidth=0.8;
       ctx.beginPath();
       ctx.moveTo(0,-m.r*0.3); ctx.quadraticCurveTo(m.r*0.26,-m.r*0.56, m.r*0.1,-m.r*0.78);
@@ -6284,14 +6699,14 @@ function buildFragileGlassSprites(m, ringColor, lineW, hsl){
   m._glassSkinBuilt = true;
 }
 
-// 【標準】繊細で壊れそうなガラス玉：線を細く・揺らぎをごくわずかにし、光の反射と気泡で「ガラス感」を出す
+// 【標準】繊細で壊れそうな磁晶核：線を細く・揺らぎをごくわずかにし、光の反射と気泡で「ガラス感」を出す
 // 見た目自体は初回にスプライトへ焼き込み、毎フレームはdrawImageのみ（脈動する芯だけ別スプライトで拡縮）
 function drawMarbleSkin_fragileGlass(m, t, pulse, ringColor, lineW, hsl){
   if(!m._glassSkinBuilt){
     buildFragileGlassSprites(m, ringColor, lineW, hsl);
   }
 
-  // 遅延玉：残り時間が少ないほど「膨張と収縮」が大きく速くなり、赤い発光が強まる（爆ぜる予感を演出）
+  // 遅延磁晶核：残り時間が少ないほど「膨張と収縮」が大きく速くなり、赤い発光が強まる（爆ぜる予感を演出）
   let bombScale = 1;
   if(m.marbleType === 'delay' && m.fuseTimer !== null && m.fuseTimer !== undefined){
     const urgency = 1 - Math.min(1, Math.max(0, m.fuseTimer / 7)); // 0(開始)→1(爆発直前)
@@ -6333,14 +6748,14 @@ function drawMarbleSkin_sketchScribble(m, t, pulse, ringColor, lineW){
 
   // ── 種類別の手描き装飾（機能を伝えるアレンジ） ──
   if(m.marbleType === 'boost'){
-    // ぶっ飛び玉：後方に流れるスピード線
+    // 跳躍磁晶核：後方に流れるスピード線
     ctx.strokeStyle='rgba(255,140,40,0.75)'; ctx.lineWidth=1.0;
     for(let si=0;si<3;si++){
       const yOff=(si-1)*m.r*0.34;
       ctx.beginPath(); ctx.moveTo(-m.r*0.95, yOff); ctx.lineTo(-m.r*0.3, yOff); ctx.stroke();
     }
   } else if(m.marbleType === 'homing'){
-    // 追尾玉：照準マーク
+    // 追尾磁晶核：照準マーク
     ctx.strokeStyle='rgba(255,60,120,0.75)'; ctx.lineWidth=1.0;
     ctx.beginPath();
     ctx.arc(0,0,m.r*0.32,0,Math.PI*2);
@@ -6360,13 +6775,13 @@ function drawMarbleSkin_sketchScribble(m, t, pulse, ringColor, lineW){
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.strokeText('N', 0, 0.5);
   } else if(m.marbleType === 'delay'){
-    // 遅延玉：手描きの導火線
+    // 遅延磁晶核：手描きの導火線
     ctx.strokeStyle='rgba(190,40,40,0.85)'; ctx.lineWidth=1.0;
     ctx.beginPath();
     ctx.moveTo(0,-m.r*0.3); ctx.quadraticCurveTo(m.r*0.3,-m.r*0.6, m.r*0.12,-m.r*0.85);
     ctx.stroke();
   } else if(m.marbleType === 'gravity'){
-    // 重力玉：中心に小さな渦の書き込み
+    // 重力磁晶核：中心に小さな渦の書き込み
     ctx.strokeStyle='rgba(160,80,255,0.7)'; ctx.lineWidth=0.9;
     ctx.beginPath();
     for(let si=0;si<=18;si++){
@@ -6577,7 +6992,7 @@ function drawMarbleSkin_inkHalftone(m,t,pulse,ringColor,lineW,hsl){
   }
   const s = m._inkSprite;
 
-  // 遅延玉：残り時間が少ないほど「膨張と収縮」が大きく速くなり、赤い発光が強まる（爆ぜる予感を演出）
+  // 遅延磁晶核：残り時間が少ないほど「膨張と収縮」が大きく速くなり、赤い発光が強まる（爆ぜる予感を演出）
   let bombScale = 1;
   if(m.marbleType === 'delay' && m.fuseTimer !== null && m.fuseTimer !== undefined){
     const urgency = 1 - Math.min(1, Math.max(0, m.fuseTimer / 7)); // 0(開始)→1(爆発直前)
@@ -6602,7 +7017,7 @@ function drawMarbleSkin_inkHalftone(m,t,pulse,ringColor,lineW,hsl){
     const twinkle=0.5+0.5*Math.sin(t*2.2+m.phase);
     drawInkBurstLines(m.r,hsl,16,t*0.2,twinkle);
   }
-  // 追尾玉：常時ゆっくり回転する走査リングで「狙ってる感」を出す（浮遊中から視認できるように）
+  // 追尾磁晶核：常時ゆっくり回転する走査リングで「狙ってる感」を出す（浮遊中から視認できるように）
   if(m.marbleType === 'homing' && !m.detonating){
     ctx.save();
     ctx.rotate(t*0.9 + m.phase);
@@ -6617,7 +7032,7 @@ function drawMarbleSkin_inkHalftone(m,t,pulse,ringColor,lineW,hsl){
     ctx.stroke();
     ctx.restore();
   }
-  // 追尾玉：起爆猶予中、曲がっていく方向にロックオン線を伸ばす（残り時間が少ないほど濃く）
+  // 追尾磁晶核：起爆猶予中、曲がっていく方向にロックオン線を伸ばす（残り時間が少ないほど濃く）
   if(m.marbleType === 'homing' && m.detonating){
     const spd = Math.hypot(m.vx, m.vy);
     if(spd > 0.05){
@@ -6645,7 +7060,7 @@ const MARBLE_SKINS = {
   sketchScribble: drawMarbleSkin_sketchScribble, // ショップスキン①候補
 };
 
-// 大砲玉専用スキン：ガラス玉ではなく、手描き感のある黒い鉄球として描く
+// 大砲玉専用スキン：磁晶核ではなく、手描き感のある黒い鉄球として描く
 function drawCannonballSkin(m, t){
   const r = m.r;
   const wobSeed = m.phase || 0;
@@ -6724,7 +7139,7 @@ function drawMarbles(){
     else if(m.marbleType === 'delay'){   h=6;  s=70; l=48; ringAlpha=0.9;  lineW=1.4; }
     else if(m.marbleType === 'red'){     h=0;  s=68; l=49; ringAlpha=0.95; lineW=1.4; }
     else if(m.marbleType === 'gold'){    h=45; s=100;l=41; ringAlpha=0.95; lineW=1.4; }
-    else { h=m.hue; s=55; l=55; ringAlpha=0.85; lineW=1.2; } // 通常玉：玉ごとのランダム色を流用
+    else { h=m.hue; s=55; l=55; ringAlpha=0.85; lineW=1.2; } // 磁晶核：玉ごとのランダム色を流用
     const ringColor = `hsla(${h},${s}%,${l}%,${ringAlpha})`;
 
     if(m.isCannonball){
@@ -7874,17 +8289,21 @@ function updateOptionUI(){
   document.getElementById('opt-speedbar-on').classList.toggle('active', settings.speedBarVisible===true);
   document.getElementById('opt-speedbar-off').classList.toggle('active', settings.speedBarVisible===false);
   const favSel = document.getElementById('opt-favorite-skill');
-  if (favSel.options.length === 0) {
-    // 初回のみプルダウンの中身を構築（所持スキル＝現状は全種類）
-    const noneOpt = document.createElement('option');
-    noneOpt.value = ''; noneOpt.textContent = 'なし';
-    favSel.appendChild(noneOpt);
-    for (const def of SKILL_DEFS) {
-      const opt = document.createElement('option');
-      opt.value = def.id; opt.textContent = def.name;
-      favSel.appendChild(opt);
-    }
+  // 所持スキル（saveData.unlockedSkills）のみを毎回作り直す（ショップ購入で増えるため）
+  const prevValue = favSel.value;
+  favSel.innerHTML = '';
+  const noneOpt = document.createElement('option');
+  noneOpt.value = ''; noneOpt.textContent = 'なし';
+  favSel.appendChild(noneOpt);
+  const ownedSkillDefs = SKILL_DEFS.filter(def => (saveData.unlockedSkills || []).includes(def.id));
+  for (const def of ownedSkillDefs) {
+    const opt = document.createElement('option');
+    opt.value = def.id; opt.textContent = def.name;
+    favSel.appendChild(opt);
   }
+  // 選択中のスキルが所持リストから外れていたら（データ異常など）「なし」に戻す
+  const stillOwned = ownedSkillDefs.some(def => def.id === settings.favoriteSkillId);
+  if (!stillOwned) settings.favoriteSkillId = '';
   favSel.value = settings.favoriteSkillId || '';
 }
 
@@ -8038,15 +8457,16 @@ function showSkillSelect(){
   // カード生成
   const list = document.getElementById('skill-list');
   list.innerHTML = '';
-  // 8種からランダムに3種抽出（お気に入りスキルが設定されていれば必ず含める）
+  // ショップで購入済み（所持済み）のスキルからランダムに3種抽出（お気に入りスキルが設定されていれば必ず含める）
+  const ownedSkills = SKILL_DEFS.filter(s => (saveData.unlockedSkills || []).includes(s.id));
   const favId = settings.favoriteSkillId;
-  const favDef = favId ? SKILL_DEFS.find(s => s.id === favId) : null;
+  const favDef = (favId && ownedSkills.some(s => s.id === favId)) ? ownedSkills.find(s => s.id === favId) : null;
   let displaySkills;
   if (favDef) {
-    const others = SKILL_DEFS.filter(s => s.id !== favId).sort(()=>Math.random()-0.5).slice(0, 2);
+    const others = ownedSkills.filter(s => s.id !== favId).sort(()=>Math.random()-0.5).slice(0, 2);
     displaySkills = [favDef, ...others].sort(()=>Math.random()-0.5);
   } else {
-    displaySkills = [...SKILL_DEFS].sort(()=>Math.random()-0.5).slice(0, 3);
+    displaySkills = [...ownedSkills].sort(()=>Math.random()-0.5).slice(0, 3);
   }
   for(const def of displaySkills){
     const card = document.createElement('div');
@@ -8077,6 +8497,7 @@ function showSkillSelect(){
 document.getElementById('skill-start-btn').addEventListener('click',()=>{
   document.getElementById('skill-select').classList.add('hide');
   if (window.Achievements && selectedSkillId) window.Achievements.markSkillUsed(selectedSkillId); // 実績「収集開始/装備充実/完全武装」用
+  unlockSkillZukan(selectedSkillId); // 図鑑「スキル」解放
   initGame('endless');
 });
 
@@ -8288,7 +8709,8 @@ document.getElementById('title-play-btn').addEventListener('touchstart', e => {
 },{passive:false});
 document.getElementById('title-settings-btn').addEventListener('click', () => openOption());
 document.getElementById('psb-settings-btn').addEventListener('click', () => openOption());
-document.getElementById('mode-shop').addEventListener('click', () => showBanner('準備中です', '#888888'));
+document.getElementById('mode-shop').addEventListener('click', () => { if (window.ShopUI) window.ShopUI.open(); });
+document.getElementById('mode-shop').addEventListener('touchstart', e=>{ e.preventDefault(); if (window.ShopUI) window.ShopUI.open(); }, {passive:false});
 // mode-collectionの実際の遷移処理は js/collection.js 側で登録している
 // タイトルに戻る
 const _modeToTitle = document.getElementById('mode-to-title');
@@ -8303,8 +8725,15 @@ _modeToTitle.addEventListener('touchstart', e=>{
 },{passive:false});
 
 // モード選択ボタン
-document.getElementById('mode-endless').addEventListener('click',()=>showSkillSelect());
-document.getElementById('mode-endless').addEventListener('touchstart',e=>{e.preventDefault();showSkillSelect();},{passive:false});
+function tryOpenEndless(){
+  if (!saveData.endlessUnlocked){
+    showBanner('ショップで解放できます', '#888888');
+    return;
+  }
+  showSkillSelect();
+}
+document.getElementById('mode-endless').addEventListener('click',()=>tryOpenEndless());
+document.getElementById('mode-endless').addEventListener('touchstart',e=>{e.preventDefault();tryOpenEndless();},{passive:false});
 document.getElementById('mode-quick').addEventListener('click',()=>initGame('quick'));
 document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preventDefault();initGame('quick');},{passive:false});
 
@@ -8483,5 +8912,7 @@ requestAnimationFrame(loop);
 <script src="js/achievements.js"></script>
 <script src="js/collection.js"></script>
 <script src="js/zukan.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/shop.js"></script>
 </body>
 </html>
