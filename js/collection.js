@@ -52,6 +52,10 @@
 
   function openCollection(){
     if (!modeSelect || !collection || !statusBar) return;
+    if (typeof saveData !== 'undefined' && saveData.storyFlags && !saveData.storyFlags.collectionUnlocked){
+      if (typeof showBanner === 'function') showBanner('まだ解放されていません', '#888888');
+      return;
+    }
     modeSelect.classList.add('hide');
     collection.classList.remove('hide');
     // #player-status-barは通常「#mode-selectが表示中のときだけ表示」というCSSの隣接セレクタで
@@ -66,6 +70,7 @@
     collection.classList.add('hide');
     modeSelect.classList.remove('hide');
     statusBar.style.display = ''; // 上書きを解除し、通常のCSS制御に戻す
+    if (window.Story) window.Story.check('mode_select');
   }
 
   // モード選択画面のコレクションボタン → コレクション画面を開く

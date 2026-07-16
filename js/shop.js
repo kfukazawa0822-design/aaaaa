@@ -238,17 +238,22 @@
     renderGrid();
   }
 
-  // ── ショップ解放（初回訪問）時、博士がエンドレスモード解放を奢ってくれる強制チュートリアル ──
-  function runEndlessTutorialIfNeeded(){
-    if (saveData.endlessUnlocked) return;
+  // ── エンドレスモード値引き購入（js/story.jsの購入チュートリアルステップから呼ばれる）。
+  // 「今回だけ1100EP→100EPに値引き、確認は「はい」のみ」という演出込みの強制購入。
+  // 通常のconfirm（はい/いいえ）は使わず、値引き価格を表示したまま自動的に購入を実行する。
+  function runEndlessDiscountPurchase(onComplete){
     const def = SHOP_PAGES[1].items[0]; // エンドレスモード解放
+    if (saveData.endlessUnlocked) { if (onComplete) onComplete(); return; }
     gotoPage(1);
-    showBanner('博士「エンドレスモードを奢ってやろう！」', '#1a1a1a');
+    renderGrid();
     const spend = Math.min(def.ep, playerProgress.coins || 0);
-    if (spend > 0) spendEP(spend);
-    grantReward(def);
-    renderGrid(); // 購入済み状態（チェックマーク）を即座に反映
-    setTimeout(() => showRewardPopup(def), 600);
+    setTimeout(() => {
+      if (spend > 0) spendEP(spend);
+      grantReward(def);
+      renderGrid(); // 購入済み状態（チェックマーク）を即座に反映
+      showRewardPopup(def);
+      if (onComplete) onComplete();
+    }, 900); // 値引き表示を少し見せてから購入を実行する
   }
 
   function buildCardEl(item){
@@ -352,7 +357,7 @@
     if (typeof updatePlayerStatusBar === 'function') updatePlayerStatusBar();
     if (window.Achievements) window.Achievements.unlock('ach_002'); // ショップ機能解放の実績
     gotoPage(0);
-    runEndlessTutorialIfNeeded();
+    if (window.Story) window.Story.check('shop');
   }
   function closeShop(){
     if (!modeSelect || !shopScreen || !statusBar) return;
@@ -360,6 +365,7 @@
     if (shopBackBtn) shopBackBtn.classList.add('hide');
     modeSelect.classList.remove('hide');
     statusBar.style.display = '';
+    if (window.Story) window.Story.check('mode_select');
   }
 
   const shopBackBtn = byId('shop-back');
@@ -368,6 +374,6 @@
     shopBackBtn.addEventListener('touchstart', e=>{ e.preventDefault(); closeShop(); }, {passive:false});
   }
 
-  window.ShopUI = { open: openShop, close: closeShop };
+  window.ShopUI = { open: openShop, close: closeShop, runEndlessDiscountPurchase };
   console.log('[shop.js] 初期化完了。');
 })();

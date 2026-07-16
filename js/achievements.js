@@ -137,7 +137,10 @@
     const unclaimed = hasUnclaimed();
     const modeCollectionBtn   = document.getElementById('mode-collection');
     const achievementsCardBtn = document.getElementById('collection-achievements');
-    if (modeCollectionBtn)   modeCollectionBtn.classList.toggle('has-unclaimed', unclaimed);
+    // コレクション機能自体がまだ解放されていない間は、モード選択画面の
+    // コレクションボタンに赤バッジを出さない（ロック中なのにバッジが付くのは不自然なため）
+    const collectionUnlocked = !(typeof saveData !== 'undefined' && saveData.storyFlags && !saveData.storyFlags.collectionUnlocked);
+    if (modeCollectionBtn)   modeCollectionBtn.classList.toggle('has-unclaimed', unclaimed && collectionUnlocked);
     if (achievementsCardBtn) achievementsCardBtn.classList.toggle('has-unclaimed', unclaimed);
   }
 

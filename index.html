@@ -427,6 +427,24 @@ canvas { display:block; width:100%; height:100%; }
 .mode-sub-btn:hover,.mode-sub-btn:active { background:#efefef; border-color:#888; transform:scale(1.02); }
 .mode-sub-icon { font-size:20px; }
 .mode-sub-label{ font-size:9px; letter-spacing:2px; color:#777; }
+.mode-sub-lock {
+  font-size:11px; position:absolute; top:6px; right:8px; display:none;
+}
+.mode-sub-btn.locked { position:relative; }
+.mode-sub-btn.locked .mode-sub-lock { display:block; }
+.mode-sub-btn.locked .mode-sub-icon,
+.mode-sub-btn.locked .mode-sub-label { opacity:0.35; }
+
+/* ストーリー進行で機能が解放された直後、ボタンに気づいてもらうための発光演出。
+   1回タップされると外れる（js/story.js側で制御） */
+@keyframes storyGlowPulse {
+  0%,100% { box-shadow:0 0 0 rgba(255,213,74,0); }
+  50%     { box-shadow:0 0 18px 5px rgba(255,213,74,0.7); }
+}
+.mode-btn.story-glow, .mode-sub-btn.story-glow {
+  animation:storyGlowPulse 1.6s ease-in-out infinite;
+  border-color:#ffd54a;
+}
 .mode-sub-soon {
   font-size:8px; letter-spacing:1px; color:#bbb;
   background:#efefef; border-radius:2px; padding:1px 5px;
@@ -859,6 +877,132 @@ canvas { display:block; width:100%; height:100%; }
 #shop-error-text { font-size:14px; font-weight:bold; color:#1a1a1a; margin-bottom:14px; }
 #shop-error-tap { font-size:10px; color:#999; }
 
+/* ══════════════════════════════════════════════════
+   博士ストーリー／チュートリアルポップ（js/story.js）
+   ══════════════════════════════════════════════════ */
+#story-doctor-overlay.hide,
+#story-tutorial-overlay.hide,
+#story-name-overlay.hide,
+#story-skill-grant-overlay.hide { display:none; }
+
+/* ── 博士の吹き出し（画面下部固定） ── */
+#story-doctor-overlay {
+  position:fixed; inset:0; z-index:420; background:rgba(0,0,0,0.35);
+  display:flex; align-items:flex-end; justify-content:center; gap:0;
+  padding:0 20px 24px; cursor:pointer;
+}
+/* レイアウト上のスペース確保だけの透明な枠。実際の博士の姿は
+   #story-doctor-portrait（キャンバスより上の独立レイヤー）側で、
+   このスペーサーの位置にjs側でぴったり重ねて表示する */
+#story-doctor-portrait-spacer {
+  width:min(230px, 34vw); aspect-ratio:170/210; flex-shrink:1; margin-right:-30px; visibility:hidden;
+}
+/* 博士の姿本体：ボイルアニメーション用キャンバス(z-index:500)より上に出すため、
+   #story-doctor-overlayの中には入れず独立したposition:fixed要素にしている。
+   位置はjs/story.js側で#story-doctor-portrait-spacerの座標に追従させる */
+#story-doctor-portrait {
+  position:fixed; z-index:510; pointer-events:none;
+  display:flex; align-items:flex-end; justify-content:center;
+  transform:translateY(140%); opacity:0;
+  transition:transform 0.45s cubic-bezier(.22,1,.36,1), opacity 0.3s ease;
+}
+#story-doctor-portrait.hide { display:none; }
+#story-doctor-img { display:block; width:100%; height:100%; object-fit:contain; object-position:bottom; }
+#story-doctor-portrait-placeholder {
+  width:100%; height:100%; align-items:center; justify-content:center;
+  border:1.5px solid #1a1a1a; border-radius:50%; background:#fff;
+  font-family:'Courier New',monospace; font-size:11px; color:#bbb; letter-spacing:1px;
+}
+/* 枠線は持たせない：見えている線は全てjs側のボイルアニメーション（キャンバス）が
+   描いている手描き風の線。CSS側で普通の直線ボーダーを重ねると「二重枠線」に
+   見えてダサくなるため、ここでは背景と余白だけを指定する */
+#story-doctor-bubble {
+  position:relative; background:#fff; border-radius:16px;
+  padding:26px 30px; width:min(330px, 72vw); box-sizing:border-box;
+  pointer-events:auto; cursor:pointer;
+  font-family:'Courier New',monospace;
+  transform:translateY(140%); opacity:0;
+  transition:transform 0.45s cubic-bezier(.22,1,.36,1), opacity 0.3s ease;
+}
+/* 左側の拡張量（博士のエリアまで白背景を伸ばす分）はjs/story.js側で画面幅を見ながら
+   動的に計算してインラインstyleで設定する（margin-left・width・padding-left）。
+   固定px値だとスマホの狭い画面で左にはみ出してしまうため、実測ベースで安全な範囲に収める */
+/* 新しい博士会話セッションが始まった直後の2秒間（js/story.js側で.enteringを付与）は、
+   画面は暗いまま吹き出し・ポートレートを画面外に隠しておく演出用のクラス */
+#story-doctor-portrait.slide-in, #story-doctor-bubble.slide-in {
+  transform:translateY(0); opacity:1;
+}
+#story-doctor-text { font-size:14px; line-height:1.9; color:#1a1a1a; white-space:pre-line; }
+#story-doctor-next { text-align:right; font-size:12px; color:#999; margin-top:16px; }
+
+/* ── チュートリアルカード（画面中央） ── */
+#story-tutorial-overlay {
+  position:fixed; inset:0; z-index:420; background:rgba(0,0,0,0.35);
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+/* こちらも枠線はCSSで持たず、キャンバスのボイル線だけに任せる（doctor-bubbleと同じ理由） */
+#story-tutorial-card {
+  width:min(340px, 88vw); background:#fff; border-radius:16px;
+  font-family:'Courier New',monospace; cursor:pointer;
+  padding:32px 28px;
+}
+#story-tutorial-header { margin-bottom:24px; }
+#story-tutorial-title { font-size:18px; font-weight:bold; letter-spacing:0.5px; color:#1a1a1a; }
+#story-tutorial-image {
+  aspect-ratio:1000/800; background:#eee; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+  margin-bottom:24px;
+}
+#story-tutorial-image img { width:100%; height:100%; object-fit:cover; }
+#story-tutorial-image-placeholder { font-size:11px; color:#999; text-align:center; line-height:1.8; padding:0 16px; }
+#story-tutorial-text { font-size:13px; line-height:1.9; color:#333; white-space:pre-line; margin-bottom:24px; }
+#story-tutorial-next { text-align:center; font-size:11px; color:#999; }
+
+/* 新しいチュートリアルステップが始まった瞬間だけ再生する「ポヨン」演出。
+   ページ送り（同じステップ内での次ページ表示）では再生しない */
+@keyframes storyTutorialPopIn {
+  0%   { transform:scale(0.35); opacity:0; }
+  55%  { transform:scale(1.08); opacity:1; }
+  75%  { transform:scale(0.95); }
+  100% { transform:scale(1); }
+}
+#story-tutorial-card.pop-in { animation:storyTutorialPopIn 0.42s cubic-bezier(.34,1.56,.64,1); }
+
+/* ── 名前入力ポップ ── */
+#story-name-overlay {
+  position:fixed; inset:0; z-index:430; background:rgba(0,0,0,0.45);
+  display:flex; align-items:center; justify-content:center;
+}
+#story-name-popup {
+  width:min(260px, 78vw); background:#fff; border:1.6px solid #1a1a1a; border-radius:12px;
+  padding:24px 20px; text-align:center; font-family:'Courier New',monospace;
+}
+#story-name-title { font-size:13px; margin-bottom:16px; }
+#story-name-input {
+  width:100%; border:none; border-bottom:1.5px solid #1a1a1a; background:transparent;
+  font-family:'Courier New',monospace; font-size:15px; font-weight:bold; text-align:center;
+  padding:0 0 8px; margin-bottom:18px; box-sizing:border-box;
+}
+#story-name-input:focus { outline:none; }
+#story-name-submit {
+  width:100%; background:#1a1a1a; color:#fff; border:1.5px solid #1a1a1a; border-radius:20px;
+  padding:9px 0; font-family:'Courier New',monospace; font-size:12px; font-weight:bold; cursor:pointer;
+}
+#story-name-submit:hover, #story-name-submit:active { background:#333; }
+
+/* ── スキル獲得ポップ ── */
+#story-skill-grant-overlay {
+  position:fixed; inset:0; z-index:430; background:rgba(0,0,0,0.45);
+  display:flex; align-items:center; justify-content:center;
+}
+#story-skill-grant-popup {
+  width:min(260px, 78vw); background:#fff; border:1.6px solid #1a1a1a; border-radius:12px;
+  padding:26px 20px; text-align:center; font-family:'Courier New',monospace; cursor:pointer;
+}
+#story-skill-grant-title { font-size:18px; font-weight:bold; letter-spacing:2px; margin-bottom:14px; }
+#story-skill-grant-list { font-size:12px; line-height:1.8; margin-bottom:16px; }
+#story-skill-grant-tap { font-size:10px; color:#999; }
+
 /* カテゴリ引き出し：左からスライドイン＋背景を薄暗く */
 #zukan-drawer-overlay {
   position:absolute; inset:0; background:rgba(0,0,0,0.25);
@@ -1048,6 +1192,7 @@ canvas { display:block; width:100%; height:100%; }
   background:#fff; border:1.5px solid #ccc; color:#555;
 }
 #go-menu:hover,#go-menu:active { background:#f5f5f5; border-color:#888; }
+#go-btns-first.hide, #go-btns-normal.hide { display:none; }
 
 /* ── 速度スライダー（右下） ── */
 #speed-slider-wrap {
@@ -1436,7 +1581,9 @@ canvas { display:block; width:100%; height:100%; }
 
 /* ── オプション画面 ── */
 #option-screen {
-  position:fixed; inset:0; z-index:300;
+  position:fixed; inset:0; z-index:310;
+  /* #title-screen(z-index:300)と同値だとDOM順次第でtitle-screenに隠れてしまうため、
+     常に上に出るよう明確に高い値にしている */
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   pointer-events:none; opacity:0; transition:opacity 0.2s;
 }
@@ -1625,7 +1772,58 @@ canvas { display:block; width:100%; height:100%; }
 <body>
 <canvas id="c"></canvas>
 <!-- ボイルアニメーション用キャンバス（モード選択ボタンの枠線を手描き風にブルブルさせる演出） -->
-<canvas id="boil-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:250;"></canvas>
+<canvas id="boil-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:500;"></canvas>
+
+<!-- 博士ストーリー：画面下部の吹き出し（モード選択・ショップ画面共通で使う） -->
+<div id="story-doctor-overlay" class="hide">
+  <!-- 実際に見える博士の姿は#story-doctor-portrait（キャンバスより上の独立レイヤー）。
+       ここではレイアウト上の幅だけを確保するダミー枠（見た目は透明） -->
+  <div id="story-doctor-portrait-spacer"></div>
+  <div id="story-doctor-bubble">
+    <div id="story-doctor-text"></div>
+    <div id="story-doctor-next">▼</div>
+  </div>
+</div>
+
+<!-- 博士の姿：ボイルアニメーション用キャンバス(z-index:500)より上に独立して配置し、
+     位置はjs/story.js側で#story-doctor-portrait-spacerに追従させる -->
+<div id="story-doctor-portrait" class="hide">
+  <img id="story-doctor-img" src="assets/story/hakase.png" alt="博士"
+       onerror="this.style.display='none'; document.getElementById('story-doctor-portrait-placeholder').style.display='flex';">
+  <!-- 画像が読み込めない場合のプレースホルダー -->
+  <div id="story-doctor-portrait-placeholder" style="display:none;">博士</div>
+</div>
+
+<!-- チュートリアルポップ（画面中央のカード） -->
+<div id="story-tutorial-overlay" class="hide">
+  <div id="story-tutorial-card">
+    <div id="story-tutorial-header"><span id="story-tutorial-title"></span></div>
+    <div id="story-tutorial-image">
+      <!-- 実画像は後日差し込み予定（元画像1000×800想定）。今はプレースホルダー -->
+      <div id="story-tutorial-image-placeholder">後ほど差し込む画像<br>元画像は1000×800で用意予定</div>
+    </div>
+    <div id="story-tutorial-text"></div>
+    <div id="story-tutorial-next">タップしてすすむ ▼</div>
+  </div>
+</div>
+
+<!-- ストーリー：名前入力ポップ -->
+<div id="story-name-overlay" class="hide">
+  <div id="story-name-popup">
+    <div id="story-name-title">名前を入力してください</div>
+    <input type="text" id="story-name-input" maxlength="12" placeholder="なまえ">
+    <button id="story-name-submit">けってい</button>
+  </div>
+</div>
+
+<!-- ストーリー：スキル獲得ポップ -->
+<div id="story-skill-grant-overlay" class="hide">
+  <div id="story-skill-grant-popup">
+    <div id="story-skill-grant-title">獲得！</div>
+    <div id="story-skill-grant-list"></div>
+    <div id="story-skill-grant-tap">タップして閉じる</div>
+  </div>
+</div>
 
 <!-- カオスオーバーレイ -->
 <div id="chaos-overlay"></div>
@@ -1855,9 +2053,12 @@ canvas { display:block; width:100%; height:100%; }
         <div id="go-xp-track"><div id="go-xp-fill"></div></div>
       </div>
     </div>
-    <div class="go-btns">
+    <div class="go-btns" id="go-btns-normal">
       <button class="go-btn" id="go-retry">↺ リトライ</button>
       <button class="go-btn" id="go-menu">← もどる</button>
+    </div>
+    <div class="go-btns hide" id="go-btns-first">
+      <button class="go-btn" id="go-complete">完了</button>
     </div>
   </div>
 </div>
@@ -1883,10 +2084,12 @@ canvas { display:block; width:100%; height:100%; }
     <div class="mode-sub-btn" id="mode-shop">
       <div class="mode-sub-icon">🛒</div>
       <div class="mode-sub-label">ショップ</div>
+      <div class="mode-sub-lock" id="mode-shop-lock">🔒</div>
     </div>
     <div class="mode-sub-btn" id="mode-collection">
       <div class="mode-sub-icon">📖</div>
       <div class="mode-sub-label">コレクション</div>
+      <div class="mode-sub-lock" id="mode-collection-lock">🔒</div>
     </div>
   </div>
   <!-- 4行目：タイトルに戻る -->
@@ -2331,6 +2534,8 @@ function defaultSaveData() {
     endlessUnlocked: false, // エンドレスモード解放（ショップ初回訪問時のチュートリアル購入で自動true）
     ownedIcons: [],          // アイコンガチャで獲得済みのアイコンid（重複無し、最大12）
     freePackClaimedDate: null, // 無料応援パックを最後に受け取った日付（1日1回のリセット判定用）
+    storyProgress: { nextIndex: 0 }, // 博士ストーリー/チュートリアルの進行状況（js/story.js側で管理）
+    storyFlags: { shopUnlocked: false, collectionUnlocked: false }, // ストーリー進行で解放される機能フラグ
     titles: {},            // 実績称号の解除・受け取り状況（{ [実績id]: {unlocked, claimed} }）js/achievements.js側で管理
     collection: {},        // 未実装：図鑑の解放状況
     profile: {},             // 未実装：プロフィール情報
@@ -2351,6 +2556,8 @@ function migrateSaveData(parsed) {
   if (typeof parsed.endlessUnlocked === 'boolean') data.endlessUnlocked = parsed.endlessUnlocked;
   if (Array.isArray(parsed.ownedIcons)) data.ownedIcons = parsed.ownedIcons;
   if (typeof parsed.freePackClaimedDate === 'string') data.freePackClaimedDate = parsed.freePackClaimedDate;
+  if (parsed.storyProgress && typeof parsed.storyProgress === 'object') data.storyProgress = parsed.storyProgress;
+  if (parsed.storyFlags && typeof parsed.storyFlags === 'object') data.storyFlags = { ...data.storyFlags, ...parsed.storyFlags };
   if (parsed.titles && typeof parsed.titles === 'object' && !Array.isArray(parsed.titles)) data.titles = parsed.titles;
   // 旧スキーマ（未実装当時の空配列）だった場合は何もしない＝初期値の{}のまま
   if (parsed.collection && typeof parsed.collection === 'object') data.collection = parsed.collection;
@@ -2415,6 +2622,20 @@ function updateEndlessLockUI(){
   el.classList.toggle('locked', !saveData.endlessUnlocked);
 }
 updateEndlessLockUI();
+
+// ショップ・コレクションのロック表示（saveData.storyFlagsに応じて切り替える）
+function updateShopLockUI(){
+  const el = document.getElementById('mode-shop');
+  if (!el) return;
+  el.classList.toggle('locked', !saveData.storyFlags.shopUnlocked);
+}
+function updateCollectionLockUI(){
+  const el = document.getElementById('mode-collection');
+  if (!el) return;
+  el.classList.toggle('locked', !saveData.storyFlags.collectionUnlocked);
+}
+updateShopLockUI();
+updateCollectionLockUI();
 
 // ── レベル・経験値・コインシステム ──────────────────
 const LEVEL_UP_BASE_XP  = 100; // Lv1→2 に必要なXP
@@ -3834,6 +4055,7 @@ function triggerGameOver() {
     if (gameMode === 'quick')   window.Achievements.unlock('ach_001');
     if (gameMode === 'endless') window.Achievements.unlock('ach_003');
     window.Achievements.incrementStat('totalPlayCount');       // 総プレイ回数
+    if (gameMode === 'quick') window.Achievements.incrementStat('quickPlayCount'); // クイックモードのプレイ回数（ストーリー条件用）
     window.Achievements.incrementStat('totalPlayTimeSec', playTime); // 総プレイ時間（プロフィール画面用、秒で累計）
     window.Achievements.setStatIfHigher('bestChainCount', maxChainCount); // 1プレイでの最大チェイン
     window.Achievements.setStatIfHigher('bestScore', score);               // 1プレイでの最高スコア
@@ -3841,6 +4063,11 @@ function triggerGameOver() {
     if (gameMode === 'quick')   window.Achievements.setStatIfHigher('bestScoreQuick', score);
     if (gameMode === 'endless') window.Achievements.setStatIfHigher('bestScoreEndless', score);
   }
+
+  // 初めてのプレイ（総プレイ回数が1回目）だけ、リトライ／もどるを隠して「完了」ボタン1つにする
+  const isVeryFirstPlay = window.Achievements && window.Achievements.getStatValue('totalPlayCount') === 1;
+  document.getElementById('go-btns-normal').classList.toggle('hide', isVeryFirstPlay);
+  document.getElementById('go-btns-first').classList.toggle('hide', !isVeryFirstPlay);
 
   document.getElementById('gameover').classList.add('show');
 
@@ -8371,9 +8598,52 @@ function closeResetConfirm(){ resetConfirmOverlay.classList.remove('show'); }
   b.addEventListener('touchstart',e=>{e.preventDefault();closeResetConfirm();},{passive:false});
 });
 [resetConfirmOk].forEach(b=>{
-  b.addEventListener('click', ()=>{ resetSaveData(); closeResetConfirm(); updateOptionUI(); updatePlayerStatusBar(); });
-  b.addEventListener('touchstart',e=>{e.preventDefault(); resetSaveData(); closeResetConfirm(); updateOptionUI(); updatePlayerStatusBar();},{passive:false});
+  b.addEventListener('click', ()=>{ resetSaveData(); closeResetConfirm(); afterSaveDataReset(); });
+  b.addEventListener('touchstart',e=>{e.preventDefault(); resetSaveData(); closeResetConfirm(); afterSaveDataReset();},{passive:false});
 });
+
+// セーブデータ初期化後の後処理：
+// ①ロック表示・発光演出などのDOM状態は saveData の値とは別に残り続けるので、
+//   ここで明示的に作り直さないと「データは初期化されたのにボタンは解放済みの
+//   見た目のまま」というバグになる
+// ②今どの画面を開いていたとしても、強制的にタイトル画面へ戻す
+function afterSaveDataReset(){
+  updateOptionUI();
+  updatePlayerStatusBar();
+  updateEndlessLockUI();
+  updateShopLockUI();
+  updateCollectionLockUI();
+  // 実績称号の未受け取りバッジ（.has-unclaimed）もDOM側に残り続けるクラスなので、
+  // saveDataリセット後の状態で明示的に作り直す
+  if (window.Achievements) window.Achievements.updateBadges();
+  // ストーリー進行の発光演出（.story-glow）はDOM側に残ったままになるクラスなので、
+  // 対象ボタン全てから明示的に外す
+  ['mode-quick','mode-endless','mode-shop','mode-collection'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('story-glow');
+  });
+  // 開いていた可能性がある画面を全て閉じて、タイトル画面だけを表示する
+  document.getElementById('option-screen').classList.remove('show');
+  document.getElementById('gameover').classList.remove('show');
+  const shopBackStandalone = document.getElementById('shop-back');
+  if (shopBackStandalone) shopBackStandalone.classList.add('hide');
+  [
+    'mode-select','collection-screen','shop-screen','profile-screen',
+    'tutorial-screen','achievement-screen','zukan-screen','skill-select',
+  ].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hide');
+  });
+  // 博士ストーリー/チュートリアルの各種ポップも開いていれば閉じる
+  [
+    'story-doctor-overlay','story-tutorial-overlay','story-name-overlay','story-skill-grant-overlay',
+  ].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hide');
+  });
+  gameRunning = false;
+  document.getElementById('title-screen').classList.remove('hide');
+}
 
 // モード選択画面のオプションボタンは設定ボタンに統合済み
 
@@ -8506,12 +8776,14 @@ document.getElementById('skill-back-btn').addEventListener('click',()=>{
   document.getElementById('skill-select').classList.add('hide');
   document.getElementById('mode-select').classList.remove('hide');
   updatePlayerStatusBar();
+  if (window.Story) window.Story.check('mode_select');
 });
 document.getElementById('skill-back-btn').addEventListener('touchstart',e=>{
   e.preventDefault();
   document.getElementById('skill-select').classList.add('hide');
   document.getElementById('mode-select').classList.remove('hide');
   updatePlayerStatusBar();
+  if (window.Story) window.Story.check('mode_select');
 },{passive:false});
 
 // ── スキルUI更新 ──────────────────────────────────
@@ -8686,6 +8958,7 @@ document.getElementById('go-menu').addEventListener('click',()=>{
   document.getElementById('mode-select').classList.remove('hide');
   updatePlayerStatusBar();
   gameRunning=false;
+  if (window.Story) window.Story.check('mode_select');
 });
 document.getElementById('go-menu').addEventListener('touchstart',e=>{
   e.preventDefault();
@@ -8693,24 +8966,43 @@ document.getElementById('go-menu').addEventListener('touchstart',e=>{
   document.getElementById('mode-select').classList.remove('hide');
   updatePlayerStatusBar();
   gameRunning=false;
+  if (window.Story) window.Story.check('mode_select');
 },{passive:false});
+function goCompleteFirstPlay(){
+  document.getElementById('gameover').classList.remove('show');
+  document.getElementById('mode-select').classList.remove('hide');
+  updatePlayerStatusBar();
+  gameRunning=false;
+  if (window.Story) window.Story.check('mode_select');
+}
+document.getElementById('go-complete').addEventListener('click', goCompleteFirstPlay);
+document.getElementById('go-complete').addEventListener('touchstart', e=>{ e.preventDefault(); goCompleteFirstPlay(); }, {passive:false});
 
 // ── タイトル画面 ──────────────────────────────────
 document.getElementById('title-play-btn').addEventListener('click', () => {
   document.getElementById('title-screen').classList.add('hide');
   document.getElementById('mode-select').classList.remove('hide');
   updatePlayerStatusBar();
+  if (window.Story) window.Story.check('mode_select');
 });
 document.getElementById('title-play-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   document.getElementById('title-screen').classList.add('hide');
   document.getElementById('mode-select').classList.remove('hide');
   updatePlayerStatusBar();
+  if (window.Story) window.Story.check('mode_select');
 },{passive:false});
 document.getElementById('title-settings-btn').addEventListener('click', () => openOption());
 document.getElementById('psb-settings-btn').addEventListener('click', () => openOption());
-document.getElementById('mode-shop').addEventListener('click', () => { if (window.ShopUI) window.ShopUI.open(); });
-document.getElementById('mode-shop').addEventListener('touchstart', e=>{ e.preventDefault(); if (window.ShopUI) window.ShopUI.open(); }, {passive:false});
+function tryOpenShop(){
+  if (!saveData.storyFlags.shopUnlocked){
+    showBanner('まだ解放されていません', '#888888');
+    return;
+  }
+  if (window.ShopUI) window.ShopUI.open();
+}
+document.getElementById('mode-shop').addEventListener('click', tryOpenShop);
+document.getElementById('mode-shop').addEventListener('touchstart', e=>{ e.preventDefault(); tryOpenShop(); }, {passive:false});
 // mode-collectionの実際の遷移処理は js/collection.js 側で登録している
 // タイトルに戻る
 const _modeToTitle = document.getElementById('mode-to-title');
@@ -8738,11 +9030,17 @@ document.getElementById('mode-quick').addEventListener('click',()=>initGame('qui
 document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preventDefault();initGame('quick');},{passive:false});
 
 // ══════════════════════════════════════════════════
-//  ボイルアニメーション演出（モード選択ボタンの枠線）
+//  ボイルアニメーション演出
 //  参考：アニメの「ラフアニメーション」／モーショングラフィックスの
 //  「ボイル（Boil / Boiling Lines）」表現。手描き風の線を2〜3パターン
 //  用意して数フレームおきに切り替えることで、線が生きているように
-//  ブルブルと揺れて見える。PCはホバー、スマホはタップ（押下）中に発動。
+//  ブルブルと揺れて見える。
+//
+//  2種類の発動方式に対応：
+//    ①ホバー方式：モード選択ボタンなど。PCはホバー、スマホはタップ中だけ発動
+//    ②常時方式：博士ストーリー/チュートリアルの吹き出し・カードなど。
+//      表示されている間ずっと揺れ続ける（window.BoilFX.register(el)で登録）
+//  どちらも同じ仕組みで、複数の対象を同時に描画できるようにしている。
 // ══════════════════════════════════════════════════
 (function(){
   const bc   = document.getElementById('boil-canvas');
@@ -8752,7 +9050,7 @@ document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preven
   resizeBoil();
   window.addEventListener('resize', resizeBoil);
 
-  // ── 対象ボタン ──
+  // ── ホバー方式の対象ボタン ──
   // モード選択画面のボタンに加えて、コレクション画面内の4項目カードも対象にする
   const BTN_IDS = [
     'mode-quick','mode-endless','mode-shop','mode-collection',
@@ -8762,23 +9060,19 @@ document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preven
   // 未解放（準備中）のボタンにはボイルを付けない判定。
   // 現状は「準備中」バッジ（.mode-sub-soon、例：ショップ）を持つ場合、または
   // 汎用の.lockedクラスが付いている場合を未解放とみなす。
-  // ③のレベル解放実装（未着手）で新しく出てくる未解放表現も、この2パターンの
-  // どちらかに合わせておけば自動的にボイル対象から外れる想定。
   function isLockedButton(el){
     return el.classList.contains('locked') || !!el.querySelector('.mode-sub-soon');
   }
 
   const JITTER      = 4;   // 線の揺れ幅（px）：少し抑えめに調整
-  const PAD         = 3;   // ボタン外周からの少し外側オフセット
+  const PAD         = 3;   // 対象の外周からの少し外側オフセット
   const PTS_PER_100 = 26;  // 100pxあたりの頂点数（角丸なりに滑らかにするため）
   const VARIANTS     = 3;  // ボイル用に用意する線パターン数
   const HOLD_FRAMES  = 4;  // 1パターンを何フレーム保持するか（小さいほど激しく揺れる）
 
-  let target       = null; // 現在ボイル中の要素
-  let cachedRectKey = null;
-  let variants      = null; // 3パターン分の頂点配列
-  let frameCount    = 0;
-  let variantIndex  = 0;
+  // 複数対象を同時に管理する（キー＝対象のDOM要素）。
+  // 値：{ variants, cachedRectKey, frameCount, variantIndex, mode:'hover'|'always' }
+  const boilStates = new Map();
 
   // 矩形の外周（角丸っぽく見えるよう頂点多めで等間隔配置）を返す
   function basePerimeterPoints(rect){
@@ -8817,21 +9111,25 @@ document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preven
     return list;
   }
 
+  function makeState(el){
+    const r = el.getBoundingClientRect();
+    return {
+      cachedRectKey: `${r.left}|${r.top}|${r.width}|${r.height}`,
+      variants: buildVariants({ x:r.left, y:r.top, w:r.width, h:r.height }),
+      frameCount: 0,
+      variantIndex: 0,
+    };
+  }
+
+  // ── ホバー方式 ──
   function startBoil(el){
     if(isLockedButton(el)) return; // 未解放ボタンにはボイルを付けない
-    target = el;
     el.classList.add('boiling');
-    const r = el.getBoundingClientRect();
-    cachedRectKey = `${r.left}|${r.top}|${r.width}|${r.height}`;
-    variants = buildVariants({ x:r.left, y:r.top, w:r.width, h:r.height });
-    frameCount = 0;
-    variantIndex = 0;
+    boilStates.set(el, makeState(el));
   }
   function stopBoil(el){
-    if(target === el){
-      target = null;
-      variants = null;
-      cachedRectKey = null;
+    if (!el.dataset.boilAlways) { // 常時登録もされている場合は消さない
+      boilStates.delete(el);
     }
     el.classList.remove('boiling');
   }
@@ -8848,26 +9146,43 @@ document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preven
     el.addEventListener('touchcancel',()=> stopBoil(el),  {passive:true});
   });
 
-  // targetが実際に画面上に表示されているか（祖先要素にdisplay:noneがないか）を判定。
-  // #mode-selectだけでなく#collection-screen配下のカードにも対応できるよう、
-  // 画面IDを個別に見るのではなく要素自身のoffsetParentで汎用的に判定している。
-  function isTargetVisible(){
-    return !!target && target.offsetParent !== null;
+  // ── 常時方式（博士ストーリー/チュートリアルなど、表示中はずっと揺れ続ける） ──
+  function registerAlwaysBoil(el){
+    if (!el) return;
+    el.dataset.boilAlways = '1';
+    boilStates.set(el, makeState(el));
+  }
+  function unregisterAlwaysBoil(el){
+    if (!el) return;
+    delete el.dataset.boilAlways;
+    boilStates.delete(el);
+  }
+  window.BoilFX = { register: registerAlwaysBoil, unregister: unregisterAlwaysBoil };
+
+  // 要素が実際に画面上に表示されているか（祖先要素にdisplay:noneがないか）を判定
+  function isVisible(el){
+    return el.offsetParent !== null;
   }
 
-  function updateBoil(){
-    if(!target || !isTargetVisible()) return;
-    // 表示中にボタンの位置・サイズが変わった場合（レイアウト変化など）は頂点を作り直す
-    const r = target.getBoundingClientRect();
-    const key = `${r.left}|${r.top}|${r.width}|${r.height}`;
-    if(key !== cachedRectKey){
-      cachedRectKey = key;
-      variants = buildVariants({ x:r.left, y:r.top, w:r.width, h:r.height });
-    }
-    frameCount++;
-    if(frameCount >= HOLD_FRAMES){
-      frameCount = 0;
-      variantIndex = (variantIndex + 1) % VARIANTS;
+  function updateAndDraw(){
+    bctx.clearRect(0,0,bc.width,bc.height);
+    for (const [el, st] of boilStates){
+      if (!isVisible(el)){
+        // 非表示中は描画しない（常時登録は消さず、再表示時にそのまま使う）
+        continue;
+      }
+      const r = el.getBoundingClientRect();
+      const key = `${r.left}|${r.top}|${r.width}|${r.height}`;
+      if (key !== st.cachedRectKey){
+        st.cachedRectKey = key;
+        st.variants = buildVariants({ x:r.left, y:r.top, w:r.width, h:r.height });
+      }
+      st.frameCount++;
+      if (st.frameCount >= HOLD_FRAMES){
+        st.frameCount = 0;
+        st.variantIndex = (st.variantIndex + 1) % VARIANTS;
+      }
+      drawRoughClosedPath(bctx, st.variants[st.variantIndex]);
     }
   }
 
@@ -8891,15 +9206,8 @@ document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preven
     ctx.stroke();
   }
 
-  function drawBoil(){
-    bctx.clearRect(0,0,bc.width,bc.height);
-    if(!target || !variants || !isTargetVisible()) return;
-    drawRoughClosedPath(bctx, variants[variantIndex]);
-  }
-
   function boilLoop(){
-    updateBoil();
-    drawBoil();
+    updateAndDraw();
     requestAnimationFrame(boilLoop);
   }
 
@@ -8914,5 +9222,6 @@ requestAnimationFrame(loop);
 <script src="js/zukan.js"></script>
 <script src="js/profile.js"></script>
 <script src="js/shop.js"></script>
+<script src="js/story.js"></script>
 </body>
 </html>
