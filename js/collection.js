@@ -77,7 +77,10 @@
   const modeCollectionBtn = document.getElementById('mode-collection');
   if (modeCollectionBtn){
     modeCollectionBtn.addEventListener('click', openCollection);
-    modeCollectionBtn.addEventListener('touchstart', e=>{ e.preventDefault(); openCollection(); }, {passive:false});
+    // 押下時(touchstart)ではなく指を離した時(touchend)に遷移させ、押している間の
+    // ボイルアニメーションがきちんと見えるようにする
+    modeCollectionBtn.addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
+    modeCollectionBtn.addEventListener('touchend', e=>{ e.preventDefault(); openCollection(); }, {passive:false});
   } else {
     console.warn('[collection.js] 要素が見つかりません: mode-collection');
   }
@@ -128,7 +131,8 @@
   const tutorialBackBtn = byId('tutorial-back');
   if (collectionTutorialBtn && tutorialScreen){
     collectionTutorialBtn.addEventListener('click', () => openSubscreen(tutorialScreen));
-    collectionTutorialBtn.addEventListener('touchstart', e=>{ e.preventDefault(); openSubscreen(tutorialScreen); }, {passive:false});
+    collectionTutorialBtn.addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
+    collectionTutorialBtn.addEventListener('touchend', e=>{ e.preventDefault(); openSubscreen(tutorialScreen); }, {passive:false});
   }
   if (tutorialBackBtn && tutorialScreen){
     tutorialBackBtn.addEventListener('click', () => closeSubscreen(tutorialScreen));
@@ -265,7 +269,8 @@
   const achievementBackBtn = byId('achievement-back');
   if (collectionAchievementsBtn && achievementScreen){
     collectionAchievementsBtn.addEventListener('click', () => openSubscreen(achievementScreen));
-    collectionAchievementsBtn.addEventListener('touchstart', e=>{ e.preventDefault(); openSubscreen(achievementScreen); }, {passive:false});
+    collectionAchievementsBtn.addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
+    collectionAchievementsBtn.addEventListener('touchend', e=>{ e.preventDefault(); openSubscreen(achievementScreen); }, {passive:false});
   }
   if (achievementBackBtn && achievementScreen){
     achievementBackBtn.addEventListener('click', () => closeSubscreen(achievementScreen));

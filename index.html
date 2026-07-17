@@ -315,64 +315,65 @@ canvas { display:block; width:100%; height:100%; }
   position:fixed; top:0; left:0; right:0;
   min-height:92px; padding:14px 6vw;
   display:flex; align-items:center; gap:16px;
-  background:#ffffff; border-bottom:1px solid #1a1a1a;
+  background:#333333; border-bottom:1px solid #000;
   font-family:'Courier New',monospace;
   z-index:260; /* #boil-canvas(z-index:250)より上に表示するための値 */
   box-sizing:border-box;
 }
 /* mode-selectが非表示("hide"クラス)のときは連動して隠す（隣接兄弟セレクタ） */
 #mode-select.hide + #player-status-bar { display:none; }
-/* 左端：レベルバッジ（正六角形：幅は高さの約0.866倍で正六角形の比率に） */
+/* 左端：レベルバッジ（正六角形：幅は高さの約0.866倍で正六角形の比率に）
+   背景が黒地になったので、バッジ自体は白抜きにして目立たせる */
 #psb-level-badge {
   flex-shrink:0;
-  width:56px; height:64px;
+  width:56px; height:64.66px; /* 正六角形の正しい比率（幅:高さ = √3:2 ≈ 0.866:1） */
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  background:#1a1a1a;
+  background:#fff;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  color:#fff;
+  color:#1a1a1a;
 }
-#psb-level-label { font-size:10px; letter-spacing:2px; opacity:0.7; line-height:1.2; }
+#psb-level-label { font-size:10px; letter-spacing:2px; opacity:0.75; line-height:1.2; font-weight:bold; }
 #psb-level-val { font-size:24px; font-weight:bold; line-height:1.1; }
 /* 中央：EXP行＋コイン行（縦2段） */
 #psb-mid { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
 /* EXPバー＋残量テキストのブロック（バーを右端まで伸ばすため縦2段構成に） */
 #psb-xp-block { display:flex; flex-direction:column; gap:3px; }
 #psb-xp-row { display:flex; align-items:center; gap:10px; }
-#psb-xp-label { flex-shrink:0; width:30px; font-size:11px; letter-spacing:2px; font-weight:bold; color:#1a1a1a; }
+#psb-xp-label { flex-shrink:0; width:30px; font-size:11px; letter-spacing:2px; font-weight:bold; color:#fff; }
 #psb-xp-track {
   flex:1; position:relative; height:12px; border-radius:6px;
-  background:#fff; border:1.5px solid #1a1a1a; overflow:hidden;
+  background:#555; border:1.5px solid #fff; overflow:hidden;
   min-width:40px;
 }
 #psb-xp-fill {
   position:absolute; left:0; top:0; bottom:0; width:0%;
-  background:#1a1a1a; transition:width 0.3s;
+  background:#fff; transition:width 0.3s;
 }
 /* バー下段：残量テキスト（ラベル分の幅を空けて、バーの右端に右揃え） */
 #psb-xp-remain-row { display:flex; align-items:center; gap:10px; }
 #psb-xp-remain-spacer { flex-shrink:0; width:30px; }
 #psb-xp-remain {
   flex:1; min-width:0; font-size:9px; letter-spacing:0.5px; line-height:1.4;
-  color:#777; text-align:right; white-space:nowrap;
+  color:#ccc; text-align:right; white-space:nowrap; font-weight:bold;
 }
-#psb-xp-remain b { font-size:11px; color:#1a1a1a; }
+#psb-xp-remain b { font-size:11px; color:#fff; }
 #psb-coin-row { display:flex; align-items:center; gap:10px; }
 #psb-coin-icon-col { flex-shrink:0; width:30px; display:flex; }
 #psb-coin-icon {
-  width:16px; height:16px; border-radius:50%; background:#1a1a1a;
+  width:16px; height:16px; border-radius:50%; background:#fff;
   display:inline-flex; flex-shrink:0;
 }
-#psb-coin-val { font-size:15px; font-weight:bold; color:#1a1a1a; letter-spacing:1px; }
-/* 右端：設定ボタン */
+#psb-coin-val { font-size:15px; font-weight:bold; color:#fff; letter-spacing:1px; }
+/* 右端：設定ボタン（白背景ではなく、白い枠線＋バー地色(#333)より少し明るいグレーの内側に） */
 #psb-settings-btn {
   flex-shrink:0;
   width:56px; height:56px; border-radius:10px;
-  border:1.5px solid #1a1a1a; background:#fff;
+  border:1.5px solid #fff; background:#454545;
   font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center;
   -webkit-tap-highlight-color:transparent; transition:background 0.1s;
-  color:#1a1a1a;
+  color:#fff;
 }
-#psb-settings-btn:active { background:#eee; }
+#psb-settings-btn:active { background:#505050; }
 #mode-title {
   font-family:'Courier New',monospace;
   font-size:22px; letter-spacing:4px; font-weight:bold; color:#111;
@@ -384,28 +385,31 @@ canvas { display:block; width:100%; height:100%; }
   width:min(340px, 88vw);
   margin-bottom:10px;
   background:#f8f8f8;
-  border:1.5px solid #ddd;
-  border-radius:8px;
+  border:2.5px solid #333333;
+  /* ポーズボタンと同じ手法：%指定で角ごとに歪みを変え、手描きの丸みを表現
+     （%は要素自身の幅/高さを基準にするため、ボタンサイズが変わっても歪み方が破綻しない） */
+  border-radius:7% 5% 8% 6% / 12% 16% 10% 14%;
   cursor:pointer; font-family:'Courier New',monospace; color:#111;
-  transition:background 0.12s, border-color 0.12s, transform 0.1s;
+  transition:background 0.12s, border-color 0.12s, transform 0.12s;
   -webkit-tap-highlight-color:transparent;
   position:relative; overflow:hidden;
 }
-.mode-btn:hover, .mode-btn:active {
-  background:#efefef; border-color:#888; transform:scale(1.02);
-}
-#mode-quick  { border-color:#bbb; background:#fafafa; }
-#mode-endless{ border-color:#bbb; background:#fafafa; }
-#mode-quick:hover,  #mode-quick:active  { background:#f0f0f0; border-color:#555; }
-#mode-endless:hover,#mode-endless:active{ background:#f0f0f0; border-color:#555; }
+.mode-btn:hover { background:#efefef; transform:scale(1.02); }
+.mode-btn:active { background:#efefef; transform:scale(0.97) rotate(-1.2deg); }
+#mode-quick  { background:#fafafa; }
+#mode-endless{ background:#fafafa; }
+#mode-quick:hover,  #mode-quick:active  { background:#f0f0f0; }
+#mode-endless:hover,#mode-endless:active{ background:#f0f0f0; }
 /* ボイルアニメーション発動中は、キャンバス側で描く手描き風の線に完全に差し替えるため、
-   元のCSS border（点線ではなく実線の枠）は透明にして隠す。
+   元のCSS border（太め#333333の枠）は透明にして隠す。
    #mode-quick/#mode-endless側のIDセレクタがborder-colorを上書きしてしまうため、
    ここでもID+.boilingで指定してhoverより優先させる。 */
 #mode-quick.boiling, #mode-endless.boiling,
 #mode-shop.boiling, #mode-collection.boiling { border-color:transparent; }
-.mode-btn-title { font-size:16px; letter-spacing:3px; margin-bottom:5px; color:#111; }
-.mode-btn-desc  { font-size:9px; color:#999; letter-spacing:0.5px; line-height:1.7; }
+/* フォントはコレクション画面の.collection-card-title/.collection-card-descに合わせる
+   （太字・字間・色を統一。サイズはボタンの大きさに応じて16px/9pxのまま） */
+.mode-btn-title { font-size:16px; letter-spacing:2px; margin-bottom:5px; color:#111; font-weight:bold; }
+.mode-btn-desc  { font-size:8px; color:#bbb; letter-spacing:0.5px; line-height:1.5; }
 .mode-btn-arrow {
   position:absolute; right:16px; top:50%; transform:translateY(-50%);
   font-size:20px; color:#ccc;
@@ -419,14 +423,18 @@ canvas { display:block; width:100%; height:100%; }
 .mode-sub-btn {
   flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
   padding:14px 12px; gap:5px;
-  background:#f8f8f8; border:1.5px solid #ddd; border-radius:8px;
+  background:#f8f8f8; border:2.5px solid #333333;
+  /* ポーズボタンと同じ手法：%指定の非対称border-radius */
+  border-radius:8% 6% 9% 5% / 11% 15% 9% 13%;
   cursor:pointer; font-family:'Courier New',monospace; color:#555;
-  transition:background 0.12s, border-color 0.12s, transform 0.1s;
+  transition:background 0.12s, border-color 0.12s, transform 0.12s;
   -webkit-tap-highlight-color:transparent;
+  position:relative;
 }
-.mode-sub-btn:hover,.mode-sub-btn:active { background:#efefef; border-color:#888; transform:scale(1.02); }
+.mode-sub-btn:hover  { background:#efefef; transform:scale(1.02); }
+.mode-sub-btn:active { background:#efefef; transform:scale(0.97) rotate(-1.2deg); }
 .mode-sub-icon { font-size:20px; }
-.mode-sub-label{ font-size:9px; letter-spacing:2px; color:#777; }
+.mode-sub-label{ font-size:9px; letter-spacing:2px; color:#111; font-weight:bold; }
 .mode-sub-lock {
   font-size:11px; position:absolute; top:6px; right:8px; display:none;
 }
@@ -491,15 +499,16 @@ canvas { display:block; width:100%; height:100%; }
 .collection-card {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   padding:22px 10px; min-height:112px;
-  background:#f8f8f8; border:1.5px solid #ddd; border-radius:8px;
+  background:#f8f8f8; border:2.5px solid #333333;
+  /* ポーズボタンと同じ手法：%指定の非対称border-radius */
+  border-radius:9% 6% 8% 5% / 8% 11% 6% 10%;
   cursor:pointer; font-family:'Courier New',monospace; color:#111;
-  transition:background 0.12s, border-color 0.12s, transform 0.1s;
+  transition:background 0.12s, border-color 0.12s, transform 0.12s;
   -webkit-tap-highlight-color:transparent;
   text-align:center;
 }
-.collection-card:hover, .collection-card:active {
-  background:#efefef; border-color:#888; transform:scale(1.02);
-}
+.collection-card:hover  { background:#efefef; transform:scale(1.02); }
+.collection-card:active { background:#efefef; transform:scale(0.97) rotate(-1.2deg); }
 .collection-card.boiling { border-color:transparent; }
 .collection-card-icon {
   width:28px; height:28px; margin-bottom:8px; object-fit:contain;
@@ -626,9 +635,9 @@ canvas { display:block; width:100%; height:100%; }
   pointer-events:none;
 }
 .achievement-toast {
-  background:#1a1a1a; color:#fff; border-radius:10px;
+  background:rgba(51,51,51,0.95); color:#fff; border-radius:10px;
   font-family:'Courier New',monospace;
-  max-width:min(300px, 70vw);
+  max-width:min(340px, 78vw);
   overflow:hidden;
   max-height:0; margin-top:0; padding:0 18px;
   opacity:0; transform:translateX(-140%);
@@ -643,7 +652,7 @@ canvas { display:block; width:100%; height:100%; }
 /* 表示中：スライドイン＋展開。2つ目以降が入ると、上の古いトーストはこの要素の
    margin-topぶん自然に押し上げられる（JS側でflexの積み上げ順を管理） */
 .achievement-toast.show {
-  max-height:80px; margin-top:10px; padding:14px 46px 14px 20px;
+  max-height:140px; margin-top:10px; padding:14px 46px 14px 20px;
   opacity:1; transform:translateX(0);
 }
 /* 消える時：スライドアウトしつつ折りたたむ（下に残るトーストの間隔も同時に閉じる） */
@@ -651,8 +660,11 @@ canvas { display:block; width:100%; height:100%; }
   max-height:0; margin-top:0; padding:0 18px;
   opacity:0; transform:translateX(-140%);
 }
-.achievement-toast-label { font-size:10px; letter-spacing:2px; color:#ffd54a; margin-bottom:4px; }
-.achievement-toast-title { font-size:15px; font-weight:bold; letter-spacing:1px; white-space:nowrap; }
+/* 「実績解除！」の下だけ少し間隔を空け、タイトル→達成条件はぴったり詰める
+   （横長のカードに見えるよう、縦の余白は最小限に） */
+.achievement-toast-label { font-size:10px; letter-spacing:2px; color:#ffd54a; margin-bottom:6px; }
+.achievement-toast-title { font-size:15px; font-weight:bold; letter-spacing:1px; white-space:nowrap; margin-bottom:2px; }
+.achievement-toast-condition { font-size:10px; color:#999; line-height:1.4; }
 
 /* ── 未受け取りバッジ（コレクションボタン／実績称号カード） ── */
 #mode-collection, #collection-achievements { position:relative; }
@@ -762,16 +774,41 @@ canvas { display:block; width:100%; height:100%; }
 #shop-screen {
   padding:calc(93px + 8px) 0 8px; height:100vh; box-sizing:border-box;
 }
+/* justify-content:flex-endにより、博士エリア内で余ったスペースは全て上（ヘッダー側）に
+   逃がし、画像＋吹き出し＋線のブロックを博士エリアの下辺にぴったり揃える */
 #shop-doctor-area {
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
-  flex:2 1 0; min-height:0; margin:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  flex:2 1 0; min-height:0; width:100%; box-sizing:border-box;
 }
+/* 画像＋吹き出しの行：横幅はここだけ制限（商品グリッドより少し広め）。
+   画面幅が狭い時は90vwになるので、自動的に左右5vwずつ余白ができる */
+/* 行の高さを博士画像の高さ(160px)に固定する。こうすることで、吹き出し（セリフ）の
+   行数が変わって縦幅が変化しても、行自体の高さ・線の位置は動かない。
+   吹き出しはalign-items:centerにより、この固定された行の高さ（＝博士画像の縦幅）を
+   基準に中央揃えされるため、セリフが博士画像より縦に長くなった場合は画像の中心を
+   基準に上下へはみ出す形になる（画像の位置・線の位置には影響しない） */
+#shop-doctor-row {
+  display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:16px;
+  width:min(400px, 90vw); box-sizing:border-box; height:160px; margin-top:8px;
+}
+/* 横線：博士の行のすぐ下にぴったりつけつつ、幅だけ画面いっぱいに伸ばす（親のwidth:100%を利用） */
+#shop-doctor-line { width:100%; height:1.5px; background:#1a1a1a; flex-shrink:0; margin-top:0; }
+#shop-doctor-img { height:160px; width:auto; object-fit:contain; flex-shrink:0; display:block; }
 #shop-doctor-bubble {
-  font-family:'Courier New',monospace; font-size:11px; color:#444;
-  background:#fff; border:1.5px solid #1a1a1a; border-radius:12px;
-  padding:8px 14px; max-width:min(280px, 80vw); text-align:center;
+  font-family:'Courier New',monospace; font-size:12px; color:#1a1a1a;
+  background:#fff; border:1.6px solid #1a1a1a; border-radius:16px;
+  padding:16px 18px; flex:1; min-width:0; text-align:left; overflow:hidden;
+  box-sizing:border-box;
 }
-#shop-grid-wrap { width:min(340px, 88vw); flex:5 1 0; min-height:0; overflow-y:auto; }
+#shop-doctor-text { white-space:pre-line; line-height:1.6; }
+#shop-doctor-text.anim { animation:shopDoctorTextSlideIn 0.35s ease; }
+@keyframes shopDoctorTextSlideIn {
+  from { transform:translateY(-10px); opacity:0; }
+  to   { transform:translateY(0); opacity:1; }
+}
+/* margin-topで博士エリアとの間に一定の余白を確保し、博士画像が大きい端末や
+   縦幅が狭い端末で博士エリアが商品欄側にはみ出しても重ならないようにする */
+#shop-grid-wrap { width:min(340px, 88vw); flex:5 1 0; min-height:0; overflow-y:auto; margin-top:16px; }
 #shop-category-label { font-size:11px; color:#999; text-align:left; margin-bottom:8px; letter-spacing:0.5px; }
 #shop-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
 #shop-grid.shop-grid-list { display:flex; flex-direction:column; gap:10px; }
@@ -784,27 +821,54 @@ canvas { display:block; width:100%; height:100%; }
 
 .shop-card {
   position:relative; border:1.5px solid #1a1a1a; border-radius:8px; background:#fff;
-  padding:12px 10px; text-align:center; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  padding:14px 10px; text-align:center; cursor:pointer; -webkit-tap-highlight-color:transparent;
   font-family:'Courier New',monospace; transition:background 0.12s;
+  display:flex; flex-direction:column; align-items:center; gap:8px;
 }
 .shop-card:hover, .shop-card:active { background:#f5f5f5; }
-.shop-card-icon { font-size:26px; margin-bottom:6px; }
-.shop-card-name { font-size:11px; font-weight:bold; color:#1a1a1a; margin-bottom:6px; line-height:1.3; }
-.shop-card-price { font-size:12px; font-weight:bold; color:#1a1a1a; }
-.shop-card-desc { font-size:10px; color:#666; line-height:1.5; margin:2px 0 6px; }
-.shop-card-price .shop-price-strike { text-decoration:line-through; color:#bbb; font-weight:normal; margin-right:6px; }
+/* アイコン枠：後日512×512pxのPNGに差し替えられるよう、正方形の枠を用意しておく。
+   画像が無い間は絵文字を表示し、img読み込みが成功した時だけ絵文字を隠す */
+.shop-card-icon-box {
+  position:relative; width:52px; height:52px; flex-shrink:0;
+  border-radius:10px; background:#f2f2f2;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+.shop-card-icon-emoji { font-size:24px; }
+.shop-card-icon-img { width:100%; height:100%; object-fit:contain; }
+.shop-card-name { font-size:11px; font-weight:bold; color:#1a1a1a; line-height:1.3; }
+/* 価格ピル：#333333の角丸背景に白文字 */
+.shop-card-price-pill {
+  display:inline-block; font-size:11px; font-weight:bold; color:#fff;
+  background:#333333; padding:4px 12px; border-radius:12px;
+}
+.shop-card-desc { font-size:10px; color:#666; line-height:1.5; }
+.shop-card-price-pill .shop-price-strike { text-decoration:line-through; color:#aaa; font-weight:normal; margin-right:6px; }
+/* 値引き演出：最初は打ち消し線なしの通常価格→線が引かれる→割引後価格がふわっと出る */
+.shop-price-strike-anim {
+  position:relative; display:inline-block; margin-right:6px; color:#aaa; font-weight:normal;
+}
+.shop-price-strike-anim::after {
+  content:''; position:absolute; left:0; top:50%; height:1.5px; background:#aaa;
+  width:0%; animation:shopStrikeDraw 0.6s ease forwards;
+}
+@keyframes shopStrikeDraw { from{ width:0%; } to{ width:100%; } }
+.shop-price-discounted-anim {
+  opacity:0; animation:shopDiscountFadeIn 0.4s ease forwards; animation-delay:0.6s;
+}
+@keyframes shopDiscountFadeIn { to{ opacity:1; } }
 
 .shop-card-featured {
-  grid-column:1 / -1; display:flex; align-items:center; gap:14px; text-align:left; padding:14px 16px;
+  grid-column:1 / -1; flex-direction:row; align-items:center; gap:14px; text-align:left; padding:14px 16px;
 }
-.shop-card-featured .shop-card-icon { font-size:30px; margin-bottom:0; }
-.shop-card-featured .shop-card-body { flex:1; min-width:0; }
-.shop-card-featured .shop-card-name { margin-bottom:4px; font-size:13px; }
+.shop-card-featured .shop-card-icon-box { width:60px; height:60px; }
+.shop-card-featured .shop-card-icon-emoji { font-size:28px; }
+.shop-card-featured .shop-card-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.shop-card-featured .shop-card-name { font-size:13px; }
 
 .shop-card.purchased { background:#f2f2f2; cursor:default; }
 .shop-card.purchased:hover, .shop-card.purchased:active { background:#f2f2f2; }
-.shop-card.purchased .shop-card-name,
-.shop-card.purchased .shop-card-price { color:#aaa; }
+.shop-card.purchased .shop-card-name { color:#aaa; }
+.shop-card.purchased .shop-card-price-pill { background:#ddd; color:#999; }
 .shop-card-check {
   position:absolute; top:6px; right:8px; font-size:14px; color:#4caf82;
 }
@@ -889,7 +953,7 @@ canvas { display:block; width:100%; height:100%; }
 #story-doctor-overlay {
   position:fixed; inset:0; z-index:420; background:rgba(0,0,0,0.35);
   display:flex; align-items:flex-end; justify-content:center; gap:0;
-  padding:0 20px 24px; cursor:pointer;
+  padding:0 20px 10vh; cursor:pointer;
 }
 /* レイアウト上のスペース確保だけの透明な枠。実際の博士の姿は
    #story-doctor-portrait（キャンバスより上の独立レイヤー）側で、
@@ -967,6 +1031,8 @@ canvas { display:block; width:100%; height:100%; }
   100% { transform:scale(1); }
 }
 #story-tutorial-card.pop-in { animation:storyTutorialPopIn 0.42s cubic-bezier(.34,1.56,.64,1); }
+#shop-reward-popup.pop-in,
+#story-skill-grant-popup.pop-in { animation:storyTutorialPopIn 0.42s cubic-bezier(.34,1.56,.64,1); }
 
 /* ── 名前入力ポップ ── */
 #story-name-overlay {
@@ -997,11 +1063,15 @@ canvas { display:block; width:100%; height:100%; }
 }
 #story-skill-grant-popup {
   width:min(260px, 78vw); background:#fff; border:1.6px solid #1a1a1a; border-radius:12px;
-  padding:26px 20px; text-align:center; font-family:'Courier New',monospace; cursor:pointer;
+  padding:26px 20px; text-align:center; font-family:'Courier New',monospace;
 }
 #story-skill-grant-title { font-size:18px; font-weight:bold; letter-spacing:2px; margin-bottom:14px; }
-#story-skill-grant-list { font-size:12px; line-height:1.8; margin-bottom:16px; }
-#story-skill-grant-tap { font-size:10px; color:#999; }
+#story-skill-grant-list { font-size:12px; line-height:1.8; margin-bottom:20px; }
+#story-skill-grant-claim-btn {
+  width:100%; background:#1a1a1a; color:#fff; border:1.5px solid #1a1a1a; border-radius:20px;
+  padding:10px 0; font-family:'Courier New',monospace; font-size:13px; font-weight:bold; cursor:pointer;
+}
+#story-skill-grant-claim-btn:hover, #story-skill-grant-claim-btn:active { background:#333; }
 
 /* カテゴリ引き出し：左からスライドイン＋背景を薄暗く */
 #zukan-drawer-overlay {
@@ -1084,6 +1154,17 @@ canvas { display:block; width:100%; height:100%; }
 }
 .go-stat:last-of-type { border-bottom:none; }
 .go-stat-val { font-size:20px; letter-spacing:2px; color:#111; font-weight:bold; }
+.go-stat-label-group { display:flex; align-items:baseline; gap:7px; }
+.go-new-record.hide { display:none; }
+.go-new-record {
+  font-size:9px; font-weight:bold; letter-spacing:1px; color:#fff;
+  background:#ffb400; padding:2px 7px; border-radius:10px;
+  animation:goNewRecordPulse 1s ease-in-out infinite;
+}
+@keyframes goNewRecordPulse {
+  0%,100% { transform:scale(1); }
+  50%     { transform:scale(1.12); }
+}
 .go-stat-small { font-size:13px; color:#333; }
 /* アイテムLv表示 */
 #go-items-section {
@@ -1821,7 +1902,7 @@ canvas { display:block; width:100%; height:100%; }
   <div id="story-skill-grant-popup">
     <div id="story-skill-grant-title">獲得！</div>
     <div id="story-skill-grant-list"></div>
-    <div id="story-skill-grant-tap">タップして閉じる</div>
+    <button id="story-skill-grant-claim-btn">受け取る</button>
   </div>
 </div>
 
@@ -2025,7 +2106,10 @@ canvas { display:block; width:100%; height:100%; }
     <div id="go-levelup-banner"><span id="go-levelup-text">LEVEL UP！ Lv.2</span><span id="go-levelup-coins">+100</span></div>
     <div id="go-title">FINISH</div>
     <div class="go-stat">
-      <span>スコア</span>
+      <span class="go-stat-label-group">
+        <span>スコア</span>
+        <span class="go-new-record hide" id="go-new-record">NEW!</span>
+      </span>
       <span class="go-stat-val" id="go-score">0</span>
     </div>
     <div class="go-stat">
@@ -2140,14 +2224,14 @@ canvas { display:block; width:100%; height:100%; }
 <!-- ショップ画面 -->
 <div id="shop-screen" class="subscreen hide">
   <div id="shop-doctor-area">
-    <svg width="56" height="64" viewBox="0 0 56 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="28" cy="18" r="13" stroke="#1a1a1a" stroke-width="1.8"/>
-      <path d="M14,62 C14,42 42,42 42,62" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M17,15 C17,4 39,4 39,15" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round"/>
-      <circle cx="23" cy="19" r="1.6" fill="#1a1a1a"/>
-      <circle cx="33" cy="19" r="1.6" fill="#1a1a1a"/>
-    </svg>
-    <div id="shop-doctor-bubble">ほれ、新しい装備じゃ！</div>
+    <div id="shop-doctor-row">
+      <img id="shop-doctor-img" src="assets/story/hakase.png" alt="博士"
+           onerror="this.style.display='none';">
+      <div id="shop-doctor-bubble">
+        <div id="shop-doctor-text">ほれ、新しい装備じゃ！</div>
+      </div>
+    </div>
+    <div id="shop-doctor-line"></div>
   </div>
 
   <div id="shop-grid-wrap">
@@ -2893,6 +2977,9 @@ resize();
 // ── 初期化 ────────────────────────────────────────
 function initGame(mode) {
   gameMode = mode;
+  // 前の画面（モード選択など）で表示していたバナー（例：ロック中メッセージ）が
+  // アニメーション途中でも、ゲーム開始時には確実に消しておく
+  document.getElementById('event-banner').classList.remove('show');
   player.wx = WORLD_W/2; player.wy = WORLD_H/2;
   player.angle = -Math.PI/2;
   player.speedIdx = 4; player.magnet = 'N'; player.battery = 100;
@@ -3313,7 +3400,7 @@ function spawnItem() {
     if(idx !== -1) items.splice(idx, 1);
   }
   let pool=[...ITEM_DEFS];
-  if(gameMode === 'quick') pool = pool.filter(d=>d.cat!=='battery');
+  if(gameMode === 'quick') pool = pool.filter(d=>d.cat!=='battery' && d.cat!=='skill'); // クイックプレイにはバッテリー・スキル関連アイテムは出さない
   if (player.battery<40) pool=[...pool,...ITEM_DEFS.filter(d=>d.cat==='battery' && gameMode!=='quick')];
   const def = resolveItemDef(pool[Math.floor(Math.random()*pool.length)]);
   // ビーコン設置中は、ビーコン周囲600px以内のアイテムが3個未満なら優先してそこにスポーンする
@@ -3362,7 +3449,7 @@ function spawnComboItem(wx, wy) {
   const comboItems = items.filter(i=>i.spawnType==='combo');
   if(comboItems.length >= 10) return; // COMBO報酬の上限10個
   let pool=[...ITEM_DEFS];
-  if(gameMode === 'quick') pool = pool.filter(d=>d.cat!=='battery');
+  if(gameMode === 'quick') pool = pool.filter(d=>d.cat!=='battery' && d.cat!=='skill'); // クイックプレイにはバッテリー・スキル関連アイテムは出さない
   const def = resolveItemDef(pool[Math.floor(Math.random()*pool.length)]);
   // 発生場所付近にスポーン（岩と重ならない）
   let x=wx, y=wy, ok=false, tries=0;
@@ -4051,21 +4138,29 @@ function triggerGameOver() {
   showLevelUpBanner(null); // 前回表示ぶんを隠しておく（アニメーション側で必要なタイミングで出す）
 
   // ── 実績称号：各モードの初プレイでリザルト画面を見た実績＋各種統計の更新 ──
+  let isNewRecord = false;
   if (window.Achievements) {
     if (gameMode === 'quick')   window.Achievements.unlock('ach_001');
     if (gameMode === 'endless') window.Achievements.unlock('ach_003');
     window.Achievements.incrementStat('totalPlayCount');       // 総プレイ回数
-    if (gameMode === 'quick') window.Achievements.incrementStat('quickPlayCount'); // クイックモードのプレイ回数（ストーリー条件用）
+    // クイックモードのプレイ回数（ストーリー条件用）：20秒未満は「クリア」と見なさずカウントしない
+    if (gameMode === 'quick' && playTime >= MIN_PLAYTIME_FOR_REWARD) window.Achievements.incrementStat('quickPlayCount');
     window.Achievements.incrementStat('totalPlayTimeSec', playTime); // 総プレイ時間（プロフィール画面用、秒で累計）
     window.Achievements.setStatIfHigher('bestChainCount', maxChainCount); // 1プレイでの最大チェイン
     window.Achievements.setStatIfHigher('bestScore', score);               // 1プレイでの最高スコア
-    // プロフィール画面用：モード別の最高スコア
-    if (gameMode === 'quick')   window.Achievements.setStatIfHigher('bestScoreQuick', score);
-    if (gameMode === 'endless') window.Achievements.setStatIfHigher('bestScoreEndless', score);
+    // プロフィール画面用：モード別の最高スコア（更新前の値と比べて、新記録かどうかも判定する）
+    const bestKey = gameMode === 'quick' ? 'bestScoreQuick' : 'bestScoreEndless';
+    const prevBest = window.Achievements.getStatValue(bestKey) || 0;
+    isNewRecord = score > 0 && score > prevBest;
+    window.Achievements.setStatIfHigher(bestKey, score);
   }
+  document.getElementById('go-new-record').classList.toggle('hide', !isNewRecord);
 
-  // 初めてのプレイ（総プレイ回数が1回目）だけ、リトライ／もどるを隠して「完了」ボタン1つにする
-  const isVeryFirstPlay = window.Achievements && window.Achievements.getStatValue('totalPlayCount') === 1;
+  // 初めてのプレイ（総プレイ回数が1回目）だけ、リトライ／もどるを隠して「完了」ボタン1つにする。
+  // ただし、あまりに短時間（MIN_PLAYTIME_FOR_REWARD未満）で終わった場合は「クリア」とは
+  // 見なさず、通常のリトライ／もどるボタンを出す（バッテリー切れ直後の操作不能を防ぐため）
+  const isVeryFirstPlay = window.Achievements && window.Achievements.getStatValue('totalPlayCount') === 1
+    && playTime >= MIN_PLAYTIME_FOR_REWARD;
   document.getElementById('go-btns-normal').classList.toggle('hide', isVeryFirstPlay);
   document.getElementById('go-btns-first').classList.toggle('hide', !isVeryFirstPlay);
 
@@ -8999,10 +9094,15 @@ function tryOpenShop(){
     showBanner('まだ解放されていません', '#888888');
     return;
   }
+  document.getElementById('mode-shop').classList.remove('story-glow'); // 1度使ったら発光は消す
   if (window.ShopUI) window.ShopUI.open();
 }
 document.getElementById('mode-shop').addEventListener('click', tryOpenShop);
-document.getElementById('mode-shop').addEventListener('touchstart', e=>{ e.preventDefault(); tryOpenShop(); }, {passive:false});
+// タップ直後(touchstart)で即座に画面遷移するとボイルアニメーションが見える間もなく画面が
+// 切り替わってしまうため、押下時はpreventDefaultのみ行い、実際の遷移は指を離すタイミング
+// (touchend)に行う（押している間はボイルアニメーションが見える）
+document.getElementById('mode-shop').addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
+document.getElementById('mode-shop').addEventListener('touchend', e=>{ e.preventDefault(); tryOpenShop(); }, {passive:false});
 // mode-collectionの実際の遷移処理は js/collection.js 側で登録している
 // タイトルに戻る
 const _modeToTitle = document.getElementById('mode-to-title');
@@ -9022,12 +9122,21 @@ function tryOpenEndless(){
     showBanner('ショップで解放できます', '#888888');
     return;
   }
+  document.getElementById('mode-endless').classList.remove('story-glow'); // 1度使ったら発光は消す
   showSkillSelect();
 }
 document.getElementById('mode-endless').addEventListener('click',()=>tryOpenEndless());
-document.getElementById('mode-endless').addEventListener('touchstart',e=>{e.preventDefault();tryOpenEndless();},{passive:false});
-document.getElementById('mode-quick').addEventListener('click',()=>initGame('quick'));
-document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preventDefault();initGame('quick');},{passive:false});
+// mode-shopと同様、押下時ではなく指を離した時に遷移させ、ボイルアニメーションが見えるようにする
+document.getElementById('mode-endless').addEventListener('touchstart',e=>{e.preventDefault();},{passive:false});
+document.getElementById('mode-endless').addEventListener('touchend',e=>{e.preventDefault();tryOpenEndless();},{passive:false});
+function startQuickPlay(){
+  document.getElementById('mode-quick').classList.remove('story-glow'); // 1度使ったら発光は消す
+  initGame('quick');
+}
+document.getElementById('mode-quick').addEventListener('click', startQuickPlay);
+// mode-shop/mode-endlessと同様、押下時ではなく指を離した時に遷移させる
+document.getElementById('mode-quick').addEventListener('touchstart',e=>{e.preventDefault();},{passive:false});
+document.getElementById('mode-quick').addEventListener('touchend',e=>{e.preventDefault();startQuickPlay();},{passive:false});
 
 // ══════════════════════════════════════════════════
 //  ボイルアニメーション演出

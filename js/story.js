@@ -320,13 +320,20 @@
   // ── スキル獲得ポップ ──
   const skillOv   = byId('story-skill-grant-overlay');
   const skillList = byId('story-skill-grant-list');
+  const skillClaimBtn = byId('story-skill-grant-claim-btn');
+  const skillGrantPopupEl = byId('story-skill-grant-popup');
   function showSkillGrant(step){
     if (skillList) skillList.innerHTML = step.skills.map(s => `スキル：${s}`).join('<br>');
     if (skillOv) skillOv.classList.remove('hide');
+    if (skillGrantPopupEl){
+      skillGrantPopupEl.classList.remove('pop-in');
+      void skillGrantPopupEl.offsetWidth;
+      skillGrantPopupEl.classList.add('pop-in');
+    }
   }
-  if (skillOv){
-    skillOv.addEventListener('click', () => {
-      skillOv.classList.add('hide');
+  if (skillClaimBtn){
+    skillClaimBtn.addEventListener('click', () => {
+      if (skillOv) skillOv.classList.add('hide');
       advance();
     });
   }

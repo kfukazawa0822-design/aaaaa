@@ -154,13 +154,34 @@
     }
     return stack;
   }
-  function showToast(titleText){
+  // ── 実績解除ポップ（画面左下からにゅっと出るトースト） ──
+  // 複数の実績がほぼ同時に解除された時に、全部いっぺんに出てきて重なって
+  // 見えてしまうのを防ぐため、表示はキューに積んで0.2秒間隔で1つずつ出す。
+  // （1個目が入る→2個目が来たら1個目が上へ、2個目が左から入る…という
+  //   ドミノ式の積み上がりは、1つずつ間隔を空けて生成することで自然に実現される）
+  const toastQueue = [];
+  let toastQueueRunning = false;
+  const TOAST_STAGGER_MS = 300;
+
+  function queueToast(titleText, conditionText){
+    toastQueue.push({ titleText, conditionText });
+    if (!toastQueueRunning) processToastQueue();
+  }
+  function processToastQueue(){
+    if (toastQueue.length === 0){ toastQueueRunning = false; return; }
+    toastQueueRunning = true;
+    const { titleText, conditionText } = toastQueue.shift();
+    createToastElement(titleText, conditionText);
+    setTimeout(processToastQueue, TOAST_STAGGER_MS);
+  }
+  function createToastElement(titleText, conditionText){
     const stack = ensureToastStack();
     const toast = document.createElement('div');
     toast.className = 'achievement-toast';
     toast.innerHTML =
       `<div class="achievement-toast-label">実績解除！</div>` +
-      `<div class="achievement-toast-title">${titleText}</div>`;
+      `<div class="achievement-toast-title">${titleText}</div>` +
+      (conditionText ? `<div class="achievement-toast-condition">${conditionText}</div>` : '');
     stack.appendChild(toast);
     requestAnimationFrame(()=>{
       requestAnimationFrame(()=>{ toast.classList.add('show'); });
@@ -169,7 +190,16 @@
       toast.classList.remove('show');
       toast.classList.add('leaving');
       setTimeout(()=>{ if (toast.parentNode) toast.remove(); }, 400);
-    }, 2600);
+    }, 3800); // 詳細（達成条件）が増えた分、読む時間を確保
+  }
+  function showToast(titleText, conditionText){
+    queueToast(titleText, conditionText);
+  }
+  // 段階実績のtierごとの達成条件テキストを、コレクション画面の未解放カードと
+  // 同じ書式（進捗ラベル：しきい値+単位）で組み立てる
+  function tierConditionText(def, tier){
+    const unit = def.progressUnit ?? '回';
+    return `${def.progressLabel}：${tier.threshold.toLocaleString()}${unit}達成`;
   }
   function refreshCollectionUI(){
     if (window.CollectionUI && typeof window.CollectionUI.refreshAchievements === 'function') {
@@ -185,7 +215,7 @@
     if (state.unlocked) return;
     state.unlocked = true;
     persist();
-    showToast(def.title);
+    showToast(def.title, def.condition);
     updateBadges();
     refreshCollectionUI();
   }
@@ -206,7 +236,7 @@
       if (!state.notifiedTiers[i] && value >= tier.threshold) {
         state.notifiedTiers[i] = true;
         changed = true;
-        showToast(tier.title);
+        showToast(tier.title, tierConditionText(def, tier));
       }
     });
     if (changed) {

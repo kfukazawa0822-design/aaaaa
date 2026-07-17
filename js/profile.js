@@ -158,7 +158,8 @@
   const collectionProfileBtn = byId('collection-profile');
   if (collectionProfileBtn){
     collectionProfileBtn.addEventListener('click', openProfile);
-    collectionProfileBtn.addEventListener('touchstart', e=>{ e.preventDefault(); openProfile(); }, {passive:false});
+    collectionProfileBtn.addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
+    collectionProfileBtn.addEventListener('touchend', e=>{ e.preventDefault(); openProfile(); }, {passive:false});
   }
   const profileBackBtn = byId('profile-back');
   if (profileBackBtn){

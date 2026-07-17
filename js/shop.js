@@ -31,6 +31,29 @@
   const shopScreen  = byId('shop-screen');
   const statusBar   = byId('player-status-bar');
   const doctorBubble = byId('shop-doctor-bubble');
+  const doctorTextEl = byId('shop-doctor-text');
+  let doctorRevertTimer = null;
+
+  // 吹き出しのテキストを、スライドインのアニメーション付きで更新する
+  function setDoctorText(text){
+    if (!doctorTextEl) return;
+    doctorTextEl.textContent = text;
+    doctorTextEl.classList.remove('anim');
+    void doctorTextEl.offsetWidth; // 強制リフローで再トリガーできるようにする
+    doctorTextEl.classList.add('anim');
+  }
+  // 購入後メッセージ（item.afterMsg）がある場合、5秒だけそれを表示してから
+  // 元のページ用セリフに戻す
+  function maybeShowAfterMsg(item){
+    if (!item.afterMsg) return;
+    if (doctorRevertTimer) clearTimeout(doctorRevertTimer);
+    setDoctorText(item.afterMsg);
+    doctorRevertTimer = setTimeout(() => {
+      doctorRevertTimer = null;
+      const page = SHOP_PAGES[currentPage];
+      setDoctorText((page && page.doctorLine) || '');
+    }, 5000);
+  }
   const categoryLabel = byId('shop-category-label');
   const grid        = byId('shop-grid');
   const dotsEl      = byId('shop-dots');
@@ -164,14 +187,26 @@
     if (typeof saveSaveData === 'function') saveSaveData();
   }
 
-  function showRewardPopup(item, customName){
+  let rewardOnClose = null;
+  const rewardPopupEl = byId('shop-reward-popup');
+  function showRewardPopup(item, customName, onClose){
     if (!rewardOv) return;
     if (rewardIcon) rewardIcon.textContent = item.icon || '🎁';
     if (rewardName) rewardName.textContent = customName || item.name;
+    rewardOnClose = onClose || null;
     rewardOv.classList.add('show');
+    if (rewardPopupEl){
+      rewardPopupEl.classList.remove('pop-in');
+      void rewardPopupEl.offsetWidth; // 強制リフローで再トリガーできるようにする
+      rewardPopupEl.classList.add('pop-in');
+    }
   }
   if (rewardOv){
-    rewardOv.addEventListener('click', () => rewardOv.classList.remove('show'));
+    rewardOv.addEventListener('click', () => {
+      rewardOv.classList.remove('show');
+      const cb = rewardOnClose; rewardOnClose = null;
+      if (cb) cb();
+    });
   }
 
   function priceText(item){
@@ -180,12 +215,15 @@
     return `${item.ep}EP`;
   }
 
-  function showConfirm(item, onYes){
+  function showConfirm(item, onYes, opts){
     if (!confirmOv || !confirmText) { onYes(); return; }
     confirmText.textContent = `${item.name}を${priceText(item)}で購入しますか？`;
     confirmOv.classList.add('show');
+    const hideNo = !!(opts && opts.hideNo);
+    if (confirmNoBtn) confirmNoBtn.style.display = hideNo ? 'none' : '';
     const cleanup = () => {
       confirmOv.classList.remove('show');
+      if (confirmNoBtn) confirmNoBtn.style.display = '';
       confirmYesBtn.removeEventListener('click', onYesClick);
       confirmNoBtn.removeEventListener('click', onNoClick);
     };
@@ -203,6 +241,7 @@
       grantReward(item);
       showRewardPopup(item);
       renderGrid();
+      maybeShowAfterMsg(item);
       return;
     }
 
@@ -220,6 +259,7 @@
       grantReward(item);
       showRewardPopup(item);
       renderGrid();
+      maybeShowAfterMsg(item);
       return;
     }
     if (item.kind === 'icon_gacha'){
@@ -228,6 +268,7 @@
       grantReward(item);
       showRewardPopup(item, `${item.name}：${item._pickedIcon}`);
       renderGrid();
+      maybeShowAfterMsg(item);
       return;
     }
     // skill / cosmetic / gift / endless_unlock 共通
@@ -236,24 +277,44 @@
     grantReward(item);
     showRewardPopup(item);
     renderGrid();
+    maybeShowAfterMsg(item);
   }
 
-  // ── エンドレスモード値引き購入（js/story.jsの購入チュートリアルステップから呼ばれる）。
-  // 「今回だけ1100EP→100EPに値引き、確認は「はい」のみ」という演出込みの強制購入。
-  // 通常のconfirm（はい/いいえ）は使わず、値引き価格を表示したまま自動的に購入を実行する。
+  // ── エンドレスモード値引き購入（js/story.jsの購入チュートリアルステップから呼ばれる）──
+  // ①スキルページへ強制移動 → ②1100→100EPの値引き演出（線が引かれる、約2秒）
+  // → ③自動で購入確認ポップ（「はい」のみ）→ ④プレイヤーが「はい」を押す
+  // → EP消費・付与 → ⑤「獲得！」ポップ（プレイヤーがタップして閉じたらonComplete）
   function runEndlessDiscountPurchase(onComplete){
     const def = SHOP_PAGES[1].items[0]; // エンドレスモード解放
     if (saveData.endlessUnlocked) { if (onComplete) onComplete(); return; }
-    gotoPage(1);
+
+    gotoPage(1); // ①スキルページへ強制移動
     renderGrid();
-    const spend = Math.min(def.ep, playerProgress.coins || 0);
+
+    const cardEl = grid.querySelector('.shop-card-featured');
+    const priceEl = cardEl ? cardEl.querySelector('.shop-card-price-pill') : null;
+    if (priceEl) priceEl.innerHTML = `${def.originalEp}EP`; // まずは通常価格のみ表示
+
     setTimeout(() => {
-      if (spend > 0) spendEP(spend);
-      grantReward(def);
-      renderGrid(); // 購入済み状態（チェックマーク）を即座に反映
-      showRewardPopup(def);
-      if (onComplete) onComplete();
-    }, 900); // 値引き表示を少し見せてから購入を実行する
+      // ②値引き演出：線が引かれて、割引後の価格がふわっと出てくる（合計約2秒）
+      if (priceEl){
+        priceEl.innerHTML =
+          `<span class="shop-price-strike shop-price-strike-anim">${def.originalEp}</span>` +
+          `<span class="shop-price-discounted-anim">${def.ep}EP</span>`;
+      }
+      setTimeout(() => {
+        // ③自動で購入確認ポップを出す（選択肢は「はい」のみ）
+        showConfirm(def, () => {
+          // ④「はい」を押した後：EP消費・付与
+          const spend = Math.min(def.ep, playerProgress.coins || 0);
+          if (spend > 0) spendEP(spend);
+          grantReward(def);
+          renderGrid(); // 購入済み状態（チェックマーク）を即座に反映
+          // ⑤「獲得！」ポップ。プレイヤーがタップして閉じたらonCompleteへ進む
+          showRewardPopup(def, null, onComplete);
+        }, { hideNo: true });
+      }, 1300);
+    }, 500);
   }
 
   function buildCardEl(item){
@@ -278,12 +339,19 @@
       ? (purchased ? item.descAfter : item.descBefore)
       : item.desc;
 
+    // アイコン画像：後日 assets/shop/<商品id>.png（512×512px）を配置すれば自動で反映される。
+    // ファイルが無い間は絵文字（item.icon）がそのまま表示される（zukan.js等と同じonerror方式）
     card.innerHTML = `
-      <div class="shop-card-icon">${item.icon || '🎁'}</div>
+      <div class="shop-card-icon-box">
+        <span class="shop-card-icon-emoji">${item.icon || '🎁'}</span>
+        <img class="shop-card-icon-img" src="assets/shop/${item.id}.png" alt=""
+             onerror="this.remove();"
+             onload="this.previousElementSibling.style.display='none';">
+      </div>
       <div class="shop-card-body">
         <div class="shop-card-name">${item.name}</div>
         ${desc && item.featured ? `<div class="shop-card-desc">${desc}</div>` : ''}
-        <div class="shop-card-price">${priceHtml}</div>
+        <div class="shop-card-price-pill">${priceHtml}</div>
       </div>
       ${purchased ? '<div class="shop-card-check">✔</div>' : ''}
     `;
@@ -317,7 +385,8 @@
     if (!grid) return;
     const page = SHOP_PAGES[currentPage];
     if (categoryLabel) categoryLabel.textContent = `＞ ${page.label}`;
-    if (doctorBubble) doctorBubble.textContent = page.doctorLine || '';
+    if (doctorRevertTimer) { clearTimeout(doctorRevertTimer); doctorRevertTimer = null; } // ページ切替時は購入後メッセージの表示を打ち切る
+    setDoctorText(page.doctorLine || '');
     grid.innerHTML = '';
     grid.classList.toggle('shop-grid-list', page.layout === 'list');
     for (const item of page.items){

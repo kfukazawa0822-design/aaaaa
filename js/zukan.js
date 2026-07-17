@@ -432,7 +432,8 @@
   const collectionZukanBtn = byId('collection-zukan');
   if (collectionZukanBtn){
     collectionZukanBtn.addEventListener('click', openZukan);
-    collectionZukanBtn.addEventListener('touchstart', e=>{ e.preventDefault(); openZukan(); }, {passive:false});
+    collectionZukanBtn.addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
+    collectionZukanBtn.addEventListener('touchend', e=>{ e.preventDefault(); openZukan(); }, {passive:false});
   }
   const zukanBackBtn = byId('zukan-back');
   if (zukanBackBtn){
