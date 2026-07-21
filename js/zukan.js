@@ -147,23 +147,23 @@
   // 解放条件：プレイ中にそのアイテムを1回でも取得したら（index.html側のunlockItemZukan()から呼ばれる）
   const ITEM_ITEMS = [
     {
-      id:'item_1', name:'アイテム：S極強化', unlocked:false, iconPath:'assets/zukan/item_1.png',
+      id:'item_1', name:'アイテム：S極強化', unlocked:false, iconPath:'assets/items/s_boost.svg',
       desc:'S極磁場の出力を強化する拡張モジュール。\n取得するたびにS極の引力が1段階上昇する。最大Lv6まで強化可能。',
     },
     {
-      id:'item_2', name:'アイテム：N極強化', unlocked:false, iconPath:'assets/zukan/item_2.png',
+      id:'item_2', name:'アイテム：N極強化', unlocked:false, iconPath:'assets/items/n_boost.svg',
       desc:'N極磁場の出力を強化する拡張モジュール。\n取得するたびにN極の斥力が1段階上昇する。最大Lv6まで強化可能。',
     },
     {
-      id:'item_3', name:'アイテム：レンジアップ', unlocked:false, iconPath:'assets/zukan/item_3.png',
+      id:'item_3', name:'アイテム：レンジアップ', unlocked:false, iconPath:'assets/items/range_up.svg',
       desc:'磁場の有効範囲を拡張する補助モジュール。\n取得するたびに磁力の届く範囲が広がる。最大Lv6まで強化可能。',
     },
     {
-      id:'item_4', name:'アイテム：チェイン倍率アップ', unlocked:false, iconPath:'assets/zukan/item_4.png',
+      id:'item_4', name:'アイテム：チェイン倍率アップ', unlocked:false, iconPath:'assets/items/chain_multi.svg',
       desc:'チェイン時のスコア倍率を強化する演算モジュール。\n取得するたびにチェイン倍率が1段階上昇する。最大Lv10まで強化可能。',
     },
     {
-      id:'item_5', name:'アイテム：爆発強化', unlocked:false, iconPath:'assets/zukan/item_5.png',
+      id:'item_5', name:'アイテム：爆発強化', unlocked:false, iconPath:'assets/items/explode_up.svg',
       desc:'磁晶核の爆発エネルギーを増幅する強化モジュール。\n取得するたびに爆発の威力と影響範囲が強化される。最大Lv10まで強化可能。',
     },
     {
@@ -180,15 +180,15 @@
          + '改造バッテリーより成功時の回復量が大きい一方、失敗時は大幅にバッテリーが減少するハイリスク・ハイリターンな性能を持つ。',
     },
     {
-      id:'item_9', name:'アイテム：レアブースター', unlocked:false, iconPath:'assets/zukan/item_9.png',
+      id:'item_9', name:'アイテム：レアブースター', unlocked:false, iconPath:'assets/items/rare_booster.svg',
       desc:'希少な磁晶核の生成率を高める探索モジュール。\n取得するたびに紅磁晶核・金磁晶核の出現率が上昇する。最大Lv6まで強化可能。',
     },
     {
-      id:'item_10', name:'アイテム：スキルチャージャー', unlocked:false, iconPath:'assets/zukan/item_10.png',
+      id:'item_10', name:'アイテム：スキルチャージャー', unlocked:false, iconPath:'assets/items/skill_charger.svg',
       desc:'SPエネルギーの回収効率を高める補助モジュール。\n取得するたびにSPゲージが溜まりやすくなる。最大Lv10まで強化可能。',
     },
     {
-      id:'item_11', name:'アイテム：+30EP', unlocked:false, iconPath:'assets/zukan/item_11.png',
+      id:'item_11', name:'アイテム：+30EP', unlocked:false, iconPath:'assets/items/ep_bonus.svg',
       desc:'プレイ中の強化アイテムが最大Lvに達すると出現する特殊アイテム。\n取得すると30EPを獲得できる。これ以上強化に利用されないエネルギーは、EPへ変換される。',
     },
   ];
@@ -196,6 +196,12 @@
   // 「スキル」ページの実データ（9件）。
   // 解放条件：スキル選択画面でSTART GAMEを押した時、選択中のスキルを使用済みとして記録し解放
   // （index.html側のunlockSkillZukan()から呼ばれる。実績称号「収集開始/装備充実/完全武装」と同じ発動タイミング）
+  //
+  // ※skill_1〜3（ブリンク／玉運動停止／マグネットスイープ）は最初から持っている
+  //   スキルでショップに対応商品が無いため、図鑑専用のassets/zukan/以下の画像のまま。
+  //   skill_4〜9はショップの「スキル」ページで購入できる商品と1対1で対応するので、
+  //   新しく図鑑用の絵を用意しなくても、ショップ側に置くassets/shop/以下の画像を
+  //   そのまま読みに行くようにしている（js/shop.jsのSHOP_PAGES内のidと同じファイル名）。
   const SKILL_ITEMS = [
     {
       id:'skill_1', name:'スキル：ブリンク', unlocked:false, iconPath:'assets/zukan/skill_1.png',
@@ -212,45 +218,83 @@
          + '密集した磁晶核を崩したり、連鎖の起点を作ったりと扱いやすいスキル。',
     },
     {
-      id:'skill_4', name:'スキル：シールド', unlocked:false, iconPath:'assets/zukan/skill_4.png',
+      id:'skill_4', name:'スキル：シールド', unlocked:false, iconPath:'assets/shop/skill_shield.png',
       desc:'約10秒間、引き寄せた磁晶核を保護する防護装置。\n発動中は磁晶核が破壊されず、遅延磁晶核のタイマーも停止する。',
     },
     {
-      id:'skill_5', name:'スキル：台風の目', unlocked:false, iconPath:'assets/zukan/skill_5.png',
+      id:'skill_5', name:'スキル：台風の目', unlocked:false, iconPath:'assets/shop/skill_typhoon.png',
       desc:'約3秒間、周囲へ持続的な吸引磁場を発生させる集束装置。\n'
          + '磁晶核を一か所へゆっくり集め続けることで、広範囲を巻き込み大規模なチェインを狙える強力なスキル。\n'
          + '岩やギミックの近くで発動すると、思わぬ連鎖につながることもある。',
     },
     {
-      id:'skill_6', name:'スキル：ワープビーコン', unlocked:false, iconPath:'assets/zukan/skill_6.png',
+      id:'skill_6', name:'スキル：ワープビーコン', unlocked:false, iconPath:'assets/shop/skill_beacon.png',
       desc:'設置と帰還の2段階で使用する転位装置。\n'
          + '1回目で現在地を記録し、半径600px以内のアイテムを検知。2回目で記録地点へ瞬間移動する。\n'
          + 'ビーコン周辺ではアイテムが出現しやすい傾向が確認されている。',
     },
     {
-      id:'skill_7', name:'スキル：ダッシュ', unlocked:false, iconPath:'assets/zukan/skill_7.png',
+      id:'skill_7', name:'スキル：ダッシュ', unlocked:false, iconPath:'assets/shop/skill_dash.png',
       desc:'約3秒間、研究装置の出力を引き上げて高速移動できる。\n広いフィールドの移動やアイテム回収に役立つ。',
     },
     {
-      id:'skill_8', name:'スキル：大砲', unlocked:false, iconPath:'assets/zukan/skill_8.png',
+      id:'skill_8', name:'スキル：大砲', unlocked:false, iconPath:'assets/shop/skill_cannon.png',
       desc:'巨大な磁晶核を前方へ射出する高出力スキル。\n'
          + '発射中の砲弾は無敵状態となり、進路上の磁晶核を巻き込みながら突き進む。\n'
          + '密集地帯へ撃ち込めば、大規模な連鎖反応の起点となる。',
     },
     {
-      id:'skill_9', name:'スキル：エネルギー変換器', unlocked:false, iconPath:'assets/zukan/skill_9.png',
+      id:'skill_9', name:'スキル：エネルギー変換器', unlocked:false, iconPath:'assets/shop/skill_energy.png',
       desc:'約10秒間、磁晶核が爆発するたびにバッテリーが0.2%ずつ回復する。\n'
          + '爆発時に放出されるエネルギーの一部を電力へ変換することで、連鎖が続くほど効率よくバッテリーを補給できる。\n'
          + 'この変換技術は、新たなエネルギー源としての実用化を目指し、現在も研究が続けられている。',
     },
   ];
 
-  // 仮データ：まだ内容をもらっていないカテゴリは、これまで通りの12個プレースホルダーのまま
+  // 「見た目スキン」ページの実データ（6件）。ショップ「カスタム」ページのcosmetic商品と1対1対応。
+  // idをショップ側のitem.idと完全に同じにしてあるので、画像もショップと同じ
+  // assets/shop/<id>.png をそのまま読みに行く（図鑑専用の画像を別途用意する必要が無い）。
+  // 解放条件：ショップで購入した瞬間（js/shop.js:grantRewardのkind==='cosmetic'から呼ばれる）
+  const SKIN_ITEMS = [
+    { id:'explode_fx_1',  name:'爆発エフェクト①',       unlocked:false, iconPath:'assets/shop/explode_fx_1.png',  desc:null },
+    { id:'explode_fx_2',  name:'爆発エフェクト②',       unlocked:false, iconPath:'assets/shop/explode_fx_2.png',  desc:null },
+    { id:'marble_skin_1', name:'玉スキン①',             unlocked:false, iconPath:'assets/shop/marble_skin_1.png', desc:null },
+    { id:'marble_skin_2', name:'玉スキン②',             unlocked:false, iconPath:'assets/shop/marble_skin_2.png', desc:null },
+    { id:'player_skin_1', name:'プレイヤー機体スキン①', unlocked:false, iconPath:'assets/shop/player_skin_1.png', desc:null },
+    { id:'player_skin_2', name:'プレイヤー機体スキン②', unlocked:false, iconPath:'assets/shop/player_skin_2.png', desc:null },
+  ];
+
+  // 「博士への差し入れ」ページの実データ（8件）。ショップ「博士支援」ページの商品と1対1対応。
+  // 考え方はSKIN_ITEMSと同じで、idをショップ側と揃えてassets/shop/<id>.pngを共用する。
+  // 解放条件：ショップで購入した瞬間（js/shop.js:grantRewardのkind==='gift'から呼ばれる）
+  const GIFT_ITEMS = [
+    { id:'gift_ramen',     name:'カップラーメン',     unlocked:false, iconPath:'assets/shop/gift_ramen.png',
+      desc:'研究所の食料事情を支える救世主。博士は新しい発見をすると、なぜか無性にカップラーメンが食べたくなるらしい。助手が差し入れるまでは、水だけで空腹を紛らわせていたとか。' },
+    { id:'gift_kettle',    name:'電気ケトル',         unlocked:false, iconPath:'assets/shop/gift_kettle.png',
+      desc:'数分でお湯が沸く文明の利器。博士は「時間短縮こそ研究効率向上の第一歩」と語っているが、一番喜んでいるのはカップラーメンがすぐ食べられることかもしれない。' },
+    { id:'gift_coffee',    name:'コーヒーメーカー',   unlocked:false, iconPath:'assets/shop/gift_coffee.png',
+      desc:'この一杯で気分もリフレッシュ！淹れたてのコーヒーが研究所中に香るようになった。なお、飲む量に比例して睡眠時間が削られた。…飲み過ぎ注意！' },
+    { id:'gift_microwave', name:'電子レンジ',         unlocked:false, iconPath:'assets/shop/gift_microwave.png',
+      desc:'電子レンジの導入により、研究所の食生活は大きく改善した。温かい食事をすぐ用意できるようになったものの、助手が声を掛けないと冷めるまで放置されることもしばしば。' },
+    { id:'gift_coat',      name:'新品の白衣',         unlocked:false, iconPath:'assets/shop/gift_coat.png',
+      desc:'長年使い込まれた染みと徹夜の歴史が刻まれていた。新品の袖に腕を通した博士は、いつもより少しだけ頼もしく見える。' },
+    { id:'gift_chair',     name:'オフィスチェア',     unlocked:false, iconPath:'assets/shop/gift_chair.png',
+      desc:'長時間の研究でも疲れにくい高性能チェア。博士は「これは危険じゃ……快適すぎて立てん」と言いながら、その日も結局座りっぱなしだった。' },
+    { id:'gift_bed',       name:'ベッド',             unlocked:false, iconPath:'assets/shop/gift_bed.png',
+      desc:'ようやく研究所にまともな寝床ができた。博士は「たまにはゆっくり休もうか」と宣言したが、3時間後には実験を再開していた。' },
+    { id:'gift_rocket',    name:'ロケット設計図',     unlocked:false, iconPath:'assets/shop/gift_rocket.png',
+      desc:'博士が長年追い続けてきた夢、その第一歩。紙切れ一枚に見えるが、この中には数え切れない挑戦と希望が詰まっている。助手の支援がなければ、この設計図が日の目を見ることはなかった。' },
+  ];
+
+  // 仮データ：まだ内容をもらっていないカテゴリ（研究対象／岩・ギミック／アイテム／スキル／
+  // スキン／差し入れ、以外）は、これまで通りの12個プレースホルダーのまま
   const ZUKAN_DATA = CATEGORIES.map(cat => {
     if (cat.id === 'matter')  return { ...cat, items: MATTER_ITEMS };
     if (cat.id === 'gimmick') return { ...cat, items: GIMMICK_ITEMS };
     if (cat.id === 'item')    return { ...cat, items: ITEM_ITEMS };
     if (cat.id === 'skill')   return { ...cat, items: SKILL_ITEMS };
+    if (cat.id === 'skin')    return { ...cat, items: SKIN_ITEMS };
+    if (cat.id === 'gift')    return { ...cat, items: GIFT_ITEMS };
     return {
       ...cat,
       items: Array.from({length: ITEMS_PER_PAGE}, (_,i) => ({
@@ -281,6 +325,22 @@
       for (const item of cat.items){
         if (store[item.id]) item.unlocked = true;
       }
+    }
+    // 救済措置：SKIN_ITEMS/GIFT_ITEMSはショップ購入と連動して解放する仕組みを
+    // 後から追加したため、それより前にショップで購入済みだった分は図鑑側の解放記録が
+    // 無いままになっている（例：購入済みのはずのカップラーメンが図鑑では未解放）。
+    // ショップの購入記録(saveData.shopPurchases)を突き合わせて、購入済みなのに
+    // 図鑑が未解放のものがあれば、ここで解放状態に揃える
+    if (typeof saveData !== 'undefined' && saveData.shopPurchases){
+      for (const cat of ZUKAN_DATA){
+        for (const item of cat.items){
+          if (!item.unlocked && saveData.shopPurchases[item.id]){
+            item.unlocked = true;
+            store[item.id] = true;
+          }
+        }
+      }
+      persist();
     }
   })();
   // 他ファイル（index.html本体）から実績と同じ要領で呼び出す解放関数
@@ -422,8 +482,14 @@
       return;
     }
     if (!screen) return;
+    // Lv30で解放されるまではロック中（js/story.jsのlv30_zukan_unlock_tutorialでzukanUnlockedがtrueになる）
+    if (typeof saveData !== 'undefined' && saveData.storyFlags && !saveData.storyFlags.zukanUnlocked){
+      if (typeof showBanner === 'function') showBanner('まだ解放されていません', '#888888');
+      return;
+    }
     window.CollectionUI.openSubscreen(screen);
     gotoPage(0);
+    if (window.Story) window.Story.check('zukan_open'); // js/story.js: zukan_intro_doctor
   };
   const closeZukan = () => {
     closeDrawer(); closePopup();

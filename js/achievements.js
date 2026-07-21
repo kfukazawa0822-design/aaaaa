@@ -44,9 +44,9 @@
 (function(){
   const ACHIEVEMENT_DEFS = [
     // ── 単発実績 ──
-    { id:'ach_001', no:'001', title:'研究開始',       ep:20,   desc:'初めて研究に参加した。',                 condition:'クイックモード初プレイでリザルト画面を見た' },
+    { id:'ach_001', no:'001', title:'研究開始',       ep:20,   desc:'初めて研究に参加した。',                 condition:'クイックモード初プレイ' },
     { id:'ach_002', no:'002', title:'物資管理係',     ep:20,   desc:'研究所の設備が利用可能になった。',       condition:'ショップ機能解放' },
-    { id:'ach_003', no:'003', title:'終わらない実験', ep:20,   desc:'終わりなき研究へ足を踏み入れた。',       condition:'エンドレスモード初プレイでリザルト画面を見た' },
+    { id:'ach_003', no:'003', title:'終わらない実験', ep:20,   desc:'終わりなき研究へ足を踏み入れた。',       condition:'エンドレスモード初プレイ' },
     { id:'ach_004', no:'004', title:'記録係',         ep:20,   desc:'発見した研究成果を記録し始めた。',       condition:'コレクション機能解放' },
     { id:'ach_005', no:'005', title:'一人前の助手',   ep:20,   desc:'博士から少しだけ頼られるようになった。', condition:'プレイヤーレベル Lv20達成',  levelReq:20 },
     { id:'ach_006', no:'006', title:'主任研究員',     ep:200,  desc:'研究所を支える存在へ成長した。',         condition:'プレイヤーレベル Lv50達成',  levelReq:50 },
@@ -55,26 +55,28 @@
     { id:'ach_009', no:'009', title:'N極マスター',    ep:50,   desc:'N極を自在に操れるようになった。',        condition:'アイテム：N極強化をLvMAXにした' },
     { id:'ach_010', no:'010', title:'年金生活',       ep:100,  desc:'これ以上強化できないアイテムは、EPとして蓄積されるようだ。', condition:'アイテム：30EPを獲得した' },
     { id:'ach_011', no:'011', title:'ハズレくじ',     ep:20,   desc:'運試しは、いつもうまくいくとは限らない。', condition:'アイテム：バッテリーでハズレを引いた' },
-    { id:'ach_012', no:'012', title:'起死回生',       ep:20,   desc:'危機的状況から立て直した。',              condition:'バッテリー残量10%以下で、バッテリーを取得して回復する' },
+    { id:'ach_012', no:'012', title:'起死回生',       ep:20,   desc:'危機的状況から立て直した。',              condition:'バッテリー残量10%以下時に、アイテムを拾って回復した' },
     { id:'ach_013', no:'013', title:'トリッキー',     ep:50,   desc:'N極だけで押し切った。',                  condition:'90秒間連続でN極を維持した' },
-    { id:'ach_014', no:'014', title:'尽きない探究心', ep:200,  desc:'長時間の研究に耐え抜いた。',              condition:'180秒生き残る' },
+    { id:'ach_014', no:'014', title:'尽きない探究心', ep:200,  desc:'長時間の研究に耐え抜いた。',              condition:'180秒以上研究を続けた' },
 
     // ── 段階実績 ──
     { id:'ach_015', no:'015', statKey:'gimmickTriggerCount', progressLabel:'ギミック発動回数',
       desc:'あらゆる実験装置を使いこなした。',
       tiers:[ {title:'起動確認',ep:20,threshold:1}, {title:'実験技師',ep:50,threshold:20}, {title:'ギミックマスター',ep:200,threshold:50} ] },
-    { id:'ach_016', no:'016', statKey:'redMarbleSpawned', progressLabel:'紅晶出現回数',
+    { id:'ach_016', no:'016', statKey:'redMarbleSpawned', progressLabel:'紅晶を出現させる',
       desc:'紅晶を知り尽くした第一人者。',
-      tiers:[ {title:'紅晶観測',ep:20,threshold:1}, {title:'紅晶研究員',ep:50,threshold:50}, {title:'紅晶博士',ep:200,threshold:200} ] },
+      tiers:[ {title:'紅晶観測',ep:20,threshold:1}, {title:'紅晶研究員',ep:50,threshold:100}, {title:'紅晶博士',ep:200,threshold:500} ] },
     { id:'ach_017', no:'017', statKey:'goldMarbleSpawned', progressLabel:'金晶出現回数',
       desc:'金晶を知り尽くした第一人者。',
       tiers:[ {title:'黄金の輝き',ep:20,threshold:1}, {title:'金晶研究員',ep:50,threshold:50}, {title:'金晶博士',ep:200,threshold:200} ] },
-    { id:'ach_018', no:'018', statKey:'bestChainCount', progressLabel:'1回のプレイでの最大チェイン数', progressUnit:'',
+    { id:'ach_018', no:'018', statKey:'bestChainCount', progressLabel:'1回のプレイでのチェイン達成数', progressUnit:'',
       desc:'宇宙誕生を思わせる究極の連鎖を達成した。',
-      tiers:[ {title:'恒星爆発',ep:20,threshold:50}, {title:'銀河爆発',ep:50,threshold:150}, {title:'ビックバン',ep:200,threshold:300} ] },
-    { id:'ach_019', no:'019', statKey:'bestScore', progressLabel:'1回のプレイでの最高スコア', progressUnit:'',
+      tiers:[ {title:'恒星爆発',ep:20,threshold:100}, {title:'銀河爆発',ep:50,threshold:300}, {title:'ビックバン',ep:200,threshold:500} ] },
+    { id:'ach_019', no:'019', statKey:'bestScore', progressLabel:'1回のプレイでの総スコア数', progressUnit:'',
       desc:'誰もが認める実力者となった。',
-      tiers:[ {title:'手練れ',ep:20,threshold:200000}, {title:'敏腕',ep:50,threshold:1000000}, {title:'超一流',ep:500,threshold:2000000} ] },
+      hideDenominatorWhenComplete:true, // 数字が大きく「2,000,000/2,000,000」のように長くなりすぎるため、
+                                          // 全段階達成後は分母(しきい値)を表示しない
+      tiers:[ {title:'手練れ',ep:20,threshold:500000}, {title:'敏腕',ep:50,threshold:2000000}, {title:'超一流',ep:500,threshold:10000000} ] },
     { id:'ach_020', no:'020', statKey:'totalPlayCount', progressLabel:'総プレイ回数',
       desc:'もはや研究所が第二の家になった。',
       tiers:[ {title:'研究メンバー',ep:20,threshold:10}, {title:'プロジェクトリーダー',ep:50,threshold:50}, {title:'研究所の住人',ep:500,threshold:200} ] },

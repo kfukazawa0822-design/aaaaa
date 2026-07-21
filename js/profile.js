@@ -151,6 +151,7 @@
     if (!screen) return;
     window.CollectionUI.openSubscreen(screen);
     renderProfile();
+    if (window.Story) window.Story.check('profile_open'); // js/story.js: profile_intro_doctor
   };
   const closeProfile = () => {
     if (window.CollectionUI && screen) window.CollectionUI.closeSubscreen(screen);

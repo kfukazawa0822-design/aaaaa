@@ -33,6 +33,10 @@
   const doctorBubble = byId('shop-doctor-bubble');
   const doctorTextEl = byId('shop-doctor-text');
   let doctorRevertTimer = null;
+  // 購入直後ではなく、報酬ポップアップ(#shop-reward-overlay)をプレイヤーが閉じた
+  // タイミングでストーリー進行をチェックしたいので、いったんここに保留しておく
+  // （js/story.jsのfavorite_skill_tutorial／buff_tutorialステップに対応）
+  let pendingStoryContext = null;
 
   // 吹き出しのテキストを、スライドインのアニメーション付きで更新する
   function setDoctorText(text){
@@ -61,7 +65,9 @@
   const rewardIcon  = byId('shop-reward-icon');
   const rewardName  = byId('shop-reward-name');
   const confirmOv    = byId('shop-confirm-overlay');
-  const confirmText  = byId('shop-confirm-text');
+  const confirmNameEl = byId('shop-confirm-name');
+  const confirmDescEl = byId('shop-confirm-desc');
+  const confirmQuestionEl = byId('shop-confirm-question');
   const confirmYesBtn = byId('shop-confirm-yes');
   const confirmNoBtn  = byId('shop-confirm-no');
   const errorOv = byId('shop-error-overlay');
@@ -70,12 +76,17 @@
     if (errorOv) errorOv.classList.add('show');
   }
 
+  const introOv = byId('shop-page-intro-overlay');
+  const introTextEl = byId('shop-page-intro-text');
+  if (introOv) introOv.addEventListener('click', () => introOv.classList.remove('show'));
+
   const ICON_GACHA_POOL = Array.from({length:12}, (_,i) => `icon_${String(i+1).padStart(2,'0')}`);
 
   const SHOP_PAGES = [
     {
       id:'support', label:'応援', layout:'list',
-      doctorLine:'生活用品も研究には必要なんじゃ。',
+      doctorLine:'外部からの支援物資を受け取れるようになったぞ。',
+      minPagesUnlocked:2, // カスタム/博士支援と同じ仕組みで、Lv15(shopPagesUnlocked>=2)までシャッター
       items:[
         { id:'free_pack', name:'無料応援パック', kind:'free', icon:'🎁',
           desc:'動画の視聴でコインとバフを獲得できます。毎日1回受け取れます。',
@@ -90,35 +101,53 @@
     },
     {
       id:'skill', label:'スキル', layout:'featured-grid',
-      doctorLine:'ほれ、新しい装備じゃ！',
+      doctorLine:'エンドレスモード用の新しいスキルを開発したぞ！',
+      // シャッターは出さない（エンドレスモード強制購入チュートリアルで最初から
+      // このページを使うため）。代わりに、下の6枚のスキルカードだけ名前を「???」にして隠す。
+      maskNonFeaturedUntilPages:2, // shopPagesUnlockedがこの値未満の間は「???」表記
       items:[
         { id:'endless_unlock', name:'エンドレスモード解放', ep:100, originalEp:1100, kind:'endless_unlock', icon:'▶',
           desc:'エンドレスモードがプレイ可能になります。', featured:true },
-        { id:'skill_shield',   name:'スキル：シールド',       ep:800,  kind:'skill', skillId:'shield',          icon:'🛡' },
-        { id:'skill_typhoon',  name:'スキル：台風の目',       ep:1000, kind:'skill', skillId:'typhoon',         icon:'🌪' },
-        { id:'skill_beacon',   name:'スキル：ワープビーコン', ep:1300, kind:'skill', skillId:'beacon',          icon:'🛰' },
-        { id:'skill_dash',     name:'スキル：ダッシュ',       ep:1600, kind:'skill', skillId:'dash',            icon:'💨' },
-        { id:'skill_cannon',   name:'スキル：大砲',           ep:2000, kind:'skill', skillId:'cannon',          icon:'💣' },
-        { id:'skill_energy',   name:'スキル：エネルギー変換器', ep:2500, kind:'skill', skillId:'energyConverter', icon:'🔌' },
+        { id:'skill_shield',   name:'スキル：シールド',       ep:800,  kind:'skill', skillId:'shield',          icon:'🛡',
+          desc:'一定時間、自機を守るシールドを展開します。' },
+        { id:'skill_typhoon',  name:'スキル：台風の目',       ep:1000, kind:'skill', skillId:'typhoon',         icon:'🌪',
+          desc:'周囲のガラス玉を引き寄せます。' },
+        { id:'skill_beacon',   name:'スキル：ワープビーコン', ep:1300, kind:'skill', skillId:'beacon',          icon:'🛰',
+          desc:'設置したビーコンへ瞬時に移動します。' },
+        { id:'skill_dash',     name:'スキル：ダッシュ',       ep:1600, kind:'skill', skillId:'dash',            icon:'💨',
+          desc:'一定距離を高速で移動します。' },
+        { id:'skill_cannon',   name:'スキル：大砲',           ep:2000, kind:'skill', skillId:'cannon',          icon:'💣',
+          desc:'前方へ大砲の弾をぶっ放します。' },
+        { id:'skill_energy',   name:'スキル：エネルギー変換器', ep:2500, kind:'skill', skillId:'energyConverter', icon:'🔌',
+          desc:'周囲のガラス玉をエネルギーへ変換します。' },
       ],
     },
     {
       id:'custom', label:'カスタム', layout:'featured-grid',
-      doctorLine:'見た目にもこだわってみるかのう？',
+      doctorLine:'研究機材の見た目にもこだわってみるかのう？',
+      minPagesUnlocked:4, // saveData.storyFlags.shopPagesUnlocked がこの値未満の間はシャッターで隠す
       items:[
         { id:'icon_gacha',     name:'アイコンガチャ（1回）', ep:500,  kind:'icon_gacha', icon:'🎰',
           desc:'プロフィールで使用できるアイコンをランダムで1つ獲得します。', featured:true },
-        { id:'explode_fx_1',   name:'爆発エフェクト①', ep:1200, kind:'cosmetic', icon:'💥' },
-        { id:'explode_fx_2',   name:'爆発エフェクト②', ep:1200, kind:'cosmetic', icon:'💥' },
-        { id:'marble_skin_1',  name:'玉スキン①',       ep:2000, kind:'cosmetic', icon:'🔮' },
-        { id:'marble_skin_2',  name:'玉スキン②',       ep:2000, kind:'cosmetic', icon:'🔮' },
-        { id:'player_skin_1',  name:'プレイヤー機体スキン①', ep:2000, kind:'cosmetic', icon:'🛸' },
-        { id:'player_skin_2',  name:'プレイヤー機体スキン②', ep:2000, kind:'cosmetic', icon:'🛸' },
+        { id:'explode_fx_1',   name:'爆発エフェクト①', ep:1200, kind:'cosmetic', icon:'💥',
+          desc:'爆発時のエフェクトを変更します。※性能は変わりません。' },
+        { id:'explode_fx_2',   name:'爆発エフェクト②', ep:1200, kind:'cosmetic', icon:'💥',
+          desc:'爆発時のエフェクトを変更します。※性能は変わりません。' },
+        { id:'marble_skin_1',  name:'玉スキン①',       ep:2000, kind:'cosmetic', icon:'🔮',
+          desc:'玉の見た目を変更します。※性能は変わりません。' },
+        { id:'marble_skin_2',  name:'玉スキン②',       ep:2000, kind:'cosmetic', icon:'🔮',
+          desc:'玉の見た目を変更します。※性能は変わりません。' },
+        { id:'player_skin_1',  name:'プレイヤー機体スキン①', ep:2000, kind:'cosmetic', icon:'🛸',
+          desc:'プレイヤー機体の見た目を変更します。※性能は変わりません。' },
+        { id:'player_skin_2',  name:'プレイヤー機体スキン②', ep:2000, kind:'cosmetic', icon:'🛸',
+          desc:'プレイヤー機体の見た目を変更します。※性能は変わりません。' },
+        // 「通過ライン①②」はショップ・図鑑ともに内容未確定とのことなので、まだ追加していない
       ],
     },
     {
       id:'gift', label:'博士支援', layout:'grid',
-      doctorLine:'差し入れは……いつでも歓迎じゃぞ。',
+      doctorLine:'研究ばかりで、生活用品はいつも後回しなのじゃ……。',
+      minPagesUnlocked:4, // カスタムページと同じくLv30(shopPagesUnlocked>=4)で解放
       items:[
         { id:'gift_ramen',   name:'カップラーメン',   ep:100,   kind:'gift', icon:'🍜',
           descBefore:'カップラーメンが食べたい気分じゃ。', descAfter:'これでいつでもラーメンが食べられるぞ！',
@@ -156,6 +185,53 @@
     return !!(saveData.shopPurchases || {})[item.id];
   }
 
+  // ストーリー進行（js/story.jsがLv15/Lv30達成時に更新するsaveData.storyFlags.shopPagesUnlocked）
+  // に応じて、ページ丸ごとシャッターで隠すかどうかを判定する
+  function shopPagesUnlocked(){
+    return (saveData.storyFlags && saveData.storyFlags.shopPagesUnlocked) || 1;
+  }
+  function isPageLocked(page){
+    return !!page.minPagesUnlocked && shopPagesUnlocked() < page.minPagesUnlocked;
+  }
+  // スキルページだけはシャッターを出さず、非featuredの6枚だけ名前を「???」にして隠す
+  function shouldMaskName(page, item){
+    return !item.featured && !!page.maskNonFeaturedUntilPages && shopPagesUnlocked() < page.maskNonFeaturedUntilPages;
+  }
+
+  // ── ページ解放お知らせポップ ──
+  // 応援ページとスキルページ（1・2ページ目）、カスタムページと博士支援ページ（3・4ページ目）は
+  // 同時に解放されるが、告知ポップはページごとに別々の文言で1回ずつ出す。
+  // ※文言はこちらの想定なので、実際に意図している内容と違えば教えてください
+  //   （PAGE_INTRO_TEXTを直せば済みます）。
+  const PAGE_INTRO_TEXT = {
+    support: '特別なパックを追加しました',
+    skill:   '新しいスキルを追加しました',
+    custom:  'スキンや見た目変更の商品を追加しました',
+    gift:    '博士支援の新しい商品を追加しました',
+  };
+  // そのページが「完全に見える状態」になっているかどうか。
+  // 応援ページのようにページ自体は最初から見えているが、お知らせポップだけは
+  // 特定のタイミングまで待ちたい場合はintroUnlockAtを使う（他の判定より優先）
+  function isPageFullyRevealed(page){
+    if (page.introUnlockAt) return shopPagesUnlocked() >= page.introUnlockAt;
+    if (page.maskNonFeaturedUntilPages) return shopPagesUnlocked() >= page.maskNonFeaturedUntilPages;
+    if (page.minPagesUnlocked) return shopPagesUnlocked() >= page.minPagesUnlocked;
+    return true;
+  }
+  function maybeShowPageIntro(page){
+    const text = PAGE_INTRO_TEXT[page.id];
+    if (!text) return;
+    if (!isPageFullyRevealed(page)) return;
+    const seen = saveData.storyFlags.shopPageIntroSeen || (saveData.storyFlags.shopPageIntroSeen = {});
+    if (seen[page.id]) return;
+    seen[page.id] = true;
+    if (typeof saveSaveData === 'function') saveSaveData();
+    if (introOv && introTextEl){
+      introTextEl.textContent = text;
+      introOv.classList.add('show');
+    }
+  }
+
   function canAfford(item){
     return (playerProgress.coins || 0) >= item.ep;
   }
@@ -172,9 +248,11 @@
     } else if (item.kind === 'skill'){
       if (!saveData.unlockedSkills) saveData.unlockedSkills = [];
       if (!saveData.unlockedSkills.includes(item.skillId)) saveData.unlockedSkills.push(item.skillId);
+      pendingStoryContext = 'skill_purchased'; // js/story.js: favorite_skill_tutorial
     } else if (item.kind === 'free'){
       saveData.freePackClaimedDate = todayStr();
       addCoins(50); // 無料パックの獲得コイン（バフ部分は今後の課題）
+      pendingStoryContext = 'free_pack_claimed'; // js/story.js: buff_tutorial
     } else if (item.kind === 'icon_gacha'){
       const owned = saveData.ownedIcons || (saveData.ownedIcons = []);
       const remaining = ICON_GACHA_POOL.filter(id => !owned.includes(id));
@@ -183,6 +261,10 @@
       item._pickedIcon = picked; // ポップアップ表示用に一時保持
     } else {
       saveData.shopPurchases[item.id] = true;
+      // 「見た目スキン」「博士への差し入れ」は、ショップ購入と同時に図鑑側も解放する。
+      // 図鑑側（js/zukan.js）のSKIN_ITEMS/GIFT_ITEMSのidをショップ側と完全に一致させて
+      // あるので、item.idをそのまま渡すだけでよい
+      if ((item.kind === 'cosmetic' || item.kind === 'gift') && window.Zukan) window.Zukan.unlock(item.id);
     }
     if (typeof saveSaveData === 'function') saveSaveData();
   }
@@ -206,6 +288,10 @@
       rewardOv.classList.remove('show');
       const cb = rewardOnClose; rewardOnClose = null;
       if (cb) cb();
+      // 報酬ポップを閉じ終わってから、保留していたストーリー進行チェックを行う
+      // （ポップと博士のチュートリアルカードが同時に重ならないようにするため）
+      if (pendingStoryContext && window.Story) window.Story.check(pendingStoryContext);
+      pendingStoryContext = null;
     });
   }
 
@@ -216,8 +302,10 @@
   }
 
   function showConfirm(item, onYes, opts){
-    if (!confirmOv || !confirmText) { onYes(); return; }
-    confirmText.textContent = `${item.name}を${priceText(item)}で購入しますか？`;
+    if (!confirmOv || !confirmNameEl) { onYes(); return; }
+    confirmNameEl.textContent = item.name;
+    if (confirmDescEl) confirmDescEl.textContent = item.desc || item.descBefore || '';
+    if (confirmQuestionEl) confirmQuestionEl.textContent = `${priceText(item)}で購入しますか？`;
     confirmOv.classList.add('show');
     const hideNo = !!(opts && opts.hideNo);
     if (confirmNoBtn) confirmNoBtn.style.display = hideNo ? 'none' : '';
@@ -317,7 +405,7 @@
     }, 500);
   }
 
-  function buildCardEl(item){
+  function buildCardEl(item, maskName){
     const purchased = isPurchased(item);
     const card = document.createElement('div');
     card.className = 'shop-card' + (item.featured ? ' shop-card-featured' : '') + (purchased ? ' purchased' : '');
@@ -338,24 +426,25 @@
     const desc = item.kind === 'gift' && item.descBefore
       ? (purchased ? item.descAfter : item.descBefore)
       : item.desc;
+    const displayName = maskName ? '？？？' : item.name;
 
     // アイコン画像：後日 assets/shop/<商品id>.png（512×512px）を配置すれば自動で反映される。
     // ファイルが無い間は絵文字（item.icon）がそのまま表示される（zukan.js等と同じonerror方式）
     card.innerHTML = `
       <div class="shop-card-icon-box">
-        <span class="shop-card-icon-emoji">${item.icon || '🎁'}</span>
+        <span class="shop-card-icon-emoji">${maskName ? '？' : (item.icon || '🎁')}</span>
         <img class="shop-card-icon-img" src="assets/shop/${item.id}.png" alt=""
              onerror="this.remove();"
              onload="this.previousElementSibling.style.display='none';">
       </div>
       <div class="shop-card-body">
-        <div class="shop-card-name">${item.name}</div>
+        <div class="shop-card-name">${displayName}</div>
         ${desc && item.featured ? `<div class="shop-card-desc">${desc}</div>` : ''}
         <div class="shop-card-price-pill">${priceHtml}</div>
       </div>
       ${purchased ? '<div class="shop-card-check">✔</div>' : ''}
     `;
-    if (!purchased) {
+    if (!purchased && !maskName) {
       card.addEventListener('click', () => purchase(item));
     }
     return card;
@@ -381,16 +470,38 @@
     return card;
   }
 
+  const shutterEl = byId('shop-page-shutter');
+  const shutterConditionEl = byId('shop-page-shutter-condition');
+  // ページごとの解放条件の説明文（シャッターの下に小さく出す）
+  const PAGE_UNLOCK_CONDITION_TEXT = { 2:'レベル15到達で解放', 4:'レベル30到達で解放' };
+
   function renderGrid(){
     if (!grid) return;
     const page = SHOP_PAGES[currentPage];
     if (categoryLabel) categoryLabel.textContent = `＞ ${page.label}`;
     if (doctorRevertTimer) { clearTimeout(doctorRevertTimer); doctorRevertTimer = null; } // ページ切替時は購入後メッセージの表示を打ち切る
-    setDoctorText(page.doctorLine || '');
+
+    const locked = isPageLocked(page);
+    // シャッター中のページでは、通常のページ用セリフではなく専用の一言に差し替える
+    setDoctorText(locked ? '商品準備中じゃ。' : (page.doctorLine || ''));
+
+    if (shutterEl) shutterEl.classList.toggle('show', locked);
+    if (categoryLabel) categoryLabel.style.display = locked ? 'none' : '';
+    if (grid) grid.style.display = locked ? 'none' : '';
+    maybeShowPageIntro(page); // このページが今回初めて「完全に見える状態」になっていればお知らせを出す
+    if (locked){
+      if (shutterConditionEl) shutterConditionEl.textContent = PAGE_UNLOCK_CONDITION_TEXT[page.minPagesUnlocked] || '';
+      return; // 商品は組み立てず、シャッターだけ見せる（押せる要素も一切生成しない）
+    }
+
     grid.innerHTML = '';
     grid.classList.toggle('shop-grid-list', page.layout === 'list');
     for (const item of page.items){
-      grid.appendChild(page.layout === 'list' ? buildListCardEl(item) : buildCardEl(item));
+      if (page.layout === 'list'){
+        grid.appendChild(buildListCardEl(item));
+      } else {
+        grid.appendChild(buildCardEl(item, shouldMaskName(page, item)));
+      }
     }
   }
 

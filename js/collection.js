@@ -129,10 +129,15 @@
 
   const collectionTutorialBtn = byId('collection-tutorial');
   const tutorialBackBtn = byId('tutorial-back');
+  // チュートリアル一覧を開く処理をまとめて、開くたびにストーリー進行もチェックする
+  function openTutorialScreen(){
+    openSubscreen(tutorialScreen);
+    if (window.Story) window.Story.check('tutorial_open'); // js/story.js: tutorial_screen_intro_doctor
+  }
   if (collectionTutorialBtn && tutorialScreen){
-    collectionTutorialBtn.addEventListener('click', () => openSubscreen(tutorialScreen));
+    collectionTutorialBtn.addEventListener('click', openTutorialScreen);
     collectionTutorialBtn.addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
-    collectionTutorialBtn.addEventListener('touchend', e=>{ e.preventDefault(); openSubscreen(tutorialScreen); }, {passive:false});
+    collectionTutorialBtn.addEventListener('touchend', e=>{ e.preventDefault(); openTutorialScreen(); }, {passive:false});
   }
   if (tutorialBackBtn && tutorialScreen){
     tutorialBackBtn.addEventListener('click', () => closeSubscreen(tutorialScreen));
@@ -169,8 +174,11 @@
       return;
     }
     card.className = 'achv-card unlocked' + (state.claimed ? '' : ' glow');
+    // 「取得時Lv」ではなく「何を達成して獲得したか」（def.condition）を表示する。
+    // ロック中カードの説明文と同じ文言を使い回すことで、未取得時に見えていたヒントと
+    // 取得後の実績内容が一致し、後から見返しても分かりやすいようにしている
     const metaText = state.claimed
-      ? `取得日：${state.claimedAt || '-'}　取得Lv：${state.claimedLevel ?? '-'}`
+      ? `取得日：${state.claimedAt || '-'}　${def.condition}`
       : `獲得EP：${def.ep}（タップで受け取り）`;
     card.innerHTML = `
       <div class="achv-title">${def.title}</div>
@@ -182,7 +190,7 @@
         if (result == null) return;
         card.classList.remove('glow');
         const metaEl = card.querySelector('.achv-meta');
-        if (metaEl) metaEl.textContent = `取得日：${result.claimedAt}　取得Lv：${result.claimedLevel}`;
+        if (metaEl) metaEl.textContent = `取得日：${result.claimedAt}　${def.condition}`;
         showClaimPopup(card, result.ep);
       }, { once:true });
     }
@@ -205,13 +213,21 @@
 
     const allClaimed = def.tiers.every((_, i) => claimed[i]);
     if (allClaimed) {
-      // 最終段階まで受け取り済み：単発実績と同じ「説明文＋取得日／Lv」表示に切り替える
+      // 最終段階まで受け取り済み：取得Lvの代わりに、現在の実測値を「進行形」で表示する。
+      // 最終しきい値を超えても実際の統計値(getStatValue)をそのまま出し続けるので、
+      // 例えば「紅晶を出現させる：340/500回」のように基準値を超えた数字も伸び続けて見える。
+      // ただし桁数が大きい実績（def.hideDenominatorWhenComplete）は、
+      // 「2,000,000/2,000,000」のように長くなりすぎるため分母を省略する
       const finalTier = def.tiers[def.tiers.length - 1];
+      const value = window.Achievements.getStatValue(def.statKey);
+      const progressText = def.hideDenominatorWhenComplete
+        ? `${def.progressLabel}：${value.toLocaleString()}${unit}`
+        : `${def.progressLabel}：${value.toLocaleString()}/${finalTier.threshold.toLocaleString()}${unit}`;
       card.className = 'achv-card unlocked';
       card.innerHTML = `
         <div class="achv-title">${finalTier.title}</div>
         <div class="achv-desc">${def.desc}</div>
-        <div class="achv-meta">取得日：${state.claimedAt || '-'}　取得Lv：${state.claimedLevel ?? '-'}</div>`;
+        <div class="achv-meta">取得日：${state.claimedAt || '-'}　${progressText}</div>`;
       return;
     }
 
@@ -267,10 +283,15 @@
 
   const collectionAchievementsBtn = byId('collection-achievements');
   const achievementBackBtn = byId('achievement-back');
+  // 実績称号一覧を開く処理をまとめて、開くたびにストーリー進行もチェックする
+  function openAchievementScreen(){
+    openSubscreen(achievementScreen);
+    if (window.Story) window.Story.check('achievement_open'); // js/story.js: achievement_intro_doctor
+  }
   if (collectionAchievementsBtn && achievementScreen){
-    collectionAchievementsBtn.addEventListener('click', () => openSubscreen(achievementScreen));
+    collectionAchievementsBtn.addEventListener('click', openAchievementScreen);
     collectionAchievementsBtn.addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
-    collectionAchievementsBtn.addEventListener('touchend', e=>{ e.preventDefault(); openSubscreen(achievementScreen); }, {passive:false});
+    collectionAchievementsBtn.addEventListener('touchend', e=>{ e.preventDefault(); openAchievementScreen(); }, {passive:false});
   }
   if (achievementBackBtn && achievementScreen){
     achievementBackBtn.addEventListener('click', () => closeSubscreen(achievementScreen));
