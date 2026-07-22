@@ -35,6 +35,9 @@ const IMAGE_ASSET_PATHS = {
     rare_booster:  'assets/items/rare_booster.svg',
     skill_charger: 'assets/items/skill_charger.svg',
     ep_bonus:      'assets/items/ep_bonus.svg',
+    bat_stable:    'assets/items/bat_stable.svg',
+    bat_unstable:  'assets/items/bat_unstable.svg',
+    bat_chaos:     'assets/items/bat_chaos.svg',
   },
   skills: {
     blink:           'assets/skills/skill_blink.svg',
@@ -42,7 +45,7 @@ const IMAGE_ASSET_PATHS = {
     cannon:          'assets/skills/skill_cannon.svg',
     typhoon:         'assets/skills/skill_typhoon.svg',
     shield:          'assets/skills/skill_shield.svg',
-    stop:            'assets/skills/skill_stop.svg',
+    bubble:          'assets/skills/skill_bubble.svg',
     beacon:          'assets/skills/skill_beacon.svg',
     sweep:           'assets/skills/skill_sweep.svg',
     energyConverter: 'assets/skills/skill_energyConverter.svg',

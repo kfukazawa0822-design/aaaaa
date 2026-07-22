@@ -139,11 +139,14 @@
     const unclaimed = hasUnclaimed();
     const modeCollectionBtn   = document.getElementById('mode-collection');
     const achievementsCardBtn = document.getElementById('collection-achievements');
+    const achvBellBtn         = document.getElementById('achv-bell-btn');
     // コレクション機能自体がまだ解放されていない間は、モード選択画面の
     // コレクションボタンに赤バッジを出さない（ロック中なのにバッジが付くのは不自然なため）
     const collectionUnlocked = !(typeof saveData !== 'undefined' && saveData.storyFlags && !saveData.storyFlags.collectionUnlocked);
     if (modeCollectionBtn)   modeCollectionBtn.classList.toggle('has-unclaimed', unclaimed && collectionUnlocked);
     if (achievementsCardBtn) achievementsCardBtn.classList.toggle('has-unclaimed', unclaimed);
+    // ベルボタンはコレクション解放前から使える早見え窓口なので、collectionUnlockedの条件は付けない
+    if (achvBellBtn)         achvBellBtn.classList.toggle('has-unclaimed', unclaimed);
   }
 
   // ── 実績解除ポップ（画面左下からにゅっと出るトースト） ──
@@ -195,7 +198,31 @@
     }, 3800); // 詳細（達成条件）が増えた分、読む時間を確保
   }
   function showToast(titleText, conditionText){
+    pushLog(titleText, conditionText);
     queueToast(titleText, conditionText);
+  }
+  // ── 実績解除ログ（ベルボタンの独立タブ用）──
+  // showToast()と同時に「いつ・何を・どんな条件で」達成したかを時系列で保存しておく。
+  // 実績称号一覧（コレクション内）とは完全に独立した読み取り専用の記録なので、
+  // ここを見てもゲームの進行状態（unlocked/claimedなど）には一切影響しない。
+  const ACHV_LOG_MAX = 50; // 保存件数の上限（増えすぎ防止。古いものから削除）
+  function getLogStore(){
+    if (typeof saveData === 'undefined') return [];
+    if (!Array.isArray(saveData.achvLog)) saveData.achvLog = [];
+    return saveData.achvLog;
+  }
+  function formatLogTime(d){
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+  function pushLog(titleText, conditionText){
+    const log = getLogStore();
+    log.push({ time: formatLogTime(new Date()), title: titleText, condition: conditionText || '' });
+    if (log.length > ACHV_LOG_MAX) log.splice(0, log.length - ACHV_LOG_MAX);
+    persist();
+  }
+  // 新しい記録が先頭に来る順で返す
+  function getLog(){
+    return getLogStore().slice().reverse();
   }
   // 段階実績のtierごとの達成条件テキストを、コレクション画面の未解放カードと
   // 同じ書式（進捗ラベル：しきい値+単位）で組み立てる
@@ -373,6 +400,7 @@
     checkMetaAchievement,
     updateBadges,
     getCompletionRate,
+    getLog,
   };
 
   // 起動時に一度チェック：この機能の追加より前から遊んでいたセーブデータでも、

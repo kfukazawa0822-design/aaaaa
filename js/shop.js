@@ -434,6 +434,7 @@
       <div class="shop-card-icon-box">
         <span class="shop-card-icon-emoji">${maskName ? '？' : (item.icon || '🎁')}</span>
         <img class="shop-card-icon-img" src="assets/shop/${item.id}.png" alt=""
+             width="512" height="512" decoding="async" loading="lazy"
              onerror="this.remove();"
              onload="this.previousElementSibling.style.display='none';">
       </div>

@@ -64,15 +64,15 @@
     },
     {
       id:'matter_6', name:'S磁晶核', unlocked:false, iconPath:'assets/zukan/matter_6.png',
-      desc:'S極の磁場にのみ反応する磁晶核。\n'
-         + 'S極以外の刺激にはほとんど反応せず、内部エネルギーの安定性が非常に高い。\n'
+      desc:'S極の引力には一切反応しない特殊な磁晶核。\n'
+         + 'その代わりN極の反発だけは強烈に増幅されるらしく、通常の磁晶核とは比べ物にならない勢いで弾き飛ばされる。\n'
          + '研究によって、他の磁晶核より高純度なエネルギー抽出が可能であることが判明している。',
     },
     {
       id:'matter_7', name:'N磁晶核', unlocked:false, iconPath:'assets/zukan/matter_7.png',
-      desc:'N極の磁場にのみ反応する磁晶核。\n'
-         + '反発磁場によるエネルギー変換効率が非常に高く、推進技術への応用が期待されている。\n'
-         + '博士は、この性質こそ宇宙航行への鍵になると考えている。',
+      desc:'N極の反発には一切反応しない特殊な磁晶核。\n'
+         + 'その代わりS極の引力にだけは極めて敏感で、通常では届かないほど遠くからでも引き寄せられてしまう。\n'
+         + '反発磁場によるエネルギー変換効率が非常に高く、推進技術への応用が期待されている。',
     },
     {
       id:'matter_8', name:'紅磁晶核', unlocked:false, iconPath:'assets/zukan/matter_8.png',
@@ -167,15 +167,15 @@
       desc:'磁晶核の爆発エネルギーを増幅する強化モジュール。\n取得するたびに爆発の威力と影響範囲が強化される。最大Lv10まで強化可能。',
     },
     {
-      id:'item_6', name:'アイテム：小型バッテリー', unlocked:false, iconPath:'assets/zukan/item_6.png',
+      id:'item_6', name:'アイテム：小型バッテリー', unlocked:false, iconPath:'assets/items/bat_stable.svg',
       desc:'研究装置へ安定した電力を供給する標準バッテリー。\n取得すると、バッテリーを確実に20%回復できる。',
     },
     {
-      id:'item_7', name:'アイテム：改造バッテリー', unlocked:false, iconPath:'assets/zukan/item_7.png',
+      id:'item_7', name:'アイテム：改造バッテリー', unlocked:false, iconPath:'assets/items/bat_unstable.svg',
       desc:'出力を高めた試作型バッテリー。\n約70%の確率で大きく回復するが、約30%の確率でバッテリーが減少するようになった。',
     },
     {
-      id:'item_8', name:'アイテム：暴走バッテリー', unlocked:false, iconPath:'assets/zukan/item_8.png',
+      id:'item_8', name:'アイテム：暴走バッテリー', unlocked:false, iconPath:'assets/items/bat_chaos.svg',
       desc:'限界まで出力を引き上げた実験用バッテリー。その反動で非常に不安定な状態になってしまい。\n'
          + '改造バッテリーより成功時の回復量が大きい一方、失敗時は大幅にバッテリーが減少するハイリスク・ハイリターンな性能を持つ。',
     },
@@ -208,8 +208,8 @@
       desc:'空間磁場を歪ませ、約500px先へ瞬間移動する転位装置。\n緊急回避や素早い位置取りに適している。',
     },
     {
-      id:'skill_2', name:'スキル：玉運動停止', unlocked:false, iconPath:'assets/zukan/skill_2.png',
-      desc:'局所的な磁場制御によって、磁晶核の運動エネルギーを一時的に抑制する制御装置。\n発動中は磁力範囲内の磁晶核が静止し、狙いどおりの配置を作りやすくなる。',
+      id:'skill_2', name:'スキル：シャボン玉', unlocked:false, iconPath:'assets/zukan/skill_2.png',
+      desc:'発動すると局所的に時間の流れを操作し、周囲がほぼ静止する特殊装置。\n静止している間に狙いを定めると、S極で引き寄せていた磁晶核をまとめてその方向へ射出する。\n照準の精度はおよそ8割で、残りは軌道が大きくブレて飛んでいく。',
     },
     {
       id:'skill_3', name:'スキル：マグネットスイープ', unlocked:false, iconPath:'assets/zukan/skill_3.png',
@@ -488,6 +488,7 @@
       return;
     }
     window.CollectionUI.openSubscreen(screen);
+    if (collectionZukanBtn) collectionZukanBtn.classList.remove('story-glow'); // 1度使ったら発光は消す
     gotoPage(0);
     if (window.Story) window.Story.check('zukan_open'); // js/story.js: zukan_intro_doctor
   };

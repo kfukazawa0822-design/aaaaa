@@ -112,6 +112,15 @@ canvas { display:block; width:100%; height:100%; }
 #hud-items-row {
   display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-start;
 }
+/* スマホ(タッチ操作)限定：獲得アイテムの表示を1行5個までに固定して折り返す。
+   PC版は元通り、幅に応じて自然に折り返す挙動のまま変えない。
+   （スマホだとSCORE表示と横並びの幅が狭く、個数が多いと重なって見えていたための対応） */
+@media (pointer: coarse) {
+  #hud-items-row {
+    display:grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
 .hud-item-chip {
   display:flex; flex-direction:column; align-items:center; gap:2px;
   min-width:32px;
@@ -255,15 +264,15 @@ canvas { display:block; width:100%; height:100%; }
 }
 #title-screen.hide { display:none; }
 #title-settings-btn {
-  position:absolute; top:16px; right:16px;
-  width:40px; height:40px; border-radius:8px;
-  border:1.5px solid #ccc; background:#f5f5f5;
-  font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  position:absolute; top:16px; right:6vw;
+  width:56px; height:56px; border-radius:10px;
+  border:2px solid #1a1a1a; background:#f0f0f0;
+  font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center;
   -webkit-tap-highlight-color:transparent; transition:background 0.1s;
 }
 #title-settings-btn img {
-  width:22px; height:22px; object-fit:contain;
-  /* アイコン素材が白塗りだが、このボタンは明るい背景(#f5f5f5)なので
+  width:28px; height:28px; object-fit:contain;
+  /* アイコン素材が白塗りだが、このボタンは明るい背景なので
      反転して黒っぽく見せている（#psb-settings-btnは背景が暗いのでそのまま） */
   filter:invert(1);
 }
@@ -311,15 +320,69 @@ canvas { display:block; width:100%; height:100%; }
 #mode-select {
   position:fixed; inset:0;
   background:#fff;
-  display:flex; align-items:center; justify-content:flex-start;
+  display:flex; align-items:center; justify-content:center;
   z-index:200;
   flex-direction:column; gap:0;
   overflow-y:auto;
-  /* 上部固定UI(#player-status-bar 高さ約93px)の下に48px（見出し→ボタン間24pxの2倍）を空けて配置。
-     下部は空けたままにして、将来の博士キャラクター／吹き出し用スペースとして確保している。 */
-  padding-top:calc(93px + 48px);
+  /* 上部固定UI(高さ約93px)を含めた画面全体の縦幅の真ん中に「モード選択〜タイトルへもどる」を配置する。
+     ヘッダーはz-indexで常に手前に来るので、内容が短い画面でヘッダーと重なる場合は
+     ヘッダーの下に隠れる形になる（見切れはしない） */
 }
 #mode-select.hide { display:none; }
+/* 実績を早期確認できるベルボタン：設定ボタン(56px)より一回り小さく、
+   上部固定UI(高さ約93px)の下・右寄りに配置する */
+#achv-bell-btn {
+  position:fixed; top:calc(93px + 14px); right:6vw;
+  width:44px; height:44px; border-radius:10px;
+  border:1.5px solid #1a1a1a; background:#fff;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; z-index:1; -webkit-tap-highlight-color:transparent;
+  transition:background 0.1s;
+}
+#achv-bell-btn:active { background:#f0f0f0; }
+
+/* ── 実績ログタブ（ベルボタン専用。コレクション・実績称号一覧とは独立） ── */
+#achv-log-screen {
+  position:fixed; inset:0; z-index:210;
+  background:rgba(0,0,10,0.85);
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  display:flex; flex-direction:column; align-items:center;
+  padding:24px 0 16px;
+  box-sizing:border-box;
+}
+#achv-log-screen.hide { display:none; }
+#achv-log-back {
+  position:fixed; top:calc(93px + 14px); left:6vw;
+  background:none; border:none; cursor:pointer;
+  padding:8px; opacity:0.7; transition:opacity 0.15s;
+  -webkit-tap-highlight-color:transparent;
+}
+#achv-log-back:hover, #achv-log-back:active { opacity:1; }
+#achv-log-title {
+  font-family:'Courier New',monospace; font-size:16px; letter-spacing:4px;
+  font-weight:bold; color:#fff; margin:12px 0 24px;
+}
+#achv-log-list {
+  width:min(400px, 88vw); flex:1; min-height:0; overflow-y:auto;
+  display:flex; flex-direction:column; gap:2px;
+  padding-right:8px;
+}
+#achv-log-list::-webkit-scrollbar { width:6px; }
+#achv-log-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.25); border-radius:3px; }
+#achv-log-list::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); }
+.achv-log-entry {
+  font-family:'Courier New',monospace; font-size:11px; line-height:1.7;
+  color:rgba(255,255,255,0.85); padding:8px 4px; border-bottom:1px solid rgba(255,255,255,0.12);
+}
+.achv-log-time { color:rgba(255,255,255,0.45); margin-right:6px; }
+.achv-log-tag  { color:#ff6b6b; font-weight:bold; margin-right:4px; }
+.achv-log-name { color:#fff; font-weight:bold; }
+.achv-log-cond { color:rgba(255,255,255,0.55); }
+#achv-log-empty {
+  display:none; font-family:'Courier New',monospace; font-size:12px;
+  color:rgba(255,255,255,0.45); margin-top:40px;
+}
+#achv-log-list:empty + #achv-log-empty { display:block; }
 /* ── 上部固定UI：レベル・経験値・コイン・設定（モード選択／ショップ／コレクション共通） ──
    参考画像のレイアウト（左端に段バッジ／中央にEXPバー+コイン2段／右端に設定）を踏襲。
    配色はゲームの白黒基調に合わせている（参考画像は配色ではなくレイアウトの参考） */
@@ -462,7 +525,7 @@ canvas { display:block; width:100%; height:100%; }
 .mode-sub-icon img { width:30px; height:30px; object-fit:contain; display:block; }
 .mode-sub-label{ font-size:9px; letter-spacing:2px; color:#111; font-weight:bold; }
 .mode-sub-lock {
-  font-size:11px; position:absolute; top:6px; right:8px; display:none;
+  position:absolute; top:6px; right:8px; display:none;
 }
 .mode-sub-btn.locked { position:relative; }
 .mode-sub-btn.locked .mode-sub-lock { display:block; }
@@ -504,8 +567,11 @@ canvas { display:block; width:100%; height:100%; }
 .mode-btn-lock {
   font-size:9px; letter-spacing:1px; color:#bbb;
   background:#efefef; border-radius:3px; padding:2px 7px;
-  display:inline-block; margin-top:4px;
+  display:inline-flex; align-items:center; gap:4px; margin-top:4px;
 }
+.lock-icon { width:10px; height:10px; object-fit:contain; display:block; flex-shrink:0; vertical-align:middle; }
+.mode-sub-lock .lock-icon { width:14px; height:14px; }
+.collection-card-lock .lock-icon { width:14px; height:14px; }
 #mode-endless.locked .mode-btn-title,
 #mode-endless.locked .mode-btn-desc,
 #mode-endless.locked .mode-btn-arrow { opacity:0.4; }
@@ -524,11 +590,10 @@ canvas { display:block; width:100%; height:100%; }
 #collection-screen {
   position:fixed; inset:0;
   background:#fff;
-  display:flex; align-items:center; justify-content:flex-start;
+  display:flex; align-items:center; justify-content:center;
   z-index:200;
   flex-direction:column; gap:0;
   overflow-y:auto;
-  padding-top:calc(93px + 48px);
 }
 #collection-screen.hide { display:none; }
 #collection-title {
@@ -575,7 +640,7 @@ canvas { display:block; width:100%; height:100%; }
 /* ロック中カード（図鑑）の鍵マーク・解放条件。モード選択画面の.mode-sub-lock/
    .mode-sub-conditionと全く同じ考え方で統一している */
 .collection-card-lock {
-  font-size:11px; position:absolute; top:6px; right:8px; display:none;
+  position:absolute; top:6px; right:8px; display:none;
 }
 .collection-card-condition {
   display:none; font-size:8px; letter-spacing:0.5px; color:#bbb; margin-top:2px;
@@ -610,7 +675,7 @@ canvas { display:block; width:100%; height:100%; }
 }
 .subscreen.hide { display:none; }
 .subscreen-back {
-  position:absolute; top:20px; left:20px;
+  position:fixed; top:calc(93px + 14px); left:6vw;
   background:none; border:none; cursor:pointer;
   padding:8px; opacity:0.7; transition:opacity 0.15s;
   -webkit-tap-highlight-color:transparent;
@@ -745,7 +810,8 @@ canvas { display:block; width:100%; height:100%; }
 #mode-collection, #collection-achievements, #mode-shop { position:relative; }
 #mode-collection.has-unclaimed::after,
 #collection-achievements.has-unclaimed::after,
-#mode-shop.has-unclaimed::after {
+#mode-shop.has-unclaimed::after,
+#achv-bell-btn.has-unclaimed::after {
   content:''; position:absolute; top:-4px; right:-4px;
   width:12px; height:12px; border-radius:50%;
   background:#e53935; border:2px solid #fff;
@@ -1584,7 +1650,7 @@ canvas { display:block; width:100%; height:100%; }
 #skill-select.hide { display:none; }
 #skill-select-title { font-size:22px; font-weight:bold; color:#fff; letter-spacing:4px; }
 #skill-back-btn {
-  position:absolute; top:20px; left:20px;
+  position:fixed; top:calc(93px + 14px); left:6vw;
   background:none; border:none; cursor:pointer;
   padding:8px; opacity:0.7; transition:opacity 0.15s;
 }
@@ -2304,18 +2370,27 @@ canvas { display:block; width:100%; height:100%; }
 
 <!-- モード選択 -->
 <div id="mode-select" class="hide">
+  <!-- 実績称号を早期から覗けるベルボタン（コレクション自体はLv20まで未解放のまま）。
+       #mode-selectの子要素にしておくことで、hide/showが自動的に連動する -->
+  <button id="achv-bell-btn" title="実績を確認">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 3.5c-3 0-5 2.2-5 5v2.3c0 .9-.3 1.8-.9 2.5l-.9 1.1c-.6.7-.1 1.8.8 1.8h11.9c.9 0 1.4-1.1.8-1.8l-.9-1.1c-.6-.7-.9-1.6-.9-2.5V8.5c0-2.8-2-5-5-5Z"
+            stroke="#1a1a1a" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M9.7 18.5a2.4 2.4 0 0 0 4.6 0" stroke="#1a1a1a" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+  </button>
   <div id="mode-title">モード選択</div>
   <!-- 1行目：クイックプレイ -->
   <div class="mode-btn" id="mode-quick">
     <div class="mode-btn-title">クイックプレイ</div>
-    <div class="mode-btn-desc">90秒間で効率よくエネルギーを収集しよう。</div>
+    <div class="mode-btn-desc">60秒間で効率よくエネルギーを収集しよう。</div>
     <div class="mode-btn-arrow"></div>
   </div>
   <!-- 2行目：エンドレス -->
   <div class="mode-btn" id="mode-endless">
     <div class="mode-btn-title">エンドレスモード</div>
     <div class="mode-btn-desc">バッテリーが尽きるまで研究を続け、限界へ挑戦しよう。</div>
-    <div class="mode-btn-lock" id="mode-endless-lock">🔒 ショップで解放</div>
+    <div class="mode-btn-lock" id="mode-endless-lock"><img class="lock-icon" src="assets/ui/lock.svg" alt="">ショップで解放</div>
     <div class="mode-btn-arrow"></div>
   </div>
   <!-- 3行目：ショップ＋コレクション横並び -->
@@ -2323,13 +2398,13 @@ canvas { display:block; width:100%; height:100%; }
     <div class="mode-sub-btn" id="mode-shop">
       <div class="mode-sub-icon"><img src="assets/ui/cart.svg" alt=""></div>
       <div class="mode-sub-label">ショップ</div>
-      <div class="mode-sub-lock" id="mode-shop-lock">🔒</div>
+      <div class="mode-sub-lock" id="mode-shop-lock"><img class="lock-icon" src="assets/ui/lock.svg" alt=""></div>
       <div class="mode-sub-condition">プレイを進めると解放</div>
     </div>
     <div class="mode-sub-btn" id="mode-collection">
       <div class="mode-sub-icon"><img src="assets/ui/collection.svg" alt=""></div>
       <div class="mode-sub-label">コレクション</div>
-      <div class="mode-sub-lock" id="mode-collection-lock">🔒</div>
+      <div class="mode-sub-lock" id="mode-collection-lock"><img class="lock-icon" src="assets/ui/lock.svg" alt=""></div>
       <div class="mode-sub-condition">レベル20到達で解放</div>
     </div>
   </div>
@@ -2367,6 +2442,24 @@ canvas { display:block; width:100%; height:100%; }
     </div>
   </div>
   <button id="psb-settings-btn"><img src="assets/ui/option.svg" alt="設定"></button>
+</div>
+
+<!-- 実績ログタブ：ベルボタンから開く「読み取り専用」の通知履歴。
+     実績称号一覧(#achievement-screen)やコレクションの解放状態(collectionUnlocked)とは
+     完全に独立している。ここでの表示・閲覧はどんな進行フラグも一切変更しない。
+     ※ #mode-select のすぐ後ろに置くと「#mode-select.hide + #player-status-bar」という
+       隣接セレクタが壊れてプレイ中も上部UIが消えなくなるため、#player-status-barの
+       さらに後ろ（間に挟まない位置）に配置している。 -->
+<div id="achv-log-screen" class="hide">
+  <button id="achv-log-back" title="モード選択に戻る">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="22" y1="14" x2="6" y2="14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <polyline points="13,7 6,14 13,21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </button>
+  <div id="achv-log-title">- 実績ログ -</div>
+  <div id="achv-log-list"></div>
+  <div id="achv-log-empty">まだ実績の記録はありません</div>
 </div>
 
 <!-- ショップの戻るボタン：ステータスバーがある画面なので、#shop-screen（.subscreenのスタッキング
@@ -2468,7 +2561,7 @@ canvas { display:block; width:100%; height:100%; }
       <img class="collection-card-icon" alt="">
       <div class="collection-card-title">図鑑</div>
       <div class="collection-card-desc">これまでの研究で判明した磁晶核の情報を、記録・保管しています。</div>
-      <div class="collection-card-lock">🔒</div>
+      <div class="collection-card-lock"><img class="lock-icon" src="assets/ui/lock.svg" alt=""></div>
       <div class="collection-card-condition">レベル30到達で解放</div>
     </div>
     <div class="collection-card" id="collection-achievements">
@@ -2658,10 +2751,11 @@ const BASE_EXPLOSION_R    = 143; // 検証用：110→143(+30%)
 const EXPLOSION_CHAIN_R   = 143; // エフェクト半径と統一（視覚と連鎖範囲を一致）
 const FRICTION   = 0.97;
 const PUSH_FORCE = 0.6;
-const BATTERY_DRAIN = 1.0; // %/秒
+const BATTERY_DRAIN = 1.0; // %/秒（エンドレスモード基準：バッテリー100%が約100秒で尽きる）
 const BATTERY_DRAIN_BOOST_TIME = 180; // 秒：これ以降バッテリー消費が加速
 const BATTERY_DRAIN_BOOST_MULT = 2;   // 消費速度の倍率
-const QUICK_PLAY_TIME = 90; // 秒
+const QUICK_PLAY_TIME = 60; // 秒（クイックプレイの想定プレイ時間。実際の切り上げはQUICK_BATTERY_DRAIN_MULTで調整）
+const QUICK_BATTERY_DRAIN_MULT = 100 / QUICK_PLAY_TIME; // クイックプレイはこの秒数でバッテリーが尽きるよう消費を早める
 
 // アイテムアイコン画像（外部ファイル js/assets.js で定義）の読み込みを開始
 // 実ファイル参照のため、ここで先に読み込みを開始しておくことで表示時には準備が整っている
@@ -2760,7 +2854,7 @@ const SKILL_DEFS = [
   { id:'cannon',  name:'大砲',         icon:'💣', spCost:100, maxStock:3, desc:'前方へ巨大な磁晶核を発射する' },
   { id:'typhoon', name:'台風の目',     icon:'🌪', spCost:200, maxStock:1, desc:'約3秒間、周囲の玉を吸い寄せる' },
   { id:'shield',  name:'シールド',     icon:'🛡', spCost:100, maxStock:1, desc:'約10秒間、Sで引き寄せた玉を保護する' },
-  { id:'stop',    name:'玉運動停止',   icon:'⏸', spCost:50,  maxStock:6, desc:'押している間、磁力範囲内の玉を停止する' },
+  { id:'bubble',  name:'シャボン玉',   icon:'🫧', spCost:50,  maxStock:3, desc:'時間を止めて方向を狙い、Sで集めた玉を精度80%で放つ' },
   { id:'beacon',  name:'ワープビーコン', icon:'🛰', spCost:100, maxStock:1, desc:'アイテムを検知するビーコンを設置。再使用でワープ' },
   { id:'sweep',   name:'マグネットスイープ', icon:'🧹', spCost:100, maxStock:2, desc:'前方を薙ぎ払い、玉を吹き飛ばす' },
   { id:'energyConverter', name:'エネルギー変換器', icon:'🔌', spCost:150, maxStock:1, desc:'約10秒間、爆発ごとにバッテリーを回復する' },
@@ -2771,7 +2865,7 @@ let skillSP         = 0;    // 現在のSP
 let skillStock      = 0;    // 現在のストック数
 let skillActive     = false;// スキル効果発動中
 let skillTimer      = 0;    // 効果残り時間（秒）
-let stopHeld         = false; // 玉運動停止：ホールド中フラグ
+let bubbleAiming      = false; // シャボン玉：狙い中フラグ（true の間は時間停止＋旋回のみ許可）
 let cannonCharge     = null;  // 大砲：チャージ中の状態（null=非チャージ中）
 let beaconPos         = null; // ワープビーコン：記憶地点 {x,y}
 let sweepEffects      = []; // マグネットスイープ：手描きの弧エフェクト {cx,cy,startAngle,endAngle,range,color,born,dur}
@@ -2793,7 +2887,7 @@ function defaultSaveData() {
     xp: 0,
     coins: 0,
     shopPurchases: {},   // ショップでの購入状況（{ [商品id]: true }。スキン/エフェクト/差し入れ/応援パックなど一度きりの購入品用）
-    unlockedSkills: ['blink', 'stop', 'sweep'], // 所持スキン（初期3つ＋ショップ購入分）
+    unlockedSkills: ['blink', 'bubble', 'sweep'], // 所持スキン（初期3つ＋ショップ購入分）
     endlessUnlocked: false, // エンドレスモード解放（ショップ初回訪問時のチュートリアル購入で自動true）
     ownedIcons: [],          // アイコンガチャで獲得済みのアイコンid（重複無し、最大12）
     freePackClaimedDate: null, // 無料応援パックを最後に受け取った日付（1日1回のリセット判定用）
@@ -2820,7 +2914,12 @@ function migrateSaveData(parsed) {
   if (typeof parsed.xp === 'number' && parsed.xp >= 0) data.xp = parsed.xp;
   if (typeof parsed.coins === 'number' && parsed.coins >= 0) data.coins = parsed.coins;
   if (parsed.shopPurchases && typeof parsed.shopPurchases === 'object') data.shopPurchases = parsed.shopPurchases;
-  if (Array.isArray(parsed.unlockedSkills)) data.unlockedSkills = parsed.unlockedSkills;
+  if (Array.isArray(parsed.unlockedSkills)) {
+    // v1.x → 現行：「玉運動停止(stop)」を「シャボン玉(bubble)」に全面差し替えしたため、
+    // 既存セーブに残っている旧IDをそのまま新IDへ読み替える（重複は除去）
+    const migratedSkills = parsed.unlockedSkills.map(id => id === 'stop' ? 'bubble' : id);
+    data.unlockedSkills = [...new Set(migratedSkills)];
+  }
   if (typeof parsed.endlessUnlocked === 'boolean') data.endlessUnlocked = parsed.endlessUnlocked;
   if (Array.isArray(parsed.ownedIcons)) data.ownedIcons = parsed.ownedIcons;
   if (typeof parsed.freePackClaimedDate === 'string') data.freePackClaimedDate = parsed.freePackClaimedDate;
@@ -2831,7 +2930,10 @@ function migrateSaveData(parsed) {
   if (parsed.collection && typeof parsed.collection === 'object') data.collection = parsed.collection;
   if (parsed.profile && typeof parsed.profile === 'object') data.profile = parsed.profile;
   if (parsed.stats && typeof parsed.stats === 'object') data.stats = parsed.stats;
-  if (parsed.settings && typeof parsed.settings === 'object') data.settings = { ...data.settings, ...parsed.settings };
+  if (parsed.settings && typeof parsed.settings === 'object') {
+    data.settings = { ...data.settings, ...parsed.settings };
+    if (data.settings.favoriteSkillId === 'stop') data.settings.favoriteSkillId = 'bubble'; // 同上の移行
+  }
   data.version = SAVE_DATA_VERSION;
   return data;
 }
@@ -3068,7 +3170,7 @@ const ZUKAN_ITEM_ID_BY_ITEM_DEF_ID = {
 };
 // 「スキル」ページの解放マッピング：SKILL_DEFSのidと対応
 const ZUKAN_SKILL_ID_BY_SKILL_DEF_ID = {
-  blink:'skill_1', stop:'skill_2', sweep:'skill_3', shield:'skill_4', typhoon:'skill_5',
+  blink:'skill_1', bubble:'skill_2', sweep:'skill_3', shield:'skill_4', typhoon:'skill_5',
   beacon:'skill_6', dash:'skill_7', cannon:'skill_8', energyConverter:'skill_9',
 };
 // 「研究対象：磁晶核」解放条件：そのタイプの磁晶核が爆発したら
@@ -3191,7 +3293,7 @@ function initGame(mode) {
   playTime=0; batteryDrainBoostAnnounced=false; currentChainDepth=0; screenShake={x:0,y:0,power:0}; releaseGraceTimer=0;
   nPoleHoldTimer=0; // 実績「トリッキー」用：N極を連続で維持している時間
   skillSP=0; skillStock=0; skillActive=false; skillTimer=0;
-  stopHeld=false; beaconPos=null;
+  bubbleAiming=false; beaconPos=null;
   rockSpawnTimer=0; itemSpawnTimer=0; redBallCheckChain=0; goldBallCheckChain=0; comboItemCheckDepth=0; comboItemCooldown=0;
   marbleReplenishQueue=[]; marbleReplenishActive=false;
   holes=[]; holeActiveIdx=-1; holeOpenTimer=0; holeNextTimer=HOLE_GAP_DURATION; holeSequenceIdx=0;
@@ -3671,28 +3773,52 @@ function applyItem(def) {
   const batteryBefore = player.battery; // 実績「起死回生」判定用（適用前の残量を記録）
   unlockItemZukan(def.id); // 図鑑「アイテム」解放（取得した時点で1回でも解放）
   if (window.Story) window.Story.check('item_pickup'); // 初アイテム獲得時のストーリー進行チェック
+  // クイックプレイ限定：アイテム1つあたりの価値を2倍にする（1回の取得で通常の2段階分アップ）。
+  // 上限(Math.minの第2引数)はそのままなので、上限間際の取得は自動的に1段階分だけに収まる。
+  const itemValueMult = (gameMode === 'quick') ? 2 : 1;
   switch(def.id){
-    case 's_boost':
-      upgrades.sBoost = Math.min(upgrades.sBoost+0.4,3);
-      msg='S極強化 +Lv1';
+    case 's_boost': {
+      const lvBefore = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='s_boost'));
+      upgrades.sBoost = Math.min(upgrades.sBoost+0.4*itemValueMult,3);
+      const lvAfter = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='s_boost'));
+      msg=`S極強化 +Lv${lvAfter-lvBefore}`;
       // 実績「S極マスター」：LvMAX到達チェック
       if (window.Achievements) {
         const d = PLAYER_ITEM_DEFS.find(x=>x.id==='s_boost');
         if (d && computeItemLevel(d) >= d.maxLv) window.Achievements.unlock('ach_008');
       }
       break;
-    case 'n_boost':
-      upgrades.nBoost = Math.min(upgrades.nBoost+0.6,4);
-      msg='N極強化 +Lv1';
+    }
+    case 'n_boost': {
+      const lvBefore = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='n_boost'));
+      upgrades.nBoost = Math.min(upgrades.nBoost+0.6*itemValueMult,4);
+      const lvAfter = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='n_boost'));
+      msg=`N極強化 +Lv${lvAfter-lvBefore}`;
       // 実績「N極マスター」：LvMAX到達チェック
       if (window.Achievements) {
         const d = PLAYER_ITEM_DEFS.find(x=>x.id==='n_boost');
         if (d && computeItemLevel(d) >= d.maxLv) window.Achievements.unlock('ach_009');
       }
       break;
-    case 'range_up':     upgrades.rangeUp     = Math.min(upgrades.rangeUp+0.3,2.5);msg='レンジアップ +Lv1'; break;
-    case 'chain_multi':  upgrades.chainMulti  = Math.min(upgrades.chainMulti+0.5,5.5); msg='連鎖倍率UP +Lv1'; break;
-    case 'explode_up':   upgrades.explodeUp   = Math.min(upgrades.explodeUp+0.2,2.8); msg='爆発強化 +Lv1'; break;
+    }
+    case 'range_up': {
+      const lvBefore = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='range_up'));
+      upgrades.rangeUp = Math.min(upgrades.rangeUp+0.3*itemValueMult,2.5);
+      const lvAfter = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='range_up'));
+      msg=`レンジアップ +Lv${lvAfter-lvBefore}`; break;
+    }
+    case 'chain_multi': {
+      const lvBefore = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='chain_multi'));
+      upgrades.chainMulti = Math.min(upgrades.chainMulti+0.5*itemValueMult,5.5);
+      const lvAfter = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='chain_multi'));
+      msg=`連鎖倍率UP +Lv${lvAfter-lvBefore}`; break;
+    }
+    case 'explode_up': {
+      const lvBefore = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='explode_up'));
+      upgrades.explodeUp = Math.min(upgrades.explodeUp+0.2*itemValueMult,2.8);
+      const lvAfter = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='explode_up'));
+      msg=`爆発強化 +Lv${lvAfter-lvBefore}`; break;
+    }
     case 'ep_bonus':
       addCoins(EP_BONUS_AMOUNT);
       itemRewardCoinsThisSession += EP_BONUS_AMOUNT;
@@ -3707,9 +3833,12 @@ function applyItem(def) {
              if (window.Achievements) window.Achievements.unlock('ach_011');} // 実績「ハズレくじ」
       break;
     }
-    case 'rare_booster':
-      upgrades.rareBoost = Math.min(upgrades.rareBoost + 2, 10);
-      msg='レア玉出現率UP +Lv1'; col='#ffaaff'; break;
+    case 'rare_booster': {
+      const lvBefore = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='rare_booster'));
+      upgrades.rareBoost = Math.min(upgrades.rareBoost + 2*itemValueMult, 10);
+      const lvAfter = computeItemLevel(PLAYER_ITEM_DEFS.find(x=>x.id==='rare_booster'));
+      msg=`レア玉出現率UP +Lv${lvAfter-lvBefore}`; col='#ffaaff'; break;
+    }
     case 'skill_charger':
       upgrades.skillCharge = Math.min(upgrades.skillCharge + 10, 190);
       msg=`SPゲージ効率UP ${upgrades.skillCharge}%`; col='#aaffff'; break;
@@ -3756,10 +3885,15 @@ function showGimmickBanner(name, color='#1a1a1a', effect='') {
   const effectEl = document.getElementById('gimmick-banner-effect');
   nameEl.textContent = name;
   nameEl.style.color = color;
-  nameEl.style.textShadow = `0 0 20px ${color}`;
+  // 色付きグローだけだと黄色などの明るい色が背景に溶けて読めなくなるため、
+  // 黒い縁取り(text-shadowを4方向)を追加した上で、従来通り同色のグローも重ねる
+  nameEl.style.textShadow =
+    `-1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 20px ${color}`;
   if (effectEl) {
     effectEl.textContent = effect ? `-${effect}-` : '';
     effectEl.style.color = color;
+    effectEl.style.textShadow =
+      `-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000`;
   }
   el.classList.remove('show');
   void el.offsetWidth;
@@ -3998,7 +4132,7 @@ function updateChainDisplay(n, depth, wx, wy, playerCaused=false) {
 // ── SP獲得・スキル発動 ───────────────────────────
 function gainSP(amount){
   if(!selectedSkillId || !gameRunning) return;
-  if(skillActive || stopHeld) return; // 継続系スキルの発動中／ホールド中は次のストックを貯めない
+  if(skillActive) return; // 継続系スキルの発動中は次のストックを貯めない
   const def = SKILL_DEFS.find(s=>s.id===selectedSkillId);
   if(!def) return;
   if(skillStock >= def.maxStock) return; // 最大ストック時はSP不加算
@@ -4014,6 +4148,11 @@ function useSkill(){
   if(!selectedSkillId || !gameRunning || gamePaused) return;
   const def = SKILL_DEFS.find(s=>s.id===selectedSkillId);
   if(!def) return;
+  // シャボン玉：狙い中にもう一度押すと、5秒待たずにその場で確定して発射する
+  if(selectedSkillId==='bubble' && bubbleAiming){
+    finishBubbleAim();
+    return;
+  }
   // ワープビーコンのみ特殊：1回目は記憶のみでストック消費なし
   if(selectedSkillId==='beacon'){
     activateBeacon();
@@ -4030,18 +4169,13 @@ function useSkill(){
     case 'cannon':  activateCannon(); break;
     case 'typhoon': activateTyphoon();break;
     case 'shield':  activateShield(); break;
-    case 'stop':    activateStop();   break;
+    case 'bubble':  activateBubble(); break;
     case 'sweep':   activateSweep();  break;
     case 'energyConverter': activateEnergyConverter(); break;
   }
 }
 
-// 玉運動停止：ボタンを離した時に呼ぶ（効果終了のみ。ストックは押下時に既に消費済み）
 function releaseSkillHold(){
-  if(selectedSkillId==='stop' && stopHeld){
-    stopHeld = false;
-    skillActive = false;
-  }
   // 大砲：ホールド解除。出現アニメーション(0.5秒)が終わっていれば即発射、
   // まだ出現中なら update() 側で出現完了を待ってから自動発射する
   if(cannonCharge){
@@ -4142,11 +4276,38 @@ function activateShield(){
   showBanner('🛡 SHIELD', '#ffeeaa');
 }
 
-function activateStop(){
-  // ホールド中、磁力範囲内の玉の動きを停止
+// シャボン玉：発動すると時間停止（プレイヤーの旋回だけは可能）になり、
+// 狙った方向を決めて再度ボタンを押す（または5秒経過）と、Sで集めた玉(渦内の玉)を
+// その方向へ精度80%程度で一斉に放つ
+function activateBubble(){
+  bubbleAiming = true;
   skillActive = true;
-  stopHeld = true;
-  showBanner('⏸ 玉運動停止', '#cccccc');
+  skillTimer = 5.0; // 狙える時間（この間に再度ボタンを押せば早めに確定できる）
+  showBanner('🫧 シャボン玉：狙いを定めろ', '#cfe8ff');
+}
+
+function finishBubbleAim(){
+  if(!bubbleAiming) return;
+  bubbleAiming = false;
+  skillActive = false;
+  skillTimer = 0;
+  const BUBBLE_ACCURACY = 0.8; // 80%の玉は狙った方向へほぼ正確に飛ぶ。残り20%は大きくブレる
+  const BUBBLE_SPEED = 55;
+  const targets = marbles.filter(m => m.alive && m.inVortex); // Sで集めた(渦に入っている)玉
+  for(const m of targets){
+    m.inVortex = false;
+    const hit = Math.random() < BUBBLE_ACCURACY;
+    const spread = hit ? (Math.random()-0.5)*0.08 : (Math.random()-0.5)*1.4;
+    const ang = player.angle + spread;
+    m.vx = Math.cos(ang) * BUBBLE_SPEED;
+    m.vy = Math.sin(ang) * BUBBLE_SPEED;
+    m.spawnShield = Math.max(m.spawnShield, 0.3); // 発射直後の誤爆防止
+    m.speedCapBoostTimer = 0.6; // この間だけ速度上限を緩め、実際に遠くまで飛ばす
+  }
+  showBanner(`🫧 シャボン玉：発射！(${targets.length}個)`, '#cfe8ff');
+  // 発射の瞬間に軽くカメラを揺らして手応えを出す
+  cam.shakeX=(Math.random()-0.5)*8;
+  cam.shakeY=(Math.random()-0.5)*8;
 }
 
 // マグネットスイープ：前方扇形の玉を左→右へ薙ぎ払う。N極中の発動の方が距離が伸びる。
@@ -4154,11 +4315,13 @@ function activateStop(){
 function activateSweep(){
   const isNPole = !player.isCharging; // player.magnetは'S'/'N'の表示用なのでisChargingで直接判定
   const mRange = BASE_MAGNET_RANGE * upgrades.rangeUp; // 通常の磁力(引き寄せ)範囲。レンジアップで伸びる
-  // S極はレンジアップ込みの通常の磁力範囲より少し広く、N極はさらにその1.6倍先まで届く
-  const range = isNPole ? mRange * 1.6 : mRange * 1.1;
+  // 強化：N極は1.6倍→2倍、S極は1.1倍→1.7倍に調節（掛け算ではなく最終値そのもの）
+  const N_RANGE_MULT = 2;    // 従来1.6倍 → 2倍
+  const S_RANGE_MULT = 1.7;  // 従来1.1倍 → 1.7倍
+  const range = isNPole ? mRange * N_RANGE_MULT : mRange * S_RANGE_MULT;
   const halfArc = Math.PI * 0.42; // 前方に約150°の扇形
   const SWEEP_INVULN = 0.4; // 薙ぎ払われた玉の無敵時間（秒）
-  const SWEEP_HIT_SPEED = 85; // スマブラのふっとばしを狙った大幅強化（バンパー岩の60を上回る強さ）
+  const SWEEP_HIT_SPEED = 85 * 1.5; // 薙ぎ払う速度を1.5倍に強化（旧85→約127.5）
   const SWEEP_BOOST_DUR = 0.5; // この間だけ通常の速度上限(24)を解除し、実際に遠くまで飛ばす
 
   for(const m of marbles){
@@ -4199,6 +4362,23 @@ function activateSweep(){
     }
   }
 
+  // 追加効果：薙ぎ払ったエリア内にドロップアイテムがあれば、通常の磁力吸着と同じ
+  // 「collecting」状態にして自動回収する（applyItem等は既存のupdateItems()側の処理に任せる）
+  for(const it of items){
+    if(it.collecting) continue;
+    let idx=it.x-player.wx, idy=it.y-player.wy;
+    if(idx> WORLD_W/2) idx-=WORLD_W; else if(idx<-WORLD_W/2) idx+=WORLD_W;
+    if(idy> WORLD_H/2) idy-=WORLD_H; else if(idy<-WORLD_H/2) idy+=WORLD_H;
+    const idist = Math.hypot(idx,idy);
+    if(idist < 1 || idist > range) continue;
+    let iAngDiff = Math.atan2(idy,idx) - player.angle;
+    while(iAngDiff > Math.PI) iAngDiff -= Math.PI*2;
+    while(iAngDiff < -Math.PI) iAngDiff += Math.PI*2;
+    if(Math.abs(iAngDiff) > halfArc) continue;
+    it.collecting = true;
+    it.collectTimer = 0;
+  }
+
   // 演出：極性で色を変えた手描きの弧＋残像（プレイヤーの磁力ラインと同じ色分け）
   sweepEffects.push({
     cx: player.wx, cy: player.wy,
@@ -4207,7 +4387,7 @@ function activateSweep(){
     range,
     color: isNPole ? '80,160,255' : '255,80,120', // N極=青／S極=ピンク
     born: Date.now(),
-    dur: 380,
+    dur: 380 / 1.5, // 薙ぎ払う速度を1.5倍に強化した分、演出の振り抜きも同じ比率で速くする
   });
 
   // 発動の瞬間に軽くカメラを揺らして、一撃のインパクトを強める
@@ -4684,7 +4864,7 @@ function update(dt){
   if (window.Achievements) {
     if (!player.isCharging) { // N極
       nPoleHoldTimer += dtSec;
-      if (nPoleHoldTimer >= 90) window.Achievements.unlock('ach_013');
+      if (nPoleHoldTimer >= 60) window.Achievements.unlock('ach_013');
     } else {
       nPoleHoldTimer = 0;
     }
@@ -4694,8 +4874,27 @@ function update(dt){
   // ── スキル効果タイマー ──
   if(skillActive && skillTimer > 0){
     skillTimer -= dtSec;
-    if(skillTimer <= 0){ skillActive=false; skillTimer=0; }
+    if(skillTimer <= 0){
+      skillActive=false; skillTimer=0;
+      if(selectedSkillId==='bubble' && bubbleAiming) finishBubbleAim(); // 狙い時間切れ→自動発射
+    }
   }
+
+  // ── シャボン玉：狙い中は疑似的に時間を止める ──
+  // プレイヤーの旋回（=狙う方向の調整）だけは通常通り受け付け、他の更新は全てスキップする。
+  // 通常の旋回より素早く追従させ、短い静止時間でもきびきび狙えるようにしている。
+  if(bubbleAiming){
+    if (joyTouchId !== null && touch.targetAngle !== null) {
+      player.angle = touch.targetAngle;
+    } else if (touch.active && touch.targetAngle !== null) {
+      let diff = touch.targetAngle - player.angle;
+      while (diff > Math.PI) diff -= Math.PI*2;
+      while (diff < -Math.PI) diff += Math.PI*2;
+      player.angle += Math.sign(diff) * Math.min(Math.abs(diff), 0.2*dt);
+    }
+    return;
+  }
+
   updateDashVfx(dtSec); // ダッシュ集中線（VFX）：RUSHブレンド・粒子の発生と移動を進める
 
   // マグネットスイープ演出：寿命が切れたものを間引く
@@ -4760,7 +4959,8 @@ function update(dt){
     batteryDrainBoostAnnounced = true;
     showTopNotification('⚠ バッテリー出力不安定 ⚠');
   }
-  const batteryDrainMult = playTime >= BATTERY_DRAIN_BOOST_TIME ? BATTERY_DRAIN_BOOST_MULT : 1;
+  const batteryDrainMult = (playTime >= BATTERY_DRAIN_BOOST_TIME ? BATTERY_DRAIN_BOOST_MULT : 1)
+    * (gameMode === 'quick' ? QUICK_BATTERY_DRAIN_MULT : 1);
   player.battery-=BATTERY_DRAIN*batteryDrainMult*dtSec;
   if(player.battery<=0){
     player.battery=0;
@@ -4856,6 +5056,10 @@ function update(dt){
   const VORTEX_RATIO = 0.35;
   const VORTEX_CAPTURE_R = player.r * 3.5; // この距離以内で渦モードに移行
   const VORTEX_CORE_R    = player.r * 0.25; // これ以内には入らない（コア圧）
+  // N磁晶核（nOnly）：S極には他の玉と同様に反応するが、通常よりずっと遠くから引き寄せられる
+  const N_ONLY_ATTRACT_RANGE_MULT = 3; // 「滅多遠くから」引き寄せられる演出のための引力レンジ倍率
+  // S磁晶核（sOnly）：N極には他の玉と同様に反応するが、通常よりずっと強く弾き飛ばされる
+  const S_ONLY_REPEL_FORCE_MULT = 3.5; // 「めっちゃ弾かれる」演出のための反発力倍率
 
   for(const m of marbles){
     if(!m.alive) continue;
@@ -4865,10 +5069,12 @@ function update(dt){
     const dist=Math.hypot(dx,dy);
     const nx=dist>0.1?dx/dist:0, ny=dist>0.1?dy/dist:0;
 
-    // S極に反応しない玉：N磁晶核（nOnly）、および起爆して暴走中の追尾磁晶核（homing）
-    const ignoresS = m.marbleType === 'nOnly' || (m.marbleType === 'homing' && m.detonating) || m.isCannonball;
-    // N極に反応しない玉：S磁晶核（sOnly）
-    const ignoresN = m.marbleType === 'sOnly' || m.isCannonball;
+    // S極(引力)に反応しない玉：S磁晶核（sOnly）、および起爆して暴走中の追尾磁晶核（homing）
+    const ignoresS = m.marbleType === 'sOnly' || (m.marbleType === 'homing' && m.detonating) || m.isCannonball;
+    // N極(反発)に反応しない玉：N磁晶核（nOnly）
+    const ignoresN = m.marbleType === 'nOnly' || m.isCannonball;
+    // このマーブルに適用するS極の引力レンジ（N磁晶核だけ大幅に拡張する）
+    const sRangeForThis = (m.marbleType === 'nOnly') ? mRange * N_ONLY_ATTRACT_RANGE_MULT : mRange;
 
     if(player.isCharging && player.charge > 0 && !ignoresS){
       // S極ホールド中：渦圏内に入ったらinVortex移行（バンパー/分裂で弾かれた直後の無敵中は再突入させない）
@@ -4902,9 +5108,10 @@ function update(dt){
         const spd = Math.hypot(m.vx, m.vy);
         const maxSpd = 4 + player.charge * 3;
         if(spd > maxSpd){ m.vx = m.vx/spd*maxSpd; m.vy = m.vy/spd*maxSpd; }
-      } else if(dist < mRange && dist > 1){
-        // 渦圏外：通常の引力＋弱い接線力
-        const ratio = 1 - dist/mRange;
+      } else if(dist < sRangeForThis && dist > 1){
+        // 渦圏外：通常の引力＋弱い接線力（N磁晶核はsRangeForThisが拡張されているため、
+        // 通常よりずっと遠い位置からこの枝に入ってくる）
+        const ratio = 1 - dist/sRangeForThis;
         const f = Math.pow(ratio,1.5)*fS*dt*player.charge;
         m.vx -= nx*f; m.vy -= ny*f;
         const vf = f*VORTEX_RATIO;
@@ -4916,10 +5123,11 @@ function update(dt){
       if(m.inVortex && !player.isCharging && !justReleased){
         m.inVortex = false;
       }
-      // N極：反発（S磁晶核は反応しない）
+      // N極：反発（N磁晶核は反応しない。S磁晶核は通常より大幅に強く弾かれる）
       if(!ignoresN && dist < mRange && dist > 1){
         const ratio = 1 - dist/mRange;
-        const f = ratio*fN*dt*player.nPower;
+        const repelMult = (m.marbleType === 'sOnly') ? S_ONLY_REPEL_FORCE_MULT : 1;
+        const f = ratio*fN*dt*player.nPower*repelMult;
         m.vx += nx*f; m.vy += ny*f;
         if(f > 0.001) m.recentPlayerForceTimer = 0.6;
       }
@@ -4949,17 +5157,9 @@ function update(dt){
 
   // ── マーブル更新 ──
   const alive=marbles.filter(m=>m.alive);
-  const stopRange = BASE_MAGNET_RANGE*upgrades.rangeUp; // 玉運動停止の有効範囲（現在のS/Nレンジと同範囲）
   for(let i=0;i<alive.length;i++){
     const a=alive[i];
-    // 玉運動停止：ホールド中、磁力範囲内の玉は動きを止める
-    let effDt = dt;
-    if(stopHeld){
-      let sdx=a.x-player.wx, sdy=a.y-player.wy;
-      if(sdx> WORLD_W/2) sdx-=WORLD_W; else if(sdx<-WORLD_W/2) sdx+=WORLD_W;
-      if(sdy> WORLD_H/2) sdy-=WORLD_H; else if(sdy<-WORLD_H/2) sdy+=WORLD_H;
-      if(Math.hypot(sdx,sdy) < stopRange) effDt = 0;
-    }
+    const effDt = dt;
     // 渦中でも摩擦・位置更新は行う（動きが止まる問題の修正）
     // 跳躍磁晶核：摩擦をほぼ無視し、いちど勢いがつくと長く飛び続ける（他の玉との一番わかりやすい差＝移動距離）
     // ただし重力圏内では、引力→跳ね返りの往復でエネルギーが際限なく貯まり続け、
@@ -5113,6 +5313,12 @@ function update(dt){
           } else if(rk.state === 'awake' && rk.ability === 'bumper'){
             // バンパー：覚醒中のみ爆発せず強く跳ね返す（通常・予兆時はノーマル岩と同じ扱い＝下のelseへ）
             unlockRockGimmickZukan('bumper'); // 図鑑「岩・ギミック」解放
+            // 既に起爆(チェイン反応)中の玉がバンパーに触れた場合、残り時間がどれだけ短くても
+            // フューズを満タン(0.4秒)にリセットする。これにより「弾き飛ばされてから遠くで爆発する」
+            // という演出が、触れたタイミング運に左右されず毎回きちんと起こるようになる
+            if(a.detonating){
+              a.detonateTimer = a.detonateTime || 0.4;
+            }
             const dot = a.vx*nx + a.vy*ny;
             a.vx -= 2.2*dot*nx;
             a.vy -= 2.2*dot*ny;
@@ -5227,6 +5433,11 @@ function update(dt){
           // バンパー：覚醒中のみ爆発せず跳ね返す（通常・予兆時はノーマル岩と同じ扱い＝下のelseへ）
           unlockRockGimmickZukan('bumper'); // 図鑑「岩・ギミック」解放
           m.inVortex=false;
+          // 既に起爆(チェイン反応)中の玉がバンパーに触れた場合、残り時間がどれだけ短くても
+          // フューズを満タン(0.4秒)にリセットする（通常の玉→岩衝突と同じ考え方）
+          if(m.detonating){
+            m.detonateTimer = m.detonateTime || 0.4;
+          }
           const nx2=dx/dist, ny2=dy/dist;
           const dot=m.vx*nx2+m.vy*ny2;
           m.vx-=2.2*dot*nx2; m.vy-=2.2*dot*ny2;
@@ -6467,6 +6678,9 @@ function updateGimmickRow() {
   document.getElementById('gimmick-fill').style.background = col;
   document.getElementById('gimmick-sec').textContent = Math.ceil(ev.timer) + 's';
   document.getElementById('gimmick-sec').style.color = col;
+  // 黄色など明るい色は白背景に埋もれて読めなくなるため、黒縁取りで常に視認性を確保する
+  document.getElementById('gimmick-sec').style.textShadow =
+    '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000';
 }
 
 // ── バッテリー残10%以下：画面端の波線演出（描画） ──
@@ -7167,14 +7381,14 @@ function buildFragileGlassSprites(m, ringColor, lineW, hsl){
       ctx.moveTo(0,m.r*0.32);  ctx.lineTo(0,m.r*0.48);
       ctx.stroke();
     } else if(m.marbleType === 'sOnly'){
-      // S磁晶核：S極にしか反応しないことを手描き文字で明示
-      ctx.strokeStyle='rgba(60,120,255,0.75)'; ctx.lineWidth=0.8;
+      // S磁晶核：S極では動かせず、N極で通常よりずっと強く弾かれることを手描き文字で明示
+      ctx.strokeStyle='rgba(255,90,60,0.75)'; ctx.lineWidth=0.8;
       ctx.font=`bold ${Math.round(m.r*0.5)}px Courier New`;
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.strokeText('S', 0, 0.5);
     } else if(m.marbleType === 'nOnly'){
-      // N磁晶核：N極にしか反応しないことを手描き文字で明示
-      ctx.strokeStyle='rgba(255,90,60,0.75)'; ctx.lineWidth=0.8;
+      // N磁晶核：N極では動かせず、S極では通常よりずっと遠くから引き寄せられることを手描き文字で明示
+      ctx.strokeStyle='rgba(60,120,255,0.75)'; ctx.lineWidth=0.8;
       ctx.font=`bold ${Math.round(m.r*0.5)}px Courier New`;
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.strokeText('N', 0, 0.5);
@@ -7292,12 +7506,12 @@ function drawMarbleSkin_sketchScribble(m, t, pulse, ringColor, lineW){
     ctx.moveTo(0,m.r*0.32); ctx.lineTo(0,m.r*0.5);
     ctx.stroke();
   } else if(m.marbleType === 'sOnly'){
-    ctx.strokeStyle='rgba(60,120,255,0.85)'; ctx.lineWidth=1.1;
+    ctx.strokeStyle='rgba(255,90,60,0.85)'; ctx.lineWidth=1.1;
     ctx.font=`bold ${Math.round(m.r*0.55)}px Courier New`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.strokeText('S', 0, 0.5);
   } else if(m.marbleType === 'nOnly'){
-    ctx.strokeStyle='rgba(255,90,60,0.85)'; ctx.lineWidth=1.1;
+    ctx.strokeStyle='rgba(60,120,255,0.85)'; ctx.lineWidth=1.1;
     ctx.font=`bold ${Math.round(m.r*0.55)}px Courier New`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.strokeText('N', 0, 0.5);
@@ -7468,7 +7682,7 @@ function drawInkTypeIcon(type,R){
 const INK_VARIANTS_PER_COLOR = 1; // 色（種類）ごとに用意する見た目バリエーション数
 const INK_TYPE_HSL = {
   normal:{h:0,s:0,l:27}, boost:{h:41,s:100,l:52}, gravity:{h:259,s:75,l:55}, homing:{h:176,s:75,l:54},
-  delay:{h:282,s:52,l:35}, sOnly:{h:220,s:100,l:67}, nOnly:{h:11,s:100,l:61},
+  delay:{h:282,s:52,l:35}, sOnly:{h:11,s:100,l:61}, nOnly:{h:220,s:100,l:67},
   red:{h:341,s:83,l:42}, gold:{h:44,s:52,l:58},
 };
 const INK_SIZE_MULT = {normal:1.0,boost:0.85,gravity:1.1,homing:1.05,delay:1.15,sOnly:1.0,nOnly:1.0,red:1.2,gold:1.3};
@@ -7661,8 +7875,8 @@ function drawMarbles(){
     if(m.marbleType === 'boost'){        h=28; s=100;l=58; ringAlpha=0.85; lineW=1.0; }
     else if(m.marbleType === 'gravity'){ h=270;s=100;l=70; ringAlpha=0.85; lineW=1.3; }
     else if(m.marbleType === 'homing'){  h=336;s=100;l=62; ringAlpha=0.9;  lineW=1.3; }
-    else if(m.marbleType === 'sOnly'){   h=220;s=100;l=62; ringAlpha=0.9;  lineW=1.3; }
-    else if(m.marbleType === 'nOnly'){   h=12; s=100;l=62; ringAlpha=0.9;  lineW=1.3; }
+    else if(m.marbleType === 'sOnly'){   h=12; s=100;l=62; ringAlpha=0.9;  lineW=1.3; }
+    else if(m.marbleType === 'nOnly'){   h=220;s=100;l=62; ringAlpha=0.9;  lineW=1.3; }
     else if(m.marbleType === 'delay'){   h=6;  s=70; l=48; ringAlpha=0.9;  lineW=1.4; }
     else if(m.marbleType === 'red'){     h=0;  s=68; l=49; ringAlpha=0.95; lineW=1.4; }
     else if(m.marbleType === 'gold'){    h=45; s=100;l=41; ringAlpha=0.95; lineW=1.4; }
@@ -9100,8 +9314,8 @@ function updateSkillUI(){
   document.getElementById('skill-btn-icon').innerHTML = btnIconPath
     ? `<img src="${btnIconPath}" alt="${def.name}">`
     : def.icon;
-  document.getElementById('skill-btn').classList.toggle('holding', selectedSkillId==='stop' && stopHeld);
-  document.getElementById('skill-btn').classList.toggle('active', skillActive && selectedSkillId !== 'stop');
+  document.getElementById('skill-btn').classList.remove('holding'); // ホールド型スキルは廃止（シャボン玉はタップ式）
+  document.getElementById('skill-btn').classList.toggle('active', skillActive);
   document.getElementById('skill-desc-name').textContent = def.name;
   document.getElementById('skill-desc-text').textContent = def.desc;
   // SPゲージ（canvas描画）
@@ -9186,8 +9400,8 @@ function updateSkillUI(){
   }
 
   // アクティブ中リング（継続系スキルが効果を発揮している間、ティールで大きく発光させる）
-  if(skillActive && selectedSkillId !== 'stop'){
-    const durationMap = { shield:10, dash:3, typhoon:3, energyConverter:10 };
+  if(skillActive){
+    const durationMap = { shield:10, dash:3, typhoon:3, energyConverter:10, bubble:5 };
     const dur = durationMap[selectedSkillId] || 1;
     const ratio = Math.max(0, Math.min(1, skillTimer/dur));
     const arcEnd2 = -Math.PI/2 + ratio*Math.PI*2;
@@ -9300,6 +9514,7 @@ function tryOpenShop(){
     return;
   }
   document.getElementById('mode-shop').classList.remove('story-glow'); // 1度使ったら発光は消す
+  document.getElementById('mode-shop').classList.remove('has-unclaimed'); // 新商品バッジも閲覧した時点で消す
   if (window.ShopUI) window.ShopUI.open();
 }
 document.getElementById('mode-shop').addEventListener('click', tryOpenShop);
@@ -9320,6 +9535,44 @@ _modeToTitle.addEventListener('touchstart', e=>{
   document.getElementById('mode-select').classList.add('hide');
   document.getElementById('title-screen').classList.remove('hide');
 },{passive:false});
+
+// ── 実績ログタブ（ベルボタン）──────────────────────────
+// 実績称号一覧(#achievement-screen)やコレクションの解放状態には一切触れない、
+// 完全に独立した「読み取り専用」の通知履歴タブ。開いても閉じても進行フラグは変化しない。
+function renderAchvLog(){
+  const list = document.getElementById('achv-log-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const log = (window.Achievements && typeof window.Achievements.getLog === 'function') ? window.Achievements.getLog() : [];
+  for (const entry of log) {
+    const row = document.createElement('div');
+    row.className = 'achv-log-entry';
+    row.innerHTML =
+      `<span class="achv-log-time">［${entry.time}］</span>` +
+      `<span class="achv-log-tag">（実績解除）</span>` +
+      `<span class="achv-log-name">${entry.title}</span>` +
+      (entry.condition ? `<span class="achv-log-cond">ー${entry.condition}</span>` : '');
+    list.appendChild(row);
+  }
+}
+function openAchvLog(){
+  renderAchvLog();
+  document.getElementById('achv-log-screen').classList.remove('hide');
+}
+function closeAchvLog(){
+  document.getElementById('achv-log-screen').classList.add('hide');
+}
+const _achvBellBtn = document.getElementById('achv-bell-btn');
+if (_achvBellBtn){
+  _achvBellBtn.addEventListener('click', openAchvLog);
+  _achvBellBtn.addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
+  _achvBellBtn.addEventListener('touchend', e=>{ e.preventDefault(); openAchvLog(); }, {passive:false});
+}
+const _achvLogBack = document.getElementById('achv-log-back');
+if (_achvLogBack){
+  _achvLogBack.addEventListener('click', closeAchvLog);
+  _achvLogBack.addEventListener('touchstart', e=>{ e.preventDefault(); closeAchvLog(); }, {passive:false});
+}
 
 // モード選択ボタン
 function tryOpenEndless(){

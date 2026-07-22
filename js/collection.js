@@ -58,6 +58,7 @@
     }
     modeSelect.classList.add('hide');
     collection.classList.remove('hide');
+    modeCollectionBtn.classList.remove('story-glow'); // 1度使ったら発光は消す（mode-quick/endless/shopと同じ扱い）
     // #player-status-barは通常「#mode-selectが表示中のときだけ表示」というCSSの隣接セレクタで
     // 制御されているため、コレクション画面でも表示し続けたい場合はここでJS側から明示的に上書きする
     // （インラインstyleはCSSのセレクタより優先される）
