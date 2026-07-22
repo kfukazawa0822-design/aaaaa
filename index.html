@@ -675,7 +675,9 @@ canvas { display:block; width:100%; height:100%; }
 }
 .subscreen.hide { display:none; }
 .subscreen-back {
-  position:fixed; top:calc(93px + 14px); left:6vw;
+  /* 実績称号／チュートリアル／図鑑はいずれも上部UI(player-status-bar)を非表示にして使う画面なので、
+     ヘッダー分のオフセットを空けず、画面本当の左上に配置する（開いたらリストの途中に埋もれてしまうバグの修正） */
+  position:fixed; top:14px; left:6vw;
   background:none; border:none; cursor:pointer;
   padding:8px; opacity:0.7; transition:opacity 0.15s;
   -webkit-tap-highlight-color:transparent;
@@ -1650,7 +1652,8 @@ canvas { display:block; width:100%; height:100%; }
 #skill-select.hide { display:none; }
 #skill-select-title { font-size:22px; font-weight:bold; color:#fff; letter-spacing:4px; }
 #skill-back-btn {
-  position:fixed; top:calc(93px + 14px); left:6vw;
+  /* スキル選択画面も上部UIを表示しない画面なので、ヘッダー分のオフセットを空けず左上に配置する */
+  position:fixed; top:14px; left:6vw;
   background:none; border:none; cursor:pointer;
   padding:8px; opacity:0.7; transition:opacity 0.15s;
 }
