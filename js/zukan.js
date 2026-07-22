@@ -208,8 +208,8 @@
       desc:'空間磁場を歪ませ、約500px先へ瞬間移動する転位装置。\n緊急回避や素早い位置取りに適している。',
     },
     {
-      id:'skill_2', name:'スキル：シャボン玉', unlocked:false, iconPath:'assets/zukan/skill_2.png',
-      desc:'発動すると局所的に時間の流れを操作し、周囲がほぼ静止する特殊装置。\n静止している間に狙いを定めると、S極で引き寄せていた磁晶核をまとめてその方向へ射出する。\n照準の精度はおよそ8割で、残りは軌道が大きくブレて飛んでいく。',
+      id:'skill_2', name:'スキル：フリーズショット', unlocked:false, iconPath:'assets/zukan/skill_2.png',
+      desc:'局所的に時間の流れを止め、静止した世界の中で狙いを定められる特殊装置。\n静止を解くと同時に、S極で引き寄せていた磁晶核をまとめてその方向へ一斉射出する。\n命中精度はおよそ8割で、残りは軌道が大きくブレて飛んでいく。',
     },
     {
       id:'skill_3', name:'スキル：マグネットスイープ', unlocked:false, iconPath:'assets/zukan/skill_3.png',

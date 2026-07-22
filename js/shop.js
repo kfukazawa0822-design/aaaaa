@@ -384,7 +384,7 @@
     if (priceEl) priceEl.innerHTML = `${def.originalEp}EP`; // まずは通常価格のみ表示
 
     setTimeout(() => {
-      // ②値引き演出：線が引かれて、割引後の価格がふわっと出てくる（合計約2秒）
+      // ②値引き演出：線が引かれて、割引後の価格がふわっと出てくる（合計約1.6秒）
       if (priceEl){
         priceEl.innerHTML =
           `<span class="shop-price-strike shop-price-strike-anim">${def.originalEp}</span>` +
@@ -401,8 +401,8 @@
           // ⑤「獲得！」ポップ。プレイヤーがタップして閉じたらonCompleteへ進む
           showRewardPopup(def, null, onComplete);
         }, { hideNo: true });
-      }, 1300);
-    }, 500);
+      }, 2400); // 値引きアニメ(約1.6秒)がしっかり見えた上で、余韻を持たせてから確認ポップへ
+    }, 900); // まず通常価格をひと呼吸見せてから値引き演出を始める
   }
 
   function buildCardEl(item, maskName){
@@ -431,8 +431,8 @@
     // アイコン画像：後日 assets/shop/<商品id>.png（512×512px）を配置すれば自動で反映される。
     // ファイルが無い間は絵文字（item.icon）がそのまま表示される（zukan.js等と同じonerror方式）
     card.innerHTML = `
-      <div class="shop-card-icon-box">
-        <span class="shop-card-icon-emoji">${maskName ? '？' : (item.icon || '🎁')}</span>
+      <div class="shop-card-icon-box${maskName ? ' masked' : ''}">
+        <span class="shop-card-icon-emoji">${maskName ? '' : (item.icon || '🎁')}</span>
         <img class="shop-card-icon-img" src="assets/shop/${item.id}.png" alt=""
              width="512" height="512" decoding="async" loading="lazy"
              onerror="this.remove();"
@@ -555,6 +555,6 @@
     shopBackBtn.addEventListener('touchstart', e=>{ e.preventDefault(); closeShop(); }, {passive:false});
   }
 
-  window.ShopUI = { open: openShop, close: closeShop, runEndlessDiscountPurchase };
+  window.ShopUI = { open: openShop, close: closeShop, runEndlessDiscountPurchase, gotoPage };
   console.log('[shop.js] 初期化完了。');
 })();

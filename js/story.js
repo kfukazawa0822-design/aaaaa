@@ -584,7 +584,15 @@
     activeStep = step;
     activeStepIsSide = !!isSide;
     activePopupOpen = true;
-    if (step.type === 'doctor')    return showDoctorStep(step);
+    if (step.type === 'doctor'){
+      // No.017-019「shop_dialogue_1」は、この後の購入チュートリアル(purchase_endless)で
+      // エンドレスモード解放(2ページ目)の話をするため、博士が喋り始める前に
+      // 先にショップを2ページ目へ移しておく（1ページ目を見ながら喋り出すのを防ぐ）
+      if (step.id === 'shop_dialogue_1' && window.ShopUI && typeof window.ShopUI.gotoPage === 'function'){
+        window.ShopUI.gotoPage(1);
+      }
+      return showDoctorStep(step);
+    }
     if (step.type === 'tutorial')  return showTutorialStep(step);
     if (step.type === 'name_input') return showNameInput();
     if (step.type === 'skill_grant') return showSkillGrant(step);

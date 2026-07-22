@@ -234,6 +234,24 @@ canvas { display:block; width:100%; height:100%; }
   text-align:center; pointer-events:none; opacity:0;
   z-index:45; white-space:nowrap;
 }
+/* シャボン玉：狙い中の案内文と「発射！」ボタン。案内文はゲーム画面のやや上寄り、
+   ボタンはプレイヤー機体の少し下あたりを狙って配置している */
+#bubble-aim-banner {
+  position:fixed; top:34%; left:50%; transform:translate(-50%,-50%);
+  font-size:22px; font-weight:bold; color:#1a1a1a; letter-spacing:1px;
+  text-shadow:0 0 6px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.9), 0 0 3px rgba(255,255,255,0.9);
+  pointer-events:none; white-space:nowrap; z-index:46;
+}
+#bubble-aim-banner.hide { display:none; }
+#bubble-fire-btn {
+  position:fixed; top:calc(64% + 56px); left:50%; transform:translate(-50%,-50%);
+  background:#fff; border:3px solid #1a1a1a; border-radius:16px;
+  padding:12px 34px; font-size:22px; font-weight:bold; color:#1a1a1a;
+  cursor:pointer; z-index:47; box-shadow:0 4px 0 rgba(0,0,0,0.15);
+  -webkit-tap-highlight-color:transparent; transition:transform 0.1s, box-shadow 0.1s;
+}
+#bubble-fire-btn:active { transform:translate(-50%,-50%) translateY(3px); box-shadow:none; }
+#bubble-fire-btn.hide { display:none; }
 #gimmick-banner-label {
   font-family:'Courier New',monospace; font-size:12px; letter-spacing:6px;
   color:rgba(26,26,26,0.5); margin-bottom:6px;
@@ -347,7 +365,9 @@ canvas { display:block; width:100%; height:100%; }
   background:rgba(0,0,10,0.85);
   backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
   display:flex; flex-direction:column; align-items:center;
-  padding:24px 0 16px;
+  /* 戻るボタン(top:calc(93px+14px)、ボタン自体の高さ約44px)と文字が被らないよう、
+     ボタンの下端より少し余裕を持たせた位置から書き始める */
+  padding:calc(93px + 14px + 44px + 10px) 0 16px;
   box-sizing:border-box;
 }
 #achv-log-screen.hide { display:none; }
@@ -569,9 +589,9 @@ canvas { display:block; width:100%; height:100%; }
   background:#efefef; border-radius:3px; padding:2px 7px;
   display:inline-flex; align-items:center; gap:4px; margin-top:4px;
 }
-.lock-icon { width:10px; height:10px; object-fit:contain; display:block; flex-shrink:0; vertical-align:middle; }
-.mode-sub-lock .lock-icon { width:14px; height:14px; }
-.collection-card-lock .lock-icon { width:14px; height:14px; }
+.lock-icon { width:15px; height:15px; object-fit:contain; display:block; flex-shrink:0; vertical-align:middle; }
+.mode-sub-lock .lock-icon { width:21px; height:21px; }
+.collection-card-lock .lock-icon { width:21px; height:21px; }
 #mode-endless.locked .mode-btn-title,
 #mode-endless.locked .mode-btn-desc,
 #mode-endless.locked .mode-btn-arrow { opacity:0.4; }
@@ -1027,6 +1047,10 @@ canvas { display:block; width:100%; height:100%; }
 }
 .shop-card-icon-emoji { font-size:24px; }
 .shop-card-icon-img { width:100%; height:100%; object-fit:contain; }
+/* ???（未解放スキルの名前を伏せている間）は、アイコンも「？」の代わりに
+   真っ黒な塗りつぶしにして、まだ何も分からないシルエット状態だと分かりやすくする */
+.shop-card-icon-box.masked { background:#111111; }
+.shop-card-icon-box.masked .shop-card-icon-img { display:none; } /* 万一画像があっても中身は見せない */
 /* 商品名（右上）と価格（右下）を縦に配置し、間を均等割りすることで
    アイコンの高さいっぱいに「名前は上、価格は下」となるように揃える */
 .shop-card-body {
@@ -1050,11 +1074,11 @@ canvas { display:block; width:100%; height:100%; }
 }
 .shop-price-strike-anim::after {
   content:''; position:absolute; left:0; top:50%; height:1.5px; background:#aaa;
-  width:0%; animation:shopStrikeDraw 0.6s ease forwards;
+  width:0%; animation:shopStrikeDraw 1s ease forwards;
 }
 @keyframes shopStrikeDraw { from{ width:0%; } to{ width:100%; } }
 .shop-price-discounted-anim {
-  opacity:0; animation:shopDiscountFadeIn 0.4s ease forwards; animation-delay:0.6s;
+  opacity:0; animation:shopDiscountFadeIn 0.6s ease forwards; animation-delay:1s;
 }
 @keyframes shopDiscountFadeIn { to{ opacity:1; } }
 
@@ -2718,6 +2742,10 @@ canvas { display:block; width:100%; height:100%; }
 <div id="event-banner"></div>
 <div id="top-notify"></div>
 
+<!-- シャボン玉：狙い中に出す案内文と「発射！」ボタン -->
+<div id="bubble-aim-banner" class="hide">飛ばす方向を決めよう</div>
+<button id="bubble-fire-btn" class="hide">発射！</button>
+
 <!-- ギミック発動演出（画面中央・大きめ） -->
 <div id="gimmick-banner">
   <div id="gimmick-banner-label">ギミック作動</div>
@@ -2857,7 +2885,7 @@ const SKILL_DEFS = [
   { id:'cannon',  name:'大砲',         icon:'💣', spCost:100, maxStock:3, desc:'前方へ巨大な磁晶核を発射する' },
   { id:'typhoon', name:'台風の目',     icon:'🌪', spCost:200, maxStock:1, desc:'約3秒間、周囲の玉を吸い寄せる' },
   { id:'shield',  name:'シールド',     icon:'🛡', spCost:100, maxStock:1, desc:'約10秒間、Sで引き寄せた玉を保護する' },
-  { id:'bubble',  name:'シャボン玉',   icon:'🫧', spCost:50,  maxStock:3, desc:'時間を止めて方向を狙い、Sで集めた玉を精度80%で放つ' },
+  { id:'bubble',  name:'フリーズショット', icon:'🫧', spCost:50,  maxStock:3, desc:'時間を止めて狙いを定め、Sで集めた玉を精度80%で放つ' },
   { id:'beacon',  name:'ワープビーコン', icon:'🛰', spCost:100, maxStock:1, desc:'アイテムを検知するビーコンを設置。再使用でワープ' },
   { id:'sweep',   name:'マグネットスイープ', icon:'🧹', spCost:100, maxStock:2, desc:'前方を薙ぎ払い、玉を吹き飛ばす' },
   { id:'energyConverter', name:'エネルギー変換器', icon:'🔌', spCost:150, maxStock:1, desc:'約10秒間、爆発ごとにバッテリーを回復する' },
@@ -2869,6 +2897,7 @@ let skillStock      = 0;    // 現在のストック数
 let skillActive     = false;// スキル効果発動中
 let skillTimer      = 0;    // 効果残り時間（秒）
 let bubbleAiming      = false; // シャボン玉：狙い中フラグ（true の間は時間停止＋旋回のみ許可）
+let bubbleAimElapsed  = 0;    // シャボン玉：狙い開始からの経過秒数（発射ボタンの表示タイミング用）
 let cannonCharge     = null;  // 大砲：チャージ中の状態（null=非チャージ中）
 let beaconPos         = null; // ワープビーコン：記憶地点 {x,y}
 let sweepEffects      = []; // マグネットスイープ：手描きの弧エフェクト {cx,cy,startAngle,endAngle,range,color,born,dur}
@@ -3220,6 +3249,16 @@ const RESONANCE_CHAIN_MULT = 1.8;
 
 let chainCount = 0, maxChain = 0, maxChainCount = 0, chainTimer = 0, chainDisplay = '', chainTexts = [];
 let score = 0, currentChainDepth = 0;
+// ── デバッグ用：スコア内訳の集計（コンソールで確認するためだけの内部データ。ゲーム進行には影響しない）──
+let scoreDebug = {
+  hitByCause: { S:0, N:0, none:0 },   // 1発ごとの基本点（S極/N極/非プレイヤー起因）の合計
+  hitCountByTier: { 0:0, 1:0, 2:0 },  // 各段階(通常/BIG/MEGA)でヒットした回数
+  hitScoreByTier: { 0:0, 1:0, 2:0 },  // 各段階でのヒット合計点
+  waveBonus: 0,   // 波ボーナス合計
+  spreadBonus: 0, // Nチェイン専用の拡散ボーナス合計
+  lastChainSpreadDistance: 0, // 直近チェインの累積拡散距離（拡散ボーナスの倍率調整用の参考値）
+  other: 0,       // 上記以外（岩・アイテム等）で入ったスコア
+};
 let lastChainTier = 0; // 0=通常, 1=BIG CHAIN, 2=MEGA CHAIN（直近のチェイン段階）
 let currentChainCause = null; // null=非プレイヤー起因, 'S'=S極吸引起因, 'N'=N極反発起因（チェインの起点で確定）
 let chainSpreadDistance = 0; // Nチェイン専用：爆発同士の道のりの合計（暴れまわるほど伸びる）
@@ -3289,6 +3328,12 @@ function initGame(mode) {
   marbles=[]; rocks=[]; explosions=[]; particles=[]; shockwaves=[];
   items=[]; pickupEffects=[]; redBalls=[]; miniExplosions=[]; waveRings=[];
   chainCount=0; maxChain=0; maxChainCount=0; chainTimer=0; chainDisplay=''; chainTexts=[]; score=0;
+  scoreDebug = {
+    hitByCause: { S:0, N:0, none:0 },
+    hitCountByTier: { 0:0, 1:0, 2:0 },
+    hitScoreByTier: { 0:0, 1:0, 2:0 },
+    waveBonus: 0, spreadBonus: 0, lastChainSpreadDistance: 0, other: 0,
+  };
   itemRewardCoinsThisSession = 0;
   lastChainTier=0; currentChainCause=null; chainSpreadDistance=0; chainLastExplosionX=null; chainLastExplosionY=null;
   pulseFrame={ amp:0, jitter:0, time:0, visibility:0 };
@@ -3296,7 +3341,9 @@ function initGame(mode) {
   playTime=0; batteryDrainBoostAnnounced=false; currentChainDepth=0; screenShake={x:0,y:0,power:0}; releaseGraceTimer=0;
   nPoleHoldTimer=0; // 実績「トリッキー」用：N極を連続で維持している時間
   skillSP=0; skillStock=0; skillActive=false; skillTimer=0;
-  bubbleAiming=false; beaconPos=null;
+  bubbleAiming=false; bubbleAimElapsed=0; beaconPos=null;
+  { const b1=document.getElementById('bubble-aim-banner'), b2=document.getElementById('bubble-fire-btn');
+    if(b1) b1.classList.add('hide'); if(b2) b2.classList.add('hide'); }
   rockSpawnTimer=0; itemSpawnTimer=0; redBallCheckChain=0; goldBallCheckChain=0; comboItemCheckDepth=0; comboItemCooldown=0;
   marbleReplenishQueue=[]; marbleReplenishActive=false;
   holes=[]; holeActiveIdx=-1; holeOpenTimer=0; holeNextTimer=HOLE_GAP_DURATION; holeSequenceIdx=0;
@@ -3858,7 +3905,7 @@ function applyItem(def) {
     if (batteryBefore <= 10 && player.battery > batteryBefore) window.Achievements.unlock('ach_012');
   }
   showItemPopup(msg,col);
-  addScore(Math.floor(20*upgrades.chainMulti));
+  addScore(Math.floor(26*upgrades.chainMulti));
   updateHudItems();
 }
 
@@ -4017,18 +4064,27 @@ function triggerExplosion(x, y, power, chainDepth, isRock, playerCaused=false, g
             }
           }
           chainHit++;
-          // 1発ごとの基本ポイント：チェインの原因（S極吸引/N極反発/非プレイヤー）×段階（通常/BIG/MEGA）で変える
+          // 1発ごとの基本ポイント：チェインの原因（S極吸引/N極反発/非プレイヤー）×段階（通常/BIG/MEGA）で変える。
+          // ※S極と非プレイヤー起因の基本点は底上げ済み（S極1.3倍、非プレイヤー起因は固定50点→段階倍率つき）。
+          //   N極の基本点は、拡散ボーナス（S→Nの合わせ技への大きな見返り）とは別に、
+          //   「N極だけを使い続けるプレイ」でも寂しい点数にならないよう、約3倍に引き上げている
+          //   （実績「トリッキー」＝N極60秒維持プレイで、スコア10万前後に届くことを目安に調整）
           let baseHitScore;
           if (currentChainCause === 'S') {
-            baseHitScore = lastChainTier === 2 ? 300 : lastChainTier === 1 ? 150 : 50;
+            baseHitScore = lastChainTier === 2 ? 390 : lastChainTier === 1 ? 195 : 65;
           } else if (currentChainCause === 'N') {
-            baseHitScore = lastChainTier === 2 ? 750 : lastChainTier === 1 ? 375 : 120;
+            baseHitScore = lastChainTier === 2 ? 2250 : lastChainTier === 1 ? 1125 : 360;
           } else {
-            baseHitScore = 50; // 非プレイヤー起因：段階によらず固定
+            baseHitScore = lastChainTier === 2 ? 300 : lastChainTier === 1 ? 150 : 50; // 非プレイヤー起因：以前は固定50点だった
           }
           // S磁晶核・N磁晶核：片方の極にしか反応しない制約への見返りとして基本ヒット点2倍
           const typeScoreMult = (m.marbleType === 'sOnly' || m.marbleType === 'nOnly') ? 2 : 1;
-          addScore(Math.floor(baseHitScore * typeScoreMult * upgrades.chainMulti * getEventMult('chainMulti')));
+          const hitScore = Math.floor(baseHitScore * typeScoreMult * upgrades.chainMulti * getEventMult('chainMulti'));
+          addScore(hitScore);
+          // デバッグ集計：どの原因(S/N/非プレイヤー)・どの段階(通常/BIG/MEGA)で何点入ったか
+          scoreDebug.hitByCause[currentChainCause || 'none'] += hitScore;
+          scoreDebug.hitCountByTier[lastChainTier]++;
+          scoreDebug.hitScoreByTier[lastChainTier] += hitScore;
         }
         // 外周部（0.85〜1.0）：弾き飛ばしのみ（起爆なし）
       }
@@ -4080,19 +4136,26 @@ function triggerExplosion(x, y, power, chainDepth, isRock, playerCaused=false, g
       // 波ボーナス：密集数(chainHit)は最初の8個までは今まで通り気持ちよく線形、
       // それを超えた分だけ緩やかに（極端な一極集中だけ頭打ち、通常の連鎖の伸びは変えない）
       const softHit = Math.min(chainHit, 8) + Math.sqrt(Math.max(0, chainHit - 8));
-      const waveBonus = softHit * 20 * (chainDepth+1) * upgrades.chainMulti * getEventMult('chainMulti');
+      const waveBonus = softHit * 26 * (chainDepth+1) * upgrades.chainMulti * getEventMult('chainMulti'); // 20→26（他の稼ぎ方を底上げ）
 
       // Nチェイン専用：拡散ボーナス（爆発同士の道のりの合計。暴れまわるほど伸びる）
+      // ※以前は「これまでの累積距離」をそのまま毎回点数化しており、連鎖が続くほど二乗に近い
+      //   勢いで跳ね上がっていた（爆発強化との組み合わせで暴走の主因になっていた）。
+      //   平方根を取ることで「長く続くほど伸びる」性質は残しつつ、伸び方を大きく緩和している。
       let spreadBonus = 0;
       if (chainLastExplosionX !== null) {
         chainSpreadDistance += Math.hypot(x - chainLastExplosionX, y - chainLastExplosionY);
       }
       chainLastExplosionX = x; chainLastExplosionY = y;
       if (currentChainCause === 'N') {
-        spreadBonus = chainSpreadDistance * 0.3 * upgrades.chainMulti * getEventMult('chainMulti');
+        const SPREAD_BONUS_K = 10; // 要調整：次のプレイデータのchainSpreadDistance実測値を見て微調整する
+        spreadBonus = Math.sqrt(chainSpreadDistance) * SPREAD_BONUS_K * upgrades.chainMulti * getEventMult('chainMulti');
       }
 
       addScore(Math.floor(waveBonus) + Math.floor(spreadBonus));
+      scoreDebug.waveBonus += Math.floor(waveBonus);
+      scoreDebug.spreadBonus += Math.floor(spreadBonus);
+      scoreDebug.lastChainSpreadDistance = Math.floor(chainSpreadDistance); // 次回の調整用に生の累積距離も記録
       screenShake.power=Math.min(screenShake.power+chainHit*1.5,10);
     }
   }, chainDepth*80);
@@ -4284,9 +4347,14 @@ function activateShield(){
 // その方向へ精度80%程度で一斉に放つ
 function activateBubble(){
   bubbleAiming = true;
+  bubbleAimElapsed = 0;
   skillActive = true;
   skillTimer = 5.0; // 狙える時間（この間に再度ボタンを押せば早めに確定できる）
-  showBanner('🫧 シャボン玉：狙いを定めろ', '#cfe8ff');
+  showBanner('🫧 フリーズショット：狙いを定めろ', '#cfe8ff');
+  const aimBanner = document.getElementById('bubble-aim-banner');
+  if (aimBanner) aimBanner.classList.remove('hide');
+  const fireBtn = document.getElementById('bubble-fire-btn');
+  if (fireBtn) fireBtn.classList.add('hide'); // 1秒経つまでは非表示
 }
 
 function finishBubbleAim(){
@@ -4294,6 +4362,10 @@ function finishBubbleAim(){
   bubbleAiming = false;
   skillActive = false;
   skillTimer = 0;
+  const aimBanner = document.getElementById('bubble-aim-banner');
+  if (aimBanner) aimBanner.classList.add('hide');
+  const fireBtn = document.getElementById('bubble-fire-btn');
+  if (fireBtn) fireBtn.classList.add('hide');
   const BUBBLE_ACCURACY = 0.8; // 80%の玉は狙った方向へほぼ正確に飛ぶ。残り20%は大きくブレる
   const BUBBLE_SPEED = 55;
   const targets = marbles.filter(m => m.alive && m.inVortex); // Sで集めた(渦に入っている)玉
@@ -4307,7 +4379,7 @@ function finishBubbleAim(){
     m.spawnShield = Math.max(m.spawnShield, 0.3); // 発射直後の誤爆防止
     m.speedCapBoostTimer = 0.6; // この間だけ速度上限を緩め、実際に遠くまで飛ばす
   }
-  showBanner(`🫧 シャボン玉：発射！(${targets.length}個)`, '#cfe8ff');
+  showBanner(`🫧 フリーズショット：発射！(${targets.length}個)`, '#cfe8ff');
   // 発射の瞬間に軽くカメラを揺らして手応えを出す
   cam.shakeX=(Math.random()-0.5)*8;
   cam.shakeY=(Math.random()-0.5)*8;
@@ -4547,6 +4619,30 @@ function triggerGameOver() {
     && playTime >= MIN_PLAYTIME_FOR_REWARD;
   document.getElementById('go-btns-normal').classList.toggle('hide', isVeryFirstPlay);
   document.getElementById('go-btns-first').classList.toggle('hide', !isVeryFirstPlay);
+
+  // ── デバッグ用：スコア内訳をコンソールに出力（「なぜこのスコアになったか」の確認用。UIには出さない）──
+  try {
+    const d = scoreDebug;
+    const sumHit = d.hitByCause.S + d.hitByCause.N + d.hitByCause.none;
+    console.log('%c[SCORE DEBUG] 最終スコア: ' + score.toLocaleString(), 'font-weight:bold;font-size:13px;');
+    console.log('  最大連鎖:', maxChainCount, ' プレイ時間(秒):', Math.floor(playTime));
+    console.table({
+      'S極チェイン起因ヒット合計':   { スコア: d.hitByCause.S },
+      'N極チェイン起因ヒット合計':   { スコア: d.hitByCause.N },
+      '非プレイヤー起因ヒット合計':  { スコア: d.hitByCause.none },
+      '通常段階(Tier0)ヒット合計':   { スコア: d.hitScoreByTier[0], 回数: d.hitCountByTier[0] },
+      'BIG段階(Tier1)ヒット合計':    { スコア: d.hitScoreByTier[1], 回数: d.hitCountByTier[1] },
+      'MEGA段階(Tier2)ヒット合計':   { スコア: d.hitScoreByTier[2], 回数: d.hitCountByTier[2] },
+      '波ボーナス合計':              { スコア: d.waveBonus },
+      '拡散ボーナス合計(Nのみ)':     { スコア: d.spreadBonus },
+      '直近チェインの累積拡散距離(調整用参考値)': { スコア: d.lastChainSpreadDistance },
+      'ヒット系スコア小計':          { スコア: sumHit },
+      '内訳合計(参考。他ボーナス除く)': { スコア: sumHit + d.waveBonus + d.spreadBonus },
+    });
+    console.log('※ 1発あたりの基本点：S極=[通常65/BIG195/MEGA390]、N極=[通常360/BIG1125/MEGA2250]、非プレイヤー起因=[通常50/BIG150/MEGA300]（S/N磁晶核はさらに2倍）');
+    console.log('※ 拡散ボーナスは「累積距離の平方根」×10に変更（以前は累積距離をそのまま毎回加算していたため二乗に近い伸び方だった）');
+    console.log('※ MEGA段階はチェイン数>125または連鎖深度>=8で突入。N極×MEGAが最も点が伸びやすい組み合わせ。');
+  } catch(e) { /* デバッグ出力自体で本編が止まらないよう握りつぶす */ }
 
   document.getElementById('gameover').classList.add('show');
 
@@ -4894,6 +4990,13 @@ function update(dt){
       while (diff > Math.PI) diff -= Math.PI*2;
       while (diff < -Math.PI) diff += Math.PI*2;
       player.angle += Math.sign(diff) * Math.min(Math.abs(diff), 0.2*dt);
+    }
+    // 発動から1秒経ったら「発射！」ボタンを表示する
+    const wasBeforeOneSec = bubbleAimElapsed < 1;
+    bubbleAimElapsed += dtSec;
+    if (wasBeforeOneSec && bubbleAimElapsed >= 1){
+      const fireBtn = document.getElementById('bubble-fire-btn');
+      if (fireBtn) fireBtn.classList.remove('hide');
     }
     return;
   }
@@ -5279,7 +5382,7 @@ function update(dt){
           const impactForce = Math.min(Math.abs(rv) * 0.8, 20);
           a.vx -= nx * impactForce; a.vy -= ny * impactForce;
           b.vx += nx * impactForce; b.vy += ny * impactForce;
-          addScore(Math.floor(20*upgrades.chainMulti));
+          addScore(Math.floor(26*upgrades.chainMulti));
           currentChainDepth=0; comboItemCheckDepth=0;
           chainCount++;updateChainDisplay(chainCount, 0, (a.x+b.x)/2, (a.y+b.y)/2, causedFlag);
           continue;
@@ -5333,7 +5436,7 @@ function update(dt){
             // 跳ね返り直後の0.3秒は無敵にして、状態遷移や高速衝突による誤爆発を防ぐ
             a.spawnShield = Math.max(a.spawnShield, 0.3);
             a.speedCapBoostTimer = 0.6; // この間だけ速度上限を緩めて、もっと遠くまで跳ねていくようにする
-            addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
+            addScore(Math.floor(65*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
 
           } else if(rk.state === 'awake' && rk.ability === 'split'){
             // 分裂：覚醒中のみ、未分裂の玉が当たった瞬間に分裂する（通常・予兆時はノーマル岩と同じ扱い）
@@ -5347,7 +5450,7 @@ function update(dt){
               const boost5 = Math.max(spd5*1.3, SPLIT_BOUNCE_SPEED);
               if(spd5>0){ a.vx=a.vx/spd5*boost5; a.vy=a.vy/spd5*boost5; }
               a.spawnShield = Math.max(a.spawnShield, 0.3);
-              addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
+              addScore(Math.floor(65*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
             } else {
               a.alive = false;
               unlockRockGimmickZukan('split'); // 図鑑「岩・ギミック」解放
@@ -5363,7 +5466,7 @@ function update(dt){
                 newM.hasSplit = true; // 分裂済みフラグをセット
                 marbles.push(newM);
               }
-              addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
+              addScore(Math.floor(65*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
             }
 
           } else if(rk.state === 'awake' && rk.ability === 'resonance'){
@@ -5372,7 +5475,7 @@ function update(dt){
             unlockMatterZukan(a.marbleType);     // 図鑑「研究対象：磁晶核」解放
             unlockRockGimmickZukan('resonance'); // 図鑑「岩・ギミック」解放
             triggerExplosion((a.x+rk.x)/2,(a.y+rk.y)/2,1.4,0,false,a.playerCaused||false);
-            addScore(Math.floor(50*upgrades.chainMulti));
+            addScore(Math.floor(65*upgrades.chainMulti));
             currentChainDepth=0; chainCount++;updateChainDisplay(chainCount,0,(a.x+rk.x)/2,(a.y+rk.y)/2, a.playerCaused||false);
             // 他の共鳴岩を距離順に順番に爆発させる
             const otherRes = rocks.filter(r=>r.alive && r!==rk && r.ability==='resonance');
@@ -5391,7 +5494,7 @@ function update(dt){
             a.alive=false;
             unlockMatterZukan(a.marbleType); // 図鑑「研究対象：磁晶核」解放
             triggerExplosion((a.x+rk.x)/2,(a.y+rk.y)/2,1.4,0,false,a.playerCaused||false);
-            addScore(Math.floor(50*upgrades.chainMulti));
+            addScore(Math.floor(65*upgrades.chainMulti));
             currentChainDepth=0; chainCount++;updateChainDisplay(chainCount,0,(a.x+rk.x)/2,(a.y+rk.y)/2, a.playerCaused||false);
           }
         } else {
@@ -5452,7 +5555,7 @@ function update(dt){
           // 跳ね返り直後の0.3秒は無敵にして、状態遷移や高速衝突による誤爆発を防ぐ
           m.spawnShield = Math.max(m.spawnShield, 0.3);
           m.speedCapBoostTimer = 0.6; // この間だけ速度上限を緩めて、もっと遠くまで跳ねていくようにする
-          addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
+          addScore(Math.floor(65*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
         } else if(rk.state === 'awake' && rk.ability === 'split'){
           // 分裂：覚醒中のみ、未分裂の玉が当たった瞬間に分裂する（通常・予兆時はノーマル岩と同じ扱い）
           if(m.hasSplit){
@@ -5466,7 +5569,7 @@ function update(dt){
             const boost5v = Math.max(spd5v*1.3, SPLIT_BOUNCE_SPEED_V);
             if(spd5v>0){ m.vx=m.vx/spd5v*boost5v; m.vy=m.vy/spd5v*boost5v; }
             m.spawnShield = Math.max(m.spawnShield, 0.3);
-            addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
+            addScore(Math.floor(65*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
           } else {
             m.alive=false; m.inVortex=false;
             unlockRockGimmickZukan('split'); // 図鑑「岩・ギミック」解放
@@ -5478,13 +5581,13 @@ function update(dt){
               newM.hasSplit=true;
               marbles.push(newM);
             }
-            addScore(Math.floor(50*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
+            addScore(Math.floor(65*upgrades.chainMulti)); // チェインは繋げず、当たった瞬間の得点だけ入れる
           }
         } else {
           m.alive=false; m.inVortex=false;
           unlockMatterZukan(m.marbleType); // 図鑑「研究対象：磁晶核」解放
           triggerExplosion((m.x+rk.x)/2,(m.y+rk.y)/2,1.4*(m.rangeMult||1),0,false,m.playerCaused||false);
-          addScore(Math.floor(50*upgrades.chainMulti));
+          addScore(Math.floor(65*upgrades.chainMulti));
           currentChainDepth=0; chainCount++;updateChainDisplay(chainCount,0,(m.x+rk.x)/2,(m.y+rk.y)/2, m.playerCaused||false);
           if(rk.state === 'awake' && rk.ability === 'resonance'){
             unlockRockGimmickZukan('resonance'); // 図鑑「岩・ギミック」解放
@@ -5648,7 +5751,7 @@ function update(dt){
         } else if(releaseGraceTimer <= 0 && !(m.spawnShield > 0)){
           // N極切替直後0.5秒は爆発しない（排出直後の無敵中も同様に消費されない）
           m.alive=false;
-          addScore(Math.floor(40*upgrades.chainMulti));
+          addScore(Math.floor(52*upgrades.chainMulti));
           for(let k=0;k<8;k++){
             const a=Math.random()*Math.PI*2, spd=2+Math.random()*4;
             particles.push({x:m.x,y:m.y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,
@@ -6524,6 +6627,7 @@ function draw(){
   // プレイヤーは常に中心（オフセットなし）
   drawBlinkGhosts();
   drawPlayer();
+  drawBubbleAimUI();
   drawShieldBarrier();
   drawCannonCharge();
   drawSweepEffects();
@@ -8684,7 +8788,67 @@ function drawPlayer(){
   }
 }
 
-// ── 入力設定 ─────────────────────────────────────
+// シャボン玉：狙い中に表示する「回せるよ」ヒント矢印(左右)と、狙っている方向へ流れる3連の矢印。
+// どちらもプレイヤーの位置基準（ワールド座標）で描くので、カメラに関係なく常に機体の周りに出る。
+function drawBubbleAimUI(){
+  if (!bubbleAiming) return;
+  const px = player.wx, py = player.wy, r = player.r;
+
+  // ①「回せるよ」ヒント：添付画像を参考に、1本の円環に矢じりを2つ(点対称)つけたデザインに変更。
+  // 円環を2つの弧に分けて描き、それぞれの終端（時計回り方向）に矢じりをつける。
+  // 発光しているように見せるため、不透明度をゆっくり波打たせている（ポワンポワン）
+  ctx.save();
+  ctx.translate(px, py);
+  const hintPulse = 0.28 + 0.34 * (Math.sin(bubbleAimElapsed * 3.2) * 0.5 + 0.5);
+  ctx.strokeStyle = `rgba(50,50,50,${hintPulse})`;
+  ctx.fillStyle   = `rgba(50,50,50,${hintPulse})`;
+  const ringR = r*1.75;
+  ctx.lineWidth = r*0.16;
+  ctx.lineCap = 'round';
+  function drawHintArc(startA, endA){
+    ctx.beginPath();
+    ctx.arc(0, 0, ringR, startA, endA, false); // 時計回り
+    ctx.stroke();
+    // 終端（時計回り方向の先端）に矢じりをつける
+    const tipX = Math.cos(endA)*ringR, tipY = Math.sin(endA)*ringR;
+    const tanX = -Math.sin(endA), tanY = Math.cos(endA); // 時計回りの進行方向（接線）
+    const ah = r*0.5;
+    ctx.beginPath();
+    ctx.moveTo(tipX + tanX*ah, tipY + tanY*ah);
+    ctx.lineTo(tipX - tanY*ah*0.62 - tanX*ah*0.25, tipY + tanX*ah*0.62 - tanY*ah*0.25);
+    ctx.lineTo(tipX + tanY*ah*0.62 - tanX*ah*0.25, tipY - tanX*ah*0.62 - tanY*ah*0.25);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // 点対称になるよう、180°ずらした同じ弧を2本描く
+  drawHintArc(-Math.PI*0.75, Math.PI*0.15);
+  drawHintArc(Math.PI*0.25,  Math.PI*1.15);
+  ctx.restore();
+
+  // ② 狙っている方向へ流れる3連の矢印（不透明度アニメーションで「前へ進む」感じを出す）
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(player.angle);
+  const baseDist = r*1.9, gap = r*0.95, size = r*0.6;
+  for(let i=0;i<3;i++){
+    const cyclePos = (bubbleAimElapsed*1.3 + i*0.34) % 1; // 0→1でループ（矢印ごとに位相をずらす）
+    const alpha = Math.sin(cyclePos*Math.PI); // 0→1→0
+    const dist = baseDist + i*gap;
+    ctx.save();
+    ctx.translate(dist, 0);
+    ctx.fillStyle = `rgba(255,60,60,${0.12+alpha*0.78})`;
+    ctx.beginPath();
+    ctx.moveTo(size*0.65, 0);
+    ctx.lineTo(-size*0.4, size*0.55);
+    ctx.lineTo(-size*0.4, -size*0.55);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+
 
 // canvas の中心からタッチ位置へのワールド角度を返す
 function angleFromScreen(clientX, clientY) {
@@ -9235,6 +9399,16 @@ document.addEventListener('touchcancel', e=>{
   }
 },{passive:true});
 
+// シャボン玉：「発射！」ボタン（スキルボタン再タップ・5秒経過と同じくfinishBubbleAim()を呼ぶだけ）
+const _bubbleFireBtn = document.getElementById('bubble-fire-btn');
+if (_bubbleFireBtn){
+  _bubbleFireBtn.addEventListener('click', ()=>{ if(bubbleAiming) finishBubbleAim(); });
+  _bubbleFireBtn.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    if(bubbleAiming) finishBubbleAim();
+  }, {passive:false});
+}
+
 // ── スキル選択画面 ────────────────────────────────
 function showSkillSelect(){
   document.getElementById('mode-select').classList.add('hide');
@@ -9561,6 +9735,12 @@ function renderAchvLog(){
 function openAchvLog(){
   renderAchvLog();
   document.getElementById('achv-log-screen').classList.remove('hide');
+  // 閲覧した時点で「未確認ログ」を既読にする（次に新しい実績が解除されるまで赤バッジは出ない）
+  if (window.Achievements && typeof window.Achievements.markLogSeen === 'function') {
+    window.Achievements.markLogSeen();
+  } else {
+    document.getElementById('achv-bell-btn').classList.remove('has-unclaimed');
+  }
 }
 function closeAchvLog(){
   document.getElementById('achv-log-screen').classList.add('hide');

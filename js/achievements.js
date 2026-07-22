@@ -56,7 +56,7 @@
     { id:'ach_010', no:'010', title:'年金生活',       ep:100,  desc:'これ以上強化できないアイテムは、EPとして蓄積されるようだ。', condition:'アイテム：30EPを獲得した' },
     { id:'ach_011', no:'011', title:'ハズレくじ',     ep:20,   desc:'運試しは、いつもうまくいくとは限らない。', condition:'アイテム：バッテリーでハズレを引いた' },
     { id:'ach_012', no:'012', title:'起死回生',       ep:20,   desc:'危機的状況から立て直した。',              condition:'バッテリー残量10%以下時に、アイテムを拾って回復した' },
-    { id:'ach_013', no:'013', title:'トリッキー',     ep:50,   desc:'N極だけで押し切った。',                  condition:'90秒間連続でN極を維持した' },
+    { id:'ach_013', no:'013', title:'トリッキー',     ep:50,   desc:'N極だけで押し切った。',                  condition:'60秒間N極を維持した' },
     { id:'ach_014', no:'014', title:'尽きない探究心', ep:200,  desc:'長時間の研究に耐え抜いた。',              condition:'180秒以上研究を続けた' },
 
     // ── 段階実績 ──
@@ -145,8 +145,26 @@
     const collectionUnlocked = !(typeof saveData !== 'undefined' && saveData.storyFlags && !saveData.storyFlags.collectionUnlocked);
     if (modeCollectionBtn)   modeCollectionBtn.classList.toggle('has-unclaimed', unclaimed && collectionUnlocked);
     if (achievementsCardBtn) achievementsCardBtn.classList.toggle('has-unclaimed', unclaimed);
-    // ベルボタンはコレクション解放前から使える早見え窓口なので、collectionUnlockedの条件は付けない
-    if (achvBellBtn)         achvBellBtn.classList.toggle('has-unclaimed', unclaimed);
+    // ベルボタンは「未受け取りの報酬があるか」ではなく「まだ見ていないログがあるか」で判定する。
+    // （見た報酬をまだ受け取っていなくても、ログを一度見た後は赤バッジを消したいため）
+    if (achvBellBtn) achvBellBtn.classList.toggle('has-unclaimed', hasUnseenLog());
+  }
+
+  // ── ベルボタンの未確認ログ判定 ──
+  // 「実績称号の受け取り状態」とは独立に、ログを何件見たか(achvLogSeenCount)だけで判定する。
+  // ベルを開いたらmarkLogSeen()を呼んでもらうことで、次に新しい実績が解除されるまでは
+  // 赤バッジが再表示されない（updateBadges()が何度呼ばれても消えたままになる）。
+  function hasUnseenLog(){
+    const total = getLogStore().length;
+    const seen = (typeof saveData !== 'undefined' && typeof saveData.achvLogSeenCount === 'number')
+      ? saveData.achvLogSeenCount : 0;
+    return total > seen;
+  }
+  function markLogSeen(){
+    if (typeof saveData === 'undefined') return;
+    saveData.achvLogSeenCount = getLogStore().length;
+    persist();
+    updateBadges();
   }
 
   // ── 実績解除ポップ（画面左下からにゅっと出るトースト） ──
@@ -401,6 +419,7 @@
     updateBadges,
     getCompletionRate,
     getLog,
+    markLogSeen,
   };
 
   // 起動時に一度チェック：この機能の追加より前から遊んでいたセーブデータでも、
