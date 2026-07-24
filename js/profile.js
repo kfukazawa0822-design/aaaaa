@@ -25,6 +25,11 @@
   const screen       = byId('profile-screen');
   const nameInput    = byId('profile-name-input');
   const titleSelect  = byId('profile-title-select');
+  const iconBox      = byId('profile-icon-placeholder');
+  const iconHint     = byId('profile-icon-hint');
+  const pickerOverlay = byId('profile-icon-picker-overlay');
+  const pickerGrid    = byId('profile-icon-picker-grid');
+  const pickerClose   = byId('profile-icon-picker-close');
   const statLevel    = byId('profile-stat-level');
   const statQuick    = byId('profile-stat-quick');
   const statEndless  = byId('profile-stat-endless');
@@ -32,12 +37,15 @@
   const statAch      = byId('profile-stat-achievement');
   const statPlaytime = byId('profile-stat-playtime');
 
-  // ── 保存データの読み書き（saveData.profile に { name, title } の形で永続化） ──
+  const DEFAULT_ICON_ID = 'icon_00'; // 誰もが最初から持っている証明写真。ガチャの抽選対象には含まれない
+
+  // ── 保存データの読み書き（saveData.profile に { name, title, iconId } の形で永続化） ──
   function getProfileStore(){
-    if (typeof saveData === 'undefined') return { name:'', title:'' };
+    if (typeof saveData === 'undefined') return { name:'', title:'', iconId:DEFAULT_ICON_ID };
     if (!saveData.profile || typeof saveData.profile !== 'object' || Array.isArray(saveData.profile)) {
-      saveData.profile = { name:'', title:'' };
+      saveData.profile = { name:'', title:'', iconId:DEFAULT_ICON_ID };
     }
+    if (!saveData.profile.iconId) saveData.profile.iconId = DEFAULT_ICON_ID;
     return saveData.profile;
   }
   function persist(){
@@ -120,11 +128,75 @@
     }
   }
 
+  // 所持しているアイコンID一覧（デフォルト写真 + ガチャで獲得した分）を返す
+  function ownedIconIds(){
+    const gachaOwned = (typeof saveData !== 'undefined' && Array.isArray(saveData.ownedIcons)) ? saveData.ownedIcons : [];
+    return [DEFAULT_ICON_ID, ...gachaOwned];
+  }
+
+  function iconImgSrc(iconId){
+    return `assets/icons/${iconId}.png`;
+  }
+
+  // 現在選択中のアイコンを、プロフィールカード上のアイコン枠に反映する
+  function renderIcon(){
+    if (!iconBox) return;
+    const store = getProfileStore();
+    iconBox.innerHTML = `<img src="${iconImgSrc(store.iconId)}" alt="" onerror="this.remove();">`;
+  }
+
+  function renderIconPicker(){
+    if (!pickerGrid) return;
+    const store = getProfileStore();
+    const ids = ownedIconIds();
+    pickerGrid.innerHTML = '';
+    ids.forEach(id => {
+      const cell = document.createElement('div');
+      cell.className = 'profile-icon-picker-item' + (id === store.iconId ? ' selected' : '');
+      cell.innerHTML = `<img src="${iconImgSrc(id)}" alt="" onerror="this.parentElement.remove();">`;
+      cell.addEventListener('click', () => selectIcon(id));
+      pickerGrid.appendChild(cell);
+    });
+  }
+
+  function selectIcon(iconId){
+    const store = getProfileStore();
+    store.iconId = iconId;
+    persist();
+    renderIcon();
+    renderIconPicker();
+    closeIconPicker();
+  }
+
+  function openIconPicker(){
+    if (!pickerOverlay) return;
+    renderIconPicker();
+    pickerOverlay.classList.add('show');
+  }
+  function closeIconPicker(){
+    if (pickerOverlay) pickerOverlay.classList.remove('show');
+  }
+
+  if (iconBox){
+    iconBox.addEventListener('click', openIconPicker);
+    iconBox.addEventListener('touchstart', e=>{ e.preventDefault(); }, {passive:false});
+    iconBox.addEventListener('touchend', e=>{ e.preventDefault(); openIconPicker(); }, {passive:false});
+  }
+  if (pickerClose){
+    pickerClose.addEventListener('click', closeIconPicker);
+    pickerClose.addEventListener('touchstart', e=>{ e.preventDefault(); closeIconPicker(); }, {passive:false});
+  }
+  if (pickerOverlay){
+    // 背景(オーバーレイ自体)をタップした時も閉じる。ただしピッカー本体(カード)のクリックは伝播させない
+    pickerOverlay.addEventListener('click', (e)=>{ if (e.target === pickerOverlay) closeIconPicker(); });
+  }
+
   function renderProfile(){
     const store = getProfileStore();
     if (nameInput) nameInput.value = store.name || '';
     renderTitleSelect();
     renderStats();
+    renderIcon();
   }
 
   if (nameInput){

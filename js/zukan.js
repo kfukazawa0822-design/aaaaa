@@ -219,7 +219,7 @@
     },
     {
       id:'skill_4', name:'スキル：シールド', unlocked:false, iconPath:'assets/shop/skill_shield.png',
-      desc:'約10秒間、引き寄せた磁晶核を保護する防護装置。\n発動中は磁晶核が破壊されず、遅延磁晶核のタイマーも停止する。',
+      desc:'約10秒間、引き寄せた磁晶核を保護する防護装置。\n発動中は磁晶核が破壊されず、遅延磁晶核のタイマーも停止する。\nさらに発動中はバッテリーアイテムのハズレによる減少も無効化する（-0%）。',
     },
     {
       id:'skill_5', name:'スキル：台風の目', unlocked:false, iconPath:'assets/shop/skill_typhoon.png',
@@ -379,8 +379,14 @@
   const drawerOv    = byId('zukan-drawer-overlay');
   const drawerList  = byId('zukan-drawer-list');
   const popupOv     = byId('zukan-popup-overlay');
+  const popupGenre  = byId('zukan-popup-genre');
   const popupTitle  = byId('zukan-popup-title');
+  const popupImageWrap = byId('zukan-popup-image-wrap');
+  const popupImage  = byId('zukan-popup-image');
   const popupBody   = byId('zukan-popup-body');
+  const popupPrevBtn = byId('zukan-popup-prev');
+  const popupNextBtn = byId('zukan-popup-next');
+  let popupItemIndex = -1; // 現在ポップで表示中の項目の、カテゴリ内でのインデックス（←→移動用）
 
   function renderDots(){
     if (!dotsEl) return;
@@ -411,6 +417,9 @@
         continue;
       }
       cell.className = 'zukan-cell' + (item.unlocked ? ' unlocked' : ' locked');
+      const inner = document.createElement('div');
+      inner.className = 'zukan-cell-inner';
+      cell.appendChild(inner);
       if (item.iconPath){
         const img = document.createElement('img');
         img.className = 'zukan-cell-icon';
@@ -421,9 +430,9 @@
         img.onload = () => { img.style.display = ''; };
         img.onerror = () => img.remove();
         img.src = item.iconPath;
-        cell.appendChild(img);
+        inner.appendChild(img);
       }
-      cell.addEventListener('click', () => openPopup(item));
+      cell.addEventListener('click', () => openPopup(item, i));
       grid.appendChild(cell);
     }
   }
@@ -450,12 +459,53 @@
   function openDrawer(){ if (drawer && drawerOv){ drawer.classList.add('open'); drawerOv.classList.add('show'); } }
   function closeDrawer(){ if (drawer && drawerOv){ drawer.classList.remove('open'); drawerOv.classList.remove('show'); } }
 
-  function openPopup(item){
+  // ポップの中身一式（ジャンル・タイトル・画像・本文）を、指定した項目の内容で描画する
+  function renderPopupContent(item){
+    const cat = ZUKAN_DATA[currentPage];
+    if (popupGenre) popupGenre.textContent = `＞ ${cat.label}`;
+    if (popupTitle) popupTitle.textContent = item.unlocked ? item.name : '？？？？？';
+    if (popupBody) {
+      popupBody.textContent = item.unlocked
+        ? (item.desc || '詳細は後日追加されます。')
+        : 'まだ解析が完了していない研究対象のようだ。';
+    }
+    if (popupImage && popupImageWrap){
+      if (item.iconPath && item.unlocked){
+        popupImageWrap.classList.remove('hide');
+        popupImage.classList.remove('locked');
+        popupImage.classList.remove('hide');
+        popupImage.onerror = () => popupImageWrap.classList.add('hide');
+        popupImage.src = item.iconPath;
+      } else {
+        popupImageWrap.classList.add('hide');
+        popupImage.removeAttribute('src'); // 古い項目の画像データを残さない
+      }
+    }
+    updatePopupNavButtons();
+  }
+
+  // 前後に「実データのある項目」があるかどうかで、←→ボタンの有効/無効を切り替える
+  function updatePopupNavButtons(){
+    const cat = ZUKAN_DATA[currentPage];
+    const items = cat.items;
+    if (popupPrevBtn) popupPrevBtn.disabled = !(popupItemIndex > 0 && items[popupItemIndex - 1]);
+    if (popupNextBtn) popupNextBtn.disabled = !(popupItemIndex < items.length - 1 && items[popupItemIndex + 1]);
+  }
+
+  function popupGoto(delta){
+    const cat = ZUKAN_DATA[currentPage];
+    const newIndex = popupItemIndex + delta;
+    if (newIndex < 0 || newIndex >= cat.items.length) return;
+    const newItem = cat.items[newIndex];
+    if (!newItem) return; // データの無い空きマスへは移動しない
+    popupItemIndex = newIndex;
+    renderPopupContent(newItem);
+  }
+
+  function openPopup(item, index){
     if (!popupOv || !popupTitle || !popupBody) return;
-    popupTitle.textContent = item.unlocked ? item.name : '？？？？？';
-    popupBody.textContent = item.unlocked
-      ? (item.desc || '詳細は後日追加されます。')
-      : 'まだ解析が完了していない研究対象のようだ。';
+    popupItemIndex = (typeof index === 'number') ? index : -1;
+    renderPopupContent(item);
     popupOv.classList.add('show');
   }
   function closePopup(){ if (popupOv) popupOv.classList.remove('show'); }
@@ -474,6 +524,8 @@
   const popupCloseBtn = byId('zukan-popup-close');
   if (popupCloseBtn) popupCloseBtn.addEventListener('click', closePopup);
   if (popupOv) popupOv.addEventListener('click', e => { if (e.target === popupOv) closePopup(); });
+  if (popupPrevBtn) popupPrevBtn.addEventListener('click', () => popupGoto(-1));
+  if (popupNextBtn) popupNextBtn.addEventListener('click', () => popupGoto(1));
 
   // コレクション画面の「図鑑」カード → この画面を開く
   const openZukan = () => {

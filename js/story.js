@@ -615,6 +615,25 @@
     lastContext = context;
     if (activePopupOpen) return; // 何か表示中なら二重発火させない
 
+    // 特例：クイックプレイのボタン発光は、通常は1度触ったら消える仕様（index.html側）だが、
+    // エンドレスモード解禁の条件（クイック3回以上プレイ＆所持EP100以上＝shop_introの条件と同じ）を
+    // 満たすまでは、モード選択に戻るたびに再度光らせ直す（＝実質ずっと光り続けるようにする）。
+    // 条件を満たした後は、逆に確実に消す（触らずに条件達成した場合の消し忘れ防止）。
+    if (context === 'mode_select'){
+      const quickBtn = document.getElementById('mode-quick');
+      if (quickBtn){
+        const welcomeIdx = STORY_STEPS.findIndex(s => s.id === 'welcome_tutorial');
+        const pastWelcome = welcomeIdx >= 0 && getProgress().nextIndex > welcomeIdx;
+        const endlessUnlockConditionMet =
+          quickPlayCount() >= 3 && (typeof playerProgress !== 'undefined' ? playerProgress.coins : 0) >= 100;
+        if (pastWelcome && !endlessUnlockConditionMet){
+          quickBtn.classList.add('story-glow');
+        } else if (endlessUnlockConditionMet){
+          quickBtn.classList.remove('story-glow');
+        }
+      }
+    }
+
     // まずSIDE_STEPS（メインの列とは独立した「おまけ」の一言）に、条件を満たして
     // まだ見せていないものが無いか確認する。無ければメインの列を通常通りチェックする
     for (const side of SIDE_STEPS){

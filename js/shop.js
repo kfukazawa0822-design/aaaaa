@@ -80,7 +80,9 @@
   const introTextEl = byId('shop-page-intro-text');
   if (introOv) introOv.addEventListener('click', () => introOv.classList.remove('show'));
 
-  const ICON_GACHA_POOL = Array.from({length:12}, (_,i) => `icon_${String(i+1).padStart(2,'0')}`);
+  // ガチャで当たるのはicon_01〜icon_11の11種類。icon_00は「誰もが最初から持っているデフォルトの
+  // 証明写真」で、ガチャの抽選対象には含めない（常に選択肢として使える扱いはjs/profile.js側で行う）
+  const ICON_GACHA_POOL = Array.from({length:11}, (_,i) => `icon_${String(i+1).padStart(2,'0')}`);
 
   const SHOP_PAGES = [
     {
@@ -483,8 +485,10 @@
     if (doctorRevertTimer) { clearTimeout(doctorRevertTimer); doctorRevertTimer = null; } // ページ切替時は購入後メッセージの表示を打ち切る
 
     const locked = isPageLocked(page);
-    // シャッター中のページでは、通常のページ用セリフではなく専用の一言に差し替える
-    setDoctorText(locked ? '商品準備中じゃ。' : (page.doctorLine || ''));
+    // スキルページ(page.maskNonFeaturedUntilPages)は、シャッターこそ出ないが、まだ「???」で
+    // 隠れているスキルがある間は「開発したぞ！」ではなく準備中の一言に差し替える
+    const stillMasked = !locked && !isPageFullyRevealed(page);
+    setDoctorText(locked ? '商品準備中じゃ。' : stillMasked ? 'すまん、まだ準備中のようじゃ……。' : (page.doctorLine || ''));
 
     if (shutterEl) shutterEl.classList.toggle('show', locked);
     if (categoryLabel) categoryLabel.style.display = locked ? 'none' : '';

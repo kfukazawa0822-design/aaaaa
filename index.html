@@ -744,11 +744,16 @@ canvas { display:block; width:100%; height:100%; }
 #profile-card-lab { font-size:10px; letter-spacing:1px; color:#999; }
 #profile-card-heading { font-size:15px; font-weight:bold; letter-spacing:3px; }
 #profile-card-top { display:flex; gap:20px; align-items:flex-start; }
-#profile-icon-box { flex-shrink:0; width:88px; text-align:center; }
+#profile-icon-box { flex-shrink:0; width:78px; text-align:center; }
+/* 証明写真と同じ縦長比率(3:4)。幅78px×高さ104px */
 #profile-icon-placeholder {
-  width:88px; height:88px; border:1.5px solid #1a1a1a; border-radius:8px;
+  width:78px; height:104px; border:1.5px solid #1a1a1a; border-radius:6px;
   display:flex; align-items:center; justify-content:center; background:#fafafa;
+  overflow:hidden; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  transition:background 0.12s;
 }
+#profile-icon-placeholder:active { background:#eee; }
+#profile-icon-placeholder img { width:100%; height:100%; object-fit:cover; display:block; }
 #profile-icon-hint { font-size:8px; color:#aaa; margin-top:8px; line-height:1.4; }
 #profile-name-block { flex:1; min-width:0; padding-top:4px; }
 .profile-field-label { font-size:9px; color:#999; letter-spacing:1px; display:block; margin-bottom:5px; }
@@ -767,6 +772,43 @@ canvas { display:block; width:100%; height:100%; }
   font-size:11px; font-weight:bold; color:#1a1a1a; max-width:150px;
 }
 .profile-card-divider { border-top:1.5px dashed #ccc; margin:28px 0 20px; }
+
+/* ── プロフィールアイコン選択ピッカー ── */
+#profile-icon-picker-overlay {
+  position:fixed; inset:0; z-index:320; background:rgba(0,0,0,0.45);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.15s;
+}
+#profile-icon-picker-overlay.show { opacity:1; pointer-events:auto; }
+#profile-icon-picker {
+  background:#fff; border-radius:14px; padding:20px; width:min(340px, 86vw);
+  max-height:76vh; box-sizing:border-box; display:flex; flex-direction:column;
+}
+#profile-icon-picker-title {
+  font-family:'Courier New',monospace; font-weight:bold; font-size:14px;
+  letter-spacing:2px; color:#1a1a1a; text-align:center; margin-bottom:14px; flex-shrink:0;
+}
+#profile-icon-picker-grid {
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;
+  overflow-y:auto; padding:2px;
+}
+.profile-icon-picker-item {
+  aspect-ratio:3/4; border:1.5px solid #ccc; border-radius:6px; overflow:hidden;
+  cursor:pointer; background:#fafafa; position:relative;
+  -webkit-tap-highlight-color:transparent; transition:border-color 0.12s;
+}
+.profile-icon-picker-item img { width:100%; height:100%; object-fit:cover; display:block; }
+.profile-icon-picker-item.selected { border:2.5px solid #1a1a1a; }
+#profile-icon-picker-close {
+  margin-top:16px; flex-shrink:0; align-self:center;
+  background:#fff; border:1.5px solid #1a1a1a; border-radius:20px;
+  padding:8px 28px; font-family:'Courier New',monospace; font-size:12px; font-weight:bold;
+  color:#1a1a1a; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+#profile-icon-picker-close:active { background:#eee; }
+#profile-icon-picker-empty-hint {
+  font-size:11px; color:#999; text-align:center; padding:20px 0; grid-column:1/-1;
+}
 #profile-stats-label { font-size:10px; color:#999; letter-spacing:1px; margin-bottom:14px; }
 .profile-stat-row {
   display:flex; justify-content:space-between; font-size:12px;
@@ -902,10 +944,20 @@ canvas { display:block; width:100%; height:100%; }
   width:100%;
 }
 .zukan-cell {
-  aspect-ratio:1; border-radius:8px; background:#fff; border:1.5px solid #ddd;
+  /* 「aspect-ratio:1」だけに頼ると、対応していない古いWebView(一部のAndroid端末など)で
+     セルの高さが決まらず、中の画像が本来のサイズのまま巨大に表示されてしまう不具合があった。
+     position:relative + height:0 + padding-bottom:100%（縦横比を固定する古典的な手法）を
+     土台にしつつ、対応環境ではaspect-ratio:1がそれを上書きする、二重の指定にしている。
+     中身は絶対配置の.zukan-cell-innerに移し、そちらでセンタリングする。 */
+  position:relative; height:0; padding-bottom:100%; aspect-ratio:1;
+  border-radius:8px; background:#fff; border:1.5px solid #ddd;
   cursor:pointer; -webkit-tap-highlight-color:transparent;
   transition:background 0.12s, border-color 0.12s, transform 0.1s;
-  display:flex; align-items:center; justify-content:center; padding:6px; box-sizing:border-box;
+  box-sizing:border-box; overflow:hidden;
+}
+.zukan-cell-inner {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  padding:6px; box-sizing:border-box;
 }
 .zukan-cell:hover, .zukan-cell:active { background:#eee; border-color:#999; transform:scale(1.03); }
 .zukan-cell.locked { background:#fff; }
@@ -943,7 +995,22 @@ canvas { display:block; width:100%; height:100%; }
 #shop-doctor-area {
   display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
   flex:2 1 0; min-height:0; width:100%; box-sizing:border-box;
+  position:relative; /* 背景レイヤー3枚をここを基準に絶対配置で重ねるため */
+  overflow:hidden; /* 背景画像(1200x538)がエリアの縦横比とズレてcoverではみ出す分を隠す */
 }
+/* 背景イラスト3枚：全て同じ位置・同じ大きさ(エリア全体)に重ねて敷き詰める。
+   DOM順＝奥から手前（c→b→a）。UI（画像＋吹き出し＋線）は position:relative + z-index で
+   常にこの3枚より手前に来るようにしている。
+   ※ object-fit:coverだと機種によって横幅基準/縦幅基準のどちらで埋まるか変わってしまうため、
+     常に「縦幅いっぱい」を基準にし、横方向はみ出す分だけ中央基準でクロップする指定に変更 */
+.shop-doctor-bg-layer {
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  height:100%; width:auto; max-width:none;
+  object-fit:cover; display:block; pointer-events:none;
+}
+#shop-doctor-bg-c { z-index:0; }
+#shop-doctor-bg-b { z-index:1; }
+#shop-doctor-bg-a { z-index:2; }
 /* 画像＋吹き出しの行：横幅はここだけ制限（商品グリッドより少し広め）。
    画面幅が狭い時は90vwになるので、自動的に左右5vwずつ余白ができる */
 /* 行の高さを博士画像の高さ(160px)に固定する。こうすることで、吹き出し（セリフ）の
@@ -954,10 +1021,13 @@ canvas { display:block; width:100%; height:100%; }
 #shop-doctor-row {
   display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:16px;
   width:min(400px, 90vw); box-sizing:border-box; height:160px; margin-top:8px;
+  position:relative; z-index:3; /* 背景レイヤー(0〜2)より必ず手前に */
 }
 /* 横線：博士の行のすぐ下にぴったりつけつつ、幅だけ画面いっぱいに伸ばす（親のwidth:100%を利用） */
-#shop-doctor-line { width:100%; height:1.5px; background:#1a1a1a; flex-shrink:0; margin-top:0; }
-#shop-doctor-img { height:160px; width:auto; object-fit:contain; flex-shrink:0; display:block; }
+#shop-doctor-line { width:100%; height:1.5px; background:#1a1a1a; flex-shrink:0; margin-top:0; position:relative; z-index:3; }
+/* 旧・博士画像(hakase.png)は廃止。吹き出しの位置・サイズを従来通り保つため、
+   同じ横幅(160px高さ・600x700比率で約137px)だけ確保する透明なスペーサーに置き換えている */
+#shop-doctor-img-spacer { width:137px; height:160px; flex-shrink:0; }
 #shop-doctor-bubble {
   font-family:'Courier New',monospace; font-size:12px; color:#1a1a1a;
   background:#fff; border:1.6px solid #1a1a1a; border-radius:9px;
@@ -1370,8 +1440,30 @@ canvas { display:block; width:100%; height:100%; }
   position:absolute; top:8px; right:10px; background:none; border:none;
   font-size:18px; color:#999; cursor:pointer; -webkit-tap-highlight-color:transparent;
 }
-#zukan-popup-title { font-size:15px; font-weight:bold; color:#111; margin-bottom:10px; letter-spacing:1px; }
+#zukan-popup-genre { font-size:10px; color:#999; letter-spacing:1px; margin-bottom:4px; }
+#zukan-popup-title { font-size:15px; font-weight:bold; color:#111; margin-bottom:14px; letter-spacing:1px; }
+/* アイコン画像：図鑑グリッドのマスと同じ雰囲気(正方形・白背景・薄い枠)で、本文の上に表示する。
+   ※未解放の項目ではそもそも画像欄ごと非表示にする仕様のため、シルエット化のCSSは廃止した */
+#zukan-popup-image-wrap {
+  width:120px; height:120px; margin:0 auto 16px; box-sizing:border-box;
+  border:1.5px solid #ddd; border-radius:8px; background:#fafafa;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+#zukan-popup-image-wrap.hide { display:none; }
+#zukan-popup-image { width:100%; height:100%; object-fit:contain; display:block; }
+#zukan-popup-image.hide { display:none; }
 #zukan-popup-body { font-size:11px; color:#666; line-height:1.7; white-space:pre-line; }
+/* 項目移動ボタン：本文の下、左右に「←」「→」を配置。前後に項目が無い場合は薄くして押せなくする */
+#zukan-popup-nav { display:flex; justify-content:space-between; margin-top:18px; }
+#zukan-popup-nav button {
+  width:40px; height:40px; border-radius:50%; border:1.5px solid #1a1a1a; background:#fff;
+  font-size:16px; color:#1a1a1a; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  transition:opacity 0.12s;
+}
+#zukan-popup-nav button:active { background:#eee; }
+#zukan-popup-nav button:disabled {
+  opacity:0.25; cursor:default; pointer-events:none;
+}
 
 /* ── リザルト画面 ── */
 #gameover {
@@ -2501,9 +2593,11 @@ canvas { display:block; width:100%; height:100%; }
 <!-- ショップ画面 -->
 <div id="shop-screen" class="subscreen hide">
   <div id="shop-doctor-area">
+    <img class="shop-doctor-bg-layer" id="shop-doctor-bg-c" src="assets/shop/shop_doctor_bg_c.png" alt="" onerror="this.style.display='none';">
+    <img class="shop-doctor-bg-layer" id="shop-doctor-bg-b" src="assets/shop/shop_doctor_bg_b.png" alt="" onerror="this.style.display='none';">
+    <img class="shop-doctor-bg-layer" id="shop-doctor-bg-a" src="assets/shop/shop_doctor_bg_a.png" alt="" onerror="this.style.display='none';">
     <div id="shop-doctor-row">
-      <img id="shop-doctor-img" src="assets/story/hakase.png" alt="博士"
-           onerror="this.style.display='none';">
+      <div id="shop-doctor-img-spacer"></div>
       <div id="shop-doctor-bubble">
         <div id="shop-doctor-text">外部からの支援物資を受け取れるようになったぞ。</div>
       </div>
@@ -2626,7 +2720,7 @@ canvas { display:block; width:100%; height:100%; }
               <path d="M4,27 C4,19 24,19 26,27" stroke="#bbb" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </div>
-          <div id="profile-icon-hint">ショップ実装後に選択可</div>
+          <div id="profile-icon-hint">タップして変更</div>
         </div>
         <div id="profile-name-block">
           <label class="profile-field-label" for="profile-name-input">氏名</label>
@@ -2650,6 +2744,15 @@ canvas { display:block; width:100%; height:100%; }
         <div class="profile-stat-row"><span>総プレイ時間</span><span id="profile-stat-playtime">0時間0分</span></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- プロフィールアイコン選択ピッカー：所持アイコン(デフォルト写真+ガチャ獲得分)から選ぶ -->
+<div id="profile-icon-picker-overlay">
+  <div id="profile-icon-picker">
+    <div id="profile-icon-picker-title">- アイコンを選択 -</div>
+    <div id="profile-icon-picker-grid"></div>
+    <button id="profile-icon-picker-close">閉じる</button>
   </div>
 </div>
 
@@ -2718,8 +2821,16 @@ canvas { display:block; width:100%; height:100%; }
   <div id="zukan-popup-overlay">
     <div id="zukan-popup">
       <button id="zukan-popup-close">×</button>
+      <div id="zukan-popup-genre"></div>
       <div id="zukan-popup-title"></div>
+      <div id="zukan-popup-image-wrap">
+        <img id="zukan-popup-image" alt="">
+      </div>
       <div id="zukan-popup-body"></div>
+      <div id="zukan-popup-nav">
+        <button id="zukan-popup-prev" title="前の項目">←</button>
+        <button id="zukan-popup-next" title="次の項目">→</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2884,7 +2995,7 @@ const SKILL_DEFS = [
   { id:'dash',    name:'ダッシュ',     icon:'💨', spCost:80,  maxStock:1, desc:'約3秒間、高速移動する' },
   { id:'cannon',  name:'大砲',         icon:'💣', spCost:100, maxStock:3, desc:'前方へ巨大な磁晶核を発射する' },
   { id:'typhoon', name:'台風の目',     icon:'🌪', spCost:200, maxStock:1, desc:'約3秒間、周囲の玉を吸い寄せる' },
-  { id:'shield',  name:'シールド',     icon:'🛡', spCost:100, maxStock:1, desc:'約10秒間、Sで引き寄せた玉を保護する' },
+  { id:'shield',  name:'シールド',     icon:'🛡', spCost:100, maxStock:1, desc:'約10秒間、Sで引き寄せた玉を保護。バッテリーのハズレも無効化' },
   { id:'bubble',  name:'フリーズショット', icon:'🫧', spCost:50,  maxStock:3, desc:'時間を止めて狙いを定め、Sで集めた玉を精度80%で放つ' },
   { id:'beacon',  name:'ワープビーコン', icon:'🛰', spCost:100, maxStock:1, desc:'アイテムを検知するビーコンを設置。再使用でワープ' },
   { id:'sweep',   name:'マグネットスイープ', icon:'🧹', spCost:100, maxStock:2, desc:'前方を薙ぎ払い、玉を吹き飛ばす' },
@@ -3879,8 +3990,16 @@ function applyItem(def) {
     case 'bat_unstable': {
       const ok=Math.random()<0.7;
       if(ok){const amt=20+Math.floor(Math.random()*21); player.battery=Math.min(100,player.battery+amt); msg=`バッテリー +${amt}%`; col='#88ffaa';}
-      else  {const amt=10+Math.floor(Math.random()*21); player.battery=Math.max(0,player.battery-amt); msg=`バッテリー -${amt}%`; col='#ff6666';
-             if (window.Achievements) window.Achievements.unlock('ach_011');} // 実績「ハズレくじ」
+      else {
+        const amt=10+Math.floor(Math.random()*21);
+        // シールド発動中はハズレ自体は引くが、バッテリーの減少だけ無効化(-0%)して守られたことを伝える
+        if (skillActive && selectedSkillId === 'shield'){
+          msg=`バッテリー -0%（シールドが無効化！）`; col='#ffdd44';
+        } else {
+          player.battery=Math.max(0,player.battery-amt); msg=`バッテリー -${amt}%`; col='#ff6666';
+        }
+        if (window.Achievements) window.Achievements.unlock('ach_011'); // 実績「ハズレくじ」
+      }
       break;
     }
     case 'rare_booster': {
@@ -3895,8 +4014,16 @@ function applyItem(def) {
     case 'bat_chaos':{
       const big=Math.random()<0.45;
       if(big){const g=40+Math.floor(Math.random()*21);player.battery=Math.min(100,player.battery+g);msg=`バッテリー +${g}%!!`;col='#44ffaa';}
-      else   {const l=25+Math.floor(Math.random()*31);player.battery=Math.max(0,player.battery-l);msg=`バッテリー -${l}%!!`;col='#ff2244';
-              if (window.Achievements) window.Achievements.unlock('ach_011');} // 実績「ハズレくじ」
+      else {
+        const l=25+Math.floor(Math.random()*31);
+        // シールド発動中はハズレ自体は引くが、バッテリーの減少だけ無効化(-0%)して守られたことを伝える
+        if (skillActive && selectedSkillId === 'shield'){
+          msg=`バッテリー -0%!!（シールドが無効化！）`; col='#ffdd44';
+        } else {
+          player.battery=Math.max(0,player.battery-l);msg=`バッテリー -${l}%!!`;col='#ff2244';
+        }
+        if (window.Achievements) window.Achievements.unlock('ach_011'); // 実績「ハズレくじ」
+      }
       break;
     }
   }
@@ -4760,11 +4887,11 @@ function buildPauseItems() {
     if (isMax) {
       chip.style.borderColor = '#ffd700';
       chip.style.color = '#ffd700';
-      chip.style.background = 'rgba(255,215,0,0.14)';
+      chip.style.background = '#333333';
     } else {
       chip.style.borderColor = d.color + '88';
       chip.style.color = d.color;
-      chip.style.background = d.color + '18';
+      chip.style.background = '#333333';
     }
     list.appendChild(chip);
     any = true;
